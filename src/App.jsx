@@ -1,17 +1,24 @@
 import "./App.css";
 import AppLayout from "./Pages/MainPage/AppLayout";
 import { ThemeProvider } from "./theme/themeProvider";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Home from "./Pages/HomePage/Home";
+import Employees from "./Pages/EmployeesPage/Employees";
+import Preachers from "./Pages/PreachersPage/Preachers";
 
 function App() {
   return (
-    <ThemeProvider>
-      <AppLayout>
-        <div style={{ padding: "1rem" }}>
-          <h1 style={{ marginTop: 0 , fontSize: "1.5rem" }}>ادارة المساجد</h1>
-          <p>links</p>
-        </div>
-      </AppLayout>
-    </ThemeProvider>
+    <BrowserRouter>
+      <ThemeProvider>
+        <AppLayout>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/employees" element={<Employees />} />
+            <Route path="/preachers" element={<Preachers/>}/>
+          </Routes>
+        </AppLayout>
+      </ThemeProvider>
+    </BrowserRouter>
   );
 }
 

@@ -19,19 +19,19 @@ import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import LogoutOutlinedIcon from "@mui/icons-material/LogoutOutlined";
 import HomeWorkRoundedIcon from "@mui/icons-material/HomeWorkRounded";
 import { useState } from "react";
-import MosqueRoundedIcon from '@mui/icons-material/MosqueRounded';
+import MosqueRoundedIcon from "@mui/icons-material/MosqueRounded";
 import TopBar from "./TopBar";
-
+import { NavLink } from "react-router-dom";
 
 const drawerWidth = 240;
 
 const navItems = [
-  { label: "الرئيسية", icon: GridViewOutlinedIcon },
-  { label: "المساجد", icon: MosqueOutlinedIcon },
-  { label: "الموظفين", icon: BadgeOutlinedIcon },
-  { label: "توزيع الخطباء", icon: EventNoteOutlinedIcon },
-  { label: "التبرعات", icon: PaymentsOutlinedIcon },
-  { label: "الإعلانات", icon: CampaignOutlinedIcon },
+  { label: "الرئيسية", icon: GridViewOutlinedIcon, path: "/" },
+  { label: "المساجد", icon: MosqueOutlinedIcon, path: "/mosques" },
+  { label: "الموظفين", icon: BadgeOutlinedIcon, path: "/employees" },
+  { label: "توزيع الخطباء", icon: EventNoteOutlinedIcon, path: "/preachers" },
+  { label: "التبرعات", icon: PaymentsOutlinedIcon, path: "/donations" },
+  { label: "الإعلانات", icon: CampaignOutlinedIcon, path: "/ads" },
 ];
 
 const AppLayout = ({ children }) => {
@@ -77,7 +77,12 @@ const AppLayout = ({ children }) => {
     >
       <Box sx={{ display: "flex" }}>
         <CssBaseline />
-        <TopBar toggleTheme={toggleTheme} themeMode={themeMode} palette={palette} activeTheme={activeTheme} />
+        <TopBar
+          toggleTheme={toggleTheme}
+          themeMode={themeMode}
+          palette={palette}
+          activeTheme={activeTheme}
+        />
         <Drawer
           sx={{
             width: drawerWidth,
@@ -131,6 +136,8 @@ const AppLayout = ({ children }) => {
               return (
                 <ListItem key={item.label} disablePadding sx={{ mb: 0.5 }}>
                   <ListItemButton
+                    component={NavLink}
+                    to={item.path}
                     onClick={() => setActiveIndex(index)}
                     sx={{
                       borderRadius: 0,
@@ -174,7 +181,9 @@ const AppLayout = ({ children }) => {
                             : palette.navInactive,
                         },
                       }}
-                    />
+                    >
+                      {item.label}
+                    </ListItemText>
                   </ListItemButton>
                 </ListItem>
               );
@@ -235,7 +244,7 @@ const AppLayout = ({ children }) => {
             minHeight: "100vh",
             bgcolor: activeTheme.colors.background,
             p: 3,
-            mt:8
+            mt: 8,
           }}
         >
           {children}
