@@ -1,0 +1,16 @@
+@import "@fontsource/ibm-plex-sans-arabic";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#root {
+	min-height: 100%;
+}
+
+body {
+	margin: 0;
+	font-family: "IBM Plex Sans Arabic", sans-serif;
+}
