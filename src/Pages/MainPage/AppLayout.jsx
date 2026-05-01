@@ -238,6 +238,7 @@ const AppLayout = ({ children }) => {
         </Drawer>
         {/* for main content */}
         <Box
+          dir="ltr"
           component="main"
           sx={{
             flexGrow: 1,

@@ -123,7 +123,9 @@ function TopBar() {
 
             <Divider orientation="vertical" flexItem sx={{ mx: 0.5 }} />
 
-            <Box sx={{ display: "flex", alignItems: "center", gap: 0.25 }}>
+            <Box 
+            className="flex items-center gap-0.5 flex-col md:flex-row"
+            >
               <IconButton
                 onClick={toggleTheme}
                 size="small"

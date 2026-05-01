@@ -5,6 +5,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Home from "./Pages/HomePage/Home";
 import Employees from "./Pages/EmployeesPage/Employees";
 import Preachers from "./Pages/PreachersPage/Preachers";
+import Mosque from "./Pages/MosquesPage/Mosque";
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/employees" element={<Employees />} />
             <Route path="/preachers" element={<Preachers/>}/>
+            <Route path="/mosques" element={<Mosque/>}/>
           </Routes>
         </AppLayout>
       </ThemeProvider>
