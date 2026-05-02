@@ -17,11 +17,9 @@ import CampaignOutlinedIcon from "@mui/icons-material/CampaignOutlined";
 import MapOutlinedIcon from "@mui/icons-material/MapOutlined";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import LogoutOutlinedIcon from "@mui/icons-material/LogoutOutlined";
-import HomeWorkRoundedIcon from "@mui/icons-material/HomeWorkRounded";
-import { useState } from "react";
 import MosqueRoundedIcon from "@mui/icons-material/MosqueRounded";
 import TopBar from "./TopBar";
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 
 const drawerWidth = 240;
 
@@ -35,35 +33,15 @@ const navItems = [
 ];
 
 const AppLayout = ({ children }) => {
+  // CHANGES LOG:
+  // - `palette` values moved out of this file and into `activeTheme.layout`.
+  // - We removed the local `activeIndex` state and now derive active nav
+  //   from the current route `pathname` (see `isActive` below).
+  // - `TopBar` no longer receives `palette` or `activeTheme` as props;
+  //   it reads theme tokens directly via `useTheme()`.
   const { activeTheme, themeMode, toggleTheme } = useTheme();
-  const isDarkMode = themeMode === "dark";
-  const [activeIndex, setActiveIndex] = useState(0);
-
-  const palette = isDarkMode
-    ? {
-        sidebarBg: "#111827",
-        sidebarBorder: "#334155",
-        navInactive: "#CBD5E1",
-        tnavActiveBg: "rgba(148, 163, 184, 0.16)",
-        navHoverBg: "rgba(148, 163, 184, 0.12)",
-        navActiveText: "#4ADE80",
-        navActiveBorder: "#EAB308",
-        subTitle: "#94A3B8",
-        logout: "#F87171",
-        logoText: "#4ADE80",
-      }
-    : {
-        sidebarBg: "#FFFFFF",
-        sidebarBorder: "#E6EBEF",
-        navInactive: "#7C879B",
-        navActiveBg: "#ECEFEE",
-        navHoverBg: "#F5F7F8",
-        navActiveText: "#006747",
-        navActiveBorder: "#C39D57",
-        subTitle: "#9AA3B2",
-        logout: "#D64040",
-        logoText: "#006747",
-      };
+  const { pathname } = useLocation();
+  const palette = activeTheme.layout;
 
   return (
     <div
@@ -77,18 +55,13 @@ const AppLayout = ({ children }) => {
     >
       <Box sx={{ display: "flex" }}>
         <CssBaseline />
-        <TopBar
-          toggleTheme={toggleTheme}
-          themeMode={themeMode}
-          palette={palette}
-          activeTheme={activeTheme}
-        />
+        <TopBar toggleTheme={toggleTheme} themeMode={themeMode} />
         <Drawer
           sx={{
-            width: drawerWidth,
+            width: { xs: 72, md: drawerWidth },
             flexShrink: 0,
             "& .MuiDrawer-paper": {
-              width: drawerWidth,
+              width: { xs: 72, md: drawerWidth },
               boxSizing: "border-box",
               backgroundColor: palette.sidebarBg,
               color: activeTheme.colors.text,
@@ -129,22 +102,22 @@ const AppLayout = ({ children }) => {
           </Box>
 
           <List sx={{ mt: 1 }}>
-            {navItems.map((item, index) => {
+            {navItems.map((item) => {
               const ItemIcon = item.icon;
-              const isActive = activeIndex === index;
+              // CHANGES: derive active state from route pathname
+              const isActive = pathname === item.path;
 
               return (
                 <ListItem key={item.label} disablePadding sx={{ mb: 0.5 }}>
                   <ListItemButton
                     component={NavLink}
                     to={item.path}
-                    onClick={() => setActiveIndex(index)}
+                    className="justify-center md:justify-start"
                     sx={{
                       borderRadius: 0,
                       minHeight: 44,
                       px: 2,
                       gap: 1,
-                      justifyContent: "flex-start",
                       borderRight: isActive
                         ? `3px solid ${palette.navActiveBorder}`
                         : "3px solid transparent",
@@ -173,6 +146,16 @@ const AppLayout = ({ children }) => {
                       sx={{
                         m: 0,
                         textAlign: "right",
+                        overflow: "hidden",
+                        whiteSpace: "nowrap",
+                        WebkitMaskImage: {
+                          xs: "linear-gradient(to left, rgba(0,0,0,0), rgba(0,0,0,1) 60%)",
+                          md: "none",
+                        },
+                        maskImage: {
+                          xs: "linear-gradient(to left, rgba(0,0,0,0), rgba(0,0,0,1) 60%)",
+                          md: "none",
+                        },
                         "& .MuiTypography-root": {
                           fontSize: 14,
                           fontWeight: isActive ? 700 : 600,
@@ -181,9 +164,7 @@ const AppLayout = ({ children }) => {
                             : palette.navInactive,
                         },
                       }}
-                    >
-                      {item.label}
-                    </ListItemText>
+                    />
                   </ListItemButton>
                 </ListItem>
               );
@@ -215,7 +196,7 @@ const AppLayout = ({ children }) => {
 
             <ListItem disablePadding>
               <ListItemButton sx={{ minHeight: 42, px: 2, gap: 1 }}>
-                <ListItemIcon sx={{ minWidth: 28, color: palette.logout }}>
+                <ListItemIcon sx={{ minWidth: 28, color: palette.danger }}>
                   <LogoutOutlinedIcon sx={{ fontSize: 20 }} />
                 </ListItemIcon>
                 <ListItemText
@@ -226,7 +207,7 @@ const AppLayout = ({ children }) => {
                     "& .MuiTypography-root": {
                       fontSize: 14,
                       fontWeight: 600,
-                      color: palette.logout,
+                      color: palette.danger,
                     },
                   }}
                 />
@@ -241,12 +222,9 @@ const AppLayout = ({ children }) => {
           dir="ltr"
           component="main"
           sx={{
-            flexGrow: 1,
-            minHeight: "100vh",
             bgcolor: activeTheme.colors.background,
-            p: 3,
-            mt: 8,
           }}
+          className="flex flex-col  flex-1 p-6 mt-22"
         >
           {children}
         </Box>

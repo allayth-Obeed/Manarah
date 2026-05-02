@@ -12,7 +12,7 @@ export default function Mosque() {
         variant="contained"
         href="#contained-buttons"
         dir="ltr"
-        startIcon={
+        endIcon={
           <AddIcon
             sx={{
               border: "2px solid",

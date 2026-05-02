@@ -2,7 +2,7 @@ import AppBar from "@mui/material/AppBar";
 import Toolbar from "@mui/material/Toolbar";
 import { Avatar, Box, Divider, IconButton } from "@mui/material";
 import Typography from "@mui/material/Typography";
-import { styled, alpha } from "@mui/material/styles";
+import { styled } from "@mui/material/styles";
 import InputBase from "@mui/material/InputBase";
 import SearchIcon from "@mui/icons-material/Search";
 import AccountCircle from "@mui/icons-material/AccountCircle";
@@ -16,11 +16,6 @@ const drawerWidth = 240;
 const Search = styled("div")(({ theme }) => ({
   position: "relative",
   borderRadius: theme.shape.borderRadius,
-  backgroundColor: alpha(theme.palette.common.black, 0.02),
-  "&:hover": {
-    backgroundColor: alpha(theme.palette.common.black, 0.04),
-  },
-  border: `1px solid ${alpha(theme.palette.common.black, 0.15)}`,
   width: "100%",
   maxWidth: 430,
 }));
@@ -49,17 +44,7 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
 
 function TopBar() {
   const { activeTheme, themeMode, toggleTheme } = useTheme();
-  const isDarkMode = themeMode === "dark";
-
-  const palette = isDarkMode
-    ? {
-        sidebarBg: "#111827",
-        sidebarBorder: "#334155",
-      }
-    : {
-        sidebarBg: "#FFFFFF",
-        sidebarBorder: "#E6EBEF",
-      };
+  const palette = activeTheme.layout;
 
   const user = {
     name: "احمد الموصلي",
@@ -70,8 +55,8 @@ function TopBar() {
     <AppBar
       position="fixed"
       sx={{
-        width: `calc(100% - ${drawerWidth}px)`,
-        mr: `${drawerWidth}px`,
+        width: { xs: "100%", md: `calc(100% - ${drawerWidth}px)` },
+        mr: { xs: 0, md: `${drawerWidth}px` },
         boxShadow: "none",
         borderBottom: `1px solid ${palette.sidebarBorder}`,
         backgroundColor: palette.sidebarBg,
@@ -91,7 +76,7 @@ function TopBar() {
             sx={{
               px: 1,
               py: 0.5,
-              minWidth: { xs: 190, md: 300 },
+              minWidth: { xs: "auto", md: 300 },
               display: "flex",
               alignItems: "center",
               justifyContent: "space-between",
@@ -110,11 +95,21 @@ function TopBar() {
                 أ
               </Avatar>
               <Box sx={{ lineHeight: 1.2 }}>
-                <Typography sx={{ fontSize: 14, fontWeight: 700 }}>
+                <Typography
+                  sx={{
+                    fontSize: 14,
+                    fontWeight: 700,
+                    display: { xs: "none", sm: "block" },
+                  }}
+                >
                   {user.name}
                 </Typography>
                 <Typography
-                  sx={{ fontSize: 11, color: activeTheme.colors.mutedText }}
+                  sx={{
+                    fontSize: 11,
+                    color: activeTheme.colors.mutedText,
+                    display: { xs: "none", sm: "block" },
+                  }}
                 >
                   {user.role}
                 </Typography>
@@ -123,9 +118,7 @@ function TopBar() {
 
             <Divider orientation="vertical" flexItem sx={{ mx: 0.5 }} />
 
-            <Box 
-            className="flex items-center gap-0.5 flex-col md:flex-row"
-            >
+            <Box className="flex items-center gap-0.5 flex-col md:flex-row">
               <IconButton
                 onClick={toggleTheme}
                 size="small"
@@ -152,12 +145,16 @@ function TopBar() {
             </Box>
           </Box>
           <Box sx={{ flexGrow: 1, display: "flex", justifyContent: "center" }}>
+            {/* CHANGES: search uses theme tokens from `palette` for background and border */}
             <Search
               sx={{
-                borderColor: palette.sidebarBorder,
-                backgroundColor: isDarkMode
-                  ? "rgba(148, 163, 184, 0.08)"
-                  : "#F5F7FA",
+                border: `1px solid ${palette.searchBorder}`,
+                backgroundColor: palette.searchBaseBg,
+                width: { xs: "100%", sm: "60%", md: "auto" },
+                maxWidth: { xs: "100%", sm: 430 },
+                "&:hover": {
+                  backgroundColor: palette.searchHoverBg,
+                },
               }}
             >
               <SearchIconWrapper>
