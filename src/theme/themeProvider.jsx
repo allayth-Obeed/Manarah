@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { themeTokens } from "./theme";
 import { ThemeContext } from "./themeContext";
+import {
+  createTheme,
+  ThemeProvider as MuiThemeProvider,
+} from "@mui/material/styles";
 
 function getInitialThemeMode() {
   if (typeof window === "undefined") {
@@ -16,7 +20,7 @@ function getInitialThemeMode() {
   return window.matchMedia("(prefers-color-scheme: dark)").matches
     ? "dark"
     : "light";
-}   
+}
 
 export function ThemeProvider({ children }) {
   const [themeMode, setThemeMode] = useState(getInitialThemeMode);
@@ -32,10 +36,17 @@ export function ThemeProvider({ children }) {
 
   const value = useMemo(() => {
     const activeTheme = themeTokens[themeMode];
+    const muiTheme = createTheme({
+      direction: "rtl",
+      typography: {
+        fontFamily: activeTheme.fontFamily.arabic.join(", "),
+      },
+    });
 
     return {
       themeMode,
       activeTheme,
+      muiTheme,
       isDarkMode: themeMode === "dark",
       isLightMode: themeMode === "light",
       setDarkMode: () => setThemeMode("dark"),
@@ -48,6 +59,8 @@ export function ThemeProvider({ children }) {
   }, [themeMode]);
 
   return (
-    <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>
+    <ThemeContext.Provider value={value}>
+      <MuiThemeProvider theme={value.muiTheme}>{children}</MuiThemeProvider>
+    </ThemeContext.Provider>
   );
 }

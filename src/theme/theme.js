@@ -2,31 +2,54 @@ export const themeTokens = {
   light: {
     mode: 'light',
     colors: {
-      background: '#F8F9FA', // Use for the main page background.
-      surface: '#FFFFFF', // Use for cards, panels, and raised surfaces.
-      text: '#0F172A', // Use for primary readable text.
-      mutedText: '#475569', // Use for supporting or less important text.
-      border: '#E2E8F0', // Use for separators, outlines, and dividers.
-      primary: '#006747', // Use for main brand actions and emphasis.
-      secondary: '#C5A059', // Use for secondary accents and highlights.
-      accent: '#F5F5DC', // Use for subtle decorative backgrounds or accents.
+      // Page background.
+      background: '#F8F9FA',
+      // Surface color for cards and panels.
+      surface: '#FFFFFF',
+      // Main readable text color.
+      text: '#0F172A',
+      // Muted text for hints and secondary copy.
+      mutedText: '#475569',
+      // Borders and dividers.
+      border: '#E2E8F0',
+      // Primary brand color for buttons and focus states.
+      primary: '#006747',
+      // Secondary accent color for highlights.
+      secondary: '#C5A059',
+      // Soft accent background for small emphasis areas.
+      accent: '#F5F5DC',
+      // Element background used in filter bars and similar blocks.
+      bgelem: '#B0B0B0',
+      // Button background color for light controls.
+      btn: '#FFFFF0',
     },
     layout: {
-      sidebarBg: '#FFFFFF', // Use for the sidebar background in light mode.
-      sidebarBorder: '#E6EBEF', // Use for the sidebar edge or divider.
-      navInactive: '#7C879B', // Use for navigation items that are not selected.
-      navActiveBg: '#ECEFEE', // Use for the active navigation item's background.
-      navHoverBg: '#F5F7F8', // Use for navigation item hover states.
-      navActiveText: '#006747', // Use for the active navigation item's text.
-      navActiveBorder: '#C39D57', // Use for the active item indicator or border.
-      subTitle: '#9AA3B2', // Use for subtitle or helper text.
-      danger: '#D64040', // Use for errors, warnings, or destructive actions.
-      dangerSoft: '#F87171', // Use for lighter danger states or soft alerts.
-      logoText: '#006747', // Use for the logo text color.
-      searchBg: '#F5F7FA', // Use for the search input background.
-      searchBorder: 'rgba(0, 0, 0, 0.15)', // Use for the search input border.
-      searchHoverBg: 'rgba(0, 0, 0, 0.04)', // Use for search hover feedback.
-      searchBaseBg: 'rgba(0, 0, 0, 0.02)', // Use for the default search field base.
+      // Sidebar background.
+      sidebarBg: '#FFFFFF',
+      // Sidebar border.
+      sidebarBorder: '#E6EBEF',
+      // Inactive navigation item color.
+      navInactive: '#7C879B',
+      // Active navigation item background.
+      navActiveBg: '#ECEFEE',
+      // Hover background for navigation items.
+      navHoverBg: '#F5F7F8',
+      // Active navigation item text color.
+      navActiveText: '#006747',
+      // Active navigation item border color.
+      navActiveBorder: '#C39D57',
+      // Subtitle and helper text color.
+      subTitle: '#9AA3B2',
+      // Danger and destructive action color.
+      danger: '#D64040',
+      // Logo text color.
+      logoText: '#006747',
+      // Search input border.
+      searchBorder: 'rgba(0, 0, 0, 0.15)',
+      // Search hover background.
+      searchHoverBg: 'rgba(0, 0, 0, 0.04)',
+      // Default search field background.
+      searchBaseBg: 'rgba(0, 0, 0, 0.02)',
     },
     fontFamily: {
       arabic: ['"IBM Plex Sans Arabic"', 'sans-serif'],
@@ -35,31 +58,55 @@ export const themeTokens = {
   dark: {
     mode: 'dark',
     colors: {
-      background: '#0B1220', // Use for the main page background in dark mode.
-      surface: '#111827', // Use for cards, panels, and elevated surfaces in dark mode.
-      text: '#F8FAFC', // Use for primary readable text in dark mode.
-      mutedText: '#CBD5E1', // Use for supporting text in dark mode.
-      border: '#334155', // Use for separators, outlines, and dividers in dark mode.
-      primary: '#4ADE80', // Use for main brand actions and emphasis in dark mode.
-      secondary: '#EAB308', // Use for secondary accents and highlights in dark mode.
-      accent: '#1E293B', // Use for subtle decorative backgrounds or accents in dark mode.
+      // Page background.
+      background: '#0B1220',
+      // Surface color for cards and panels.
+      surface: '#111827',
+      // Main readable text color.
+      text: '#F8FAFC',
+      // Muted text for hints and secondary copy.
+      mutedText: '#CBD5E1',
+      // Borders and dividers.
+      border: '#334155',
+      // Primary brand color for buttons and focus states.
+      primary: '#004D34',
+      // Secondary accent color for highlights.
+      secondary: '#EAB308',
+      // Soft accent background for small emphasis areas.
+      accent: '#1E293B',
+      // Element background used in filter bars and similar blocks.
+      bgelem: '#1A1A1A',
+      // Button background color for dark controls.
+      btn: '#3E3E3E',
+
     },
     layout: {
-      sidebarBg: '#111827', // Use for the sidebar background in dark mode.
-      sidebarBorder: '#334155', // Use for the sidebar edge or divider in dark mode.
-      navInactive: '#CBD5E1', // Use for navigation items that are not selected in dark mode.
-      navActiveBg: 'rgba(148, 163, 184, 0.16)', // Use for the active navigation item's background in dark mode.
-      navHoverBg: 'rgba(148, 163, 184, 0.12)', // Use for navigation item hover states in dark mode.
-      navActiveText: '#4ADE80', // Use for the active navigation item's text in dark mode.
-      navActiveBorder: '#EAB308', // Use for the active item indicator or border in dark mode.
-      subTitle: '#94A3B8', // Use for subtitle or helper text in dark mode.
-      danger: '#F87171', // Use for errors, warnings, or destructive actions in dark mode.
-      dangerSoft: '#F87171', // Use for lighter danger states or soft alerts in dark mode.
-      logoText: '#4ADE80', // Use for the logo text color in dark mode.
-      searchBg: 'rgba(148, 163, 184, 0.08)', // Use for the search input background in dark mode.
-      searchBorder: '#334155', // Use for the search input border in dark mode.
-      searchHoverBg: 'rgba(148, 163, 184, 0.12)', // Use for search hover feedback in dark mode.
-      searchBaseBg: 'rgba(148, 163, 184, 0.08)', // Use for the default search field base in dark mode.
+      // Sidebar background.
+      sidebarBg: '#111827',
+      // Sidebar border.
+      sidebarBorder: '#334155',
+      // Inactive navigation item color.
+      navInactive: '#CBD5E1',
+      // Active navigation item background.
+      navActiveBg: 'rgba(148, 163, 184, 0.16)',
+      // Hover background for navigation items.
+      navHoverBg: 'rgba(148, 163, 184, 0.12)',
+      // Active navigation item text color.
+      navActiveText: '#4ADE80',
+      // Active navigation item border color.
+      navActiveBorder: '#EAB308',
+      // Subtitle and helper text color.
+      subTitle: '#94A3B8',
+      // Danger and destructive action color.
+      danger: '#F87171',
+      // Logo text color.
+      logoText: '#4ADE80',
+      // Search input border.
+      searchBorder: '#334155',
+      // Search hover background.
+      searchHoverBg: 'rgba(148, 163, 184, 0.12)',
+      // Default search field background.
+      searchBaseBg: 'rgba(148, 163, 184, 0.08)',
     },
     fontFamily: {
       arabic: ['"IBM Plex Sans Arabic"', 'sans-serif'],

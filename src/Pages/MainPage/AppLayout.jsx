@@ -224,7 +224,7 @@ const AppLayout = ({ children }) => {
           sx={{
             bgcolor: activeTheme.colors.background,
           }}
-          className="flex flex-col  flex-1 p-6 mt-22"
+          className="flex flex-col  flex-1 p-6 mt-20"
         >
           {children}
         </Box>
