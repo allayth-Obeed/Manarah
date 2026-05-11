@@ -9,7 +9,7 @@ export const themeTokens = {
       // Main readable text color.
       text: '#0F172A',
       // Muted text for hints and secondary copy.
-      mutedText: '#475569',
+      mutedText: '#64748B',
       // Borders and dividers.
       border: '#E2E8F0',
       // Primary brand color for buttons and focus states.
@@ -21,7 +21,7 @@ export const themeTokens = {
       // Element background used in filter bars and similar blocks.
       bgelem: '#B0B0B0',
       // Button background color for light controls.
-      btn: '#FFFFF0',
+      btn: '#F3F4F6',
     },
     layout: {
       // Sidebar background.
@@ -65,7 +65,7 @@ export const themeTokens = {
       // Main readable text color.
       text: '#F8FAFC',
       // Muted text for hints and secondary copy.
-      mutedText: '#CBD5E1',
+      mutedText: '#94A3B8',
       // Borders and dividers.
       border: '#334155',
       // Primary brand color for buttons and focus states.

@@ -144,12 +144,13 @@ function TopBar() {
               </IconButton>
             </Box>
           </Box>
-          <Box sx={{ flexGrow: 1, display: "flex", justifyContent: "center" }}>
+          <Box sx={{ flexGrow: 1, display: "flex", justifyContent: "center"}}>
             {/* CHANGES: search uses theme tokens from `palette` for background and border */}
             <Search
               sx={{
                 border: `1px solid ${palette.searchBorder}`,
                 backgroundColor: palette.searchBaseBg,
+                borderRadius: 4,
                 width: { xs: "100%", sm: "60%", md: "auto" },
                 maxWidth: { xs: "100%", sm: 430 },
                 "&:hover": {

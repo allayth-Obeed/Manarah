@@ -245,8 +245,8 @@ const MyTable = () => {
                     >
                       <Box
                         sx={{
-                          width: 44,
-                          height: 44,
+                          width: 33,
+                          height: 33,
                           borderRadius: 1.5,
                           display: "flex",
                           alignItems: "center",
@@ -256,7 +256,7 @@ const MyTable = () => {
                       >
                         {statusStyle.icon}
                       </Box>
-                      <Box sx={{ textAlign: "right" }}>
+                      <Box sx={{ textAlign: "right", paddingRight: 1 }}>
                         <Typography
                           sx={{
                             fontWeight: 700,
