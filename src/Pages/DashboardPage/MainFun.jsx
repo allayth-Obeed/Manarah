@@ -2,9 +2,10 @@ import { Box, Typography } from "@mui/material";
 import { useTheme } from "../../theme/themeContext";
 import { Button } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
-import CampaignOutlinedIcon from '@mui/icons-material/CampaignOutlined';
+import CampaignOutlinedIcon from "@mui/icons-material/CampaignOutlined";
+
 export default function MainFun() {
-  const { activeTheme } = useTheme();
+  const { activeTheme, themeMode } = useTheme();
   return (
     <div>
       <Box
@@ -33,11 +34,19 @@ export default function MainFun() {
         <Box>
           <Button
             variant="contained"
-            endIcon={ <CampaignOutlinedIcon sx={{ color: activeTheme.colors.primary, fontSize: 18 }} /> }
+            endIcon={
+              <CampaignOutlinedIcon
+                sx={{
+                  color:
+                    themeMode === "dark" ? "#fff" : activeTheme.colors.primary,
+                  fontSize: 18,
+                }}
+              />
+            }
             sx={{
               backgroundColor: activeTheme.colors.btn,
-              color: activeTheme.colors.primary,
-              border:"2px solid " + activeTheme.colors.border,
+              color: themeMode === "dark" ? "#fff" : activeTheme.colors.primary,
+              border: "2px solid " + activeTheme.colors.border,
               borderRadius: 3,
               px: 0,
               py: 0.8,
@@ -79,6 +88,7 @@ export default function MainFun() {
           </Button>
         </Box>
       </Box>
+      
     </div>
   );
 }
