@@ -10,7 +10,7 @@ import {
   TableHead,
   TableRow,
   Chip,
-} from "@mui/material";
+} from '@mui/material'
 
 import {
   LineChart,
@@ -20,44 +20,51 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-} from "recharts";
+} from 'recharts'
 
-import { useTheme } from "../../theme/themeContext";
+import { useTheme } from '../../theme/themeContext'
 
 const chartData = [
-  { day: "السبت", value: 400 },
-  { day: "الأحد", value: 300 },
-  { day: "الإثنين", value: 500 },
-  { day: "الثلاثاء", value: 700 },
-  { day: "الأربعاء", value: 600 },
-  { day: "الخميس", value: 800 },
-  { day: "الجمعة", value: 900 },
-];
+  { day: 'السبت', value: 400 },
+  { day: 'الأحد', value: 300 },
+  { day: 'الإثنين', value: 500 },
+  { day: 'الثلاثاء', value: 700 },
+  { day: 'الأربعاء', value: 600 },
+  { day: 'الخميس', value: 800 },
+  { day: 'الجمعة', value: 900 },
+]
 
 const speakers = [
   {
-    mosque: "جامع القوي",
-    speaker: "د. محمد السعيد",
-    date: "24 مايو 2024",
+    mosque: 'جامع القوي',
+    speaker: 'د. محمد السعيد',
+    date: '24 مايو 2024',
   },
   {
-    mosque: "مسجد النور",
-    speaker: "الشيخ عمر الخالد",
-    date: "23 مايو 2024",
+    mosque: 'مسجد النور',
+    speaker: 'الشيخ عمر الخالد',
+    date: '23 مايو 2024',
   },
   {
-    mosque: "جامع الروضة",
-    speaker: "أ. إبراهيم علي",
-    date: "22 مايو 2024",
+    mosque: 'جامع الروضة',
+    speaker: 'أ. إبراهيم علي',
+    date: '22 مايو 2024',
   },
   {
-    mosque: "مسجد التقوى",
-    speaker: "الشيخ حسن محمود",
-    date: "21 مايو 2024",
+    mosque: 'مسجد التقوى',
+    speaker: 'الشيخ حسن محمود',
+    date: '21 مايو 2024',
   },
-];
+]
 
-const tableHeaders = ["اسم المسجد", "اسم الخطيب", "التاريخ"];
+const tableHeaders = ['اسم المسجد', 'اسم الخطيب', 'التاريخ']
+
+const regionDensity = [
+  { region: 'حي المدينة', count: 45, percentage: 75 },
+  { region: 'الريف الشمالي', count: 32, percentage: 60 },
+  { region: 'المنطقة الوسطى', count: 28, percentage: 50 },
+  { region: 'الجهة الشرقية', count: 21, percentage: 40 },
+]
 
 // Card shell used to keep dashboard sections visually consistent.
 function SectionCard({ cardSx, titleSx, title, action, children }) {
@@ -68,7 +75,7 @@ function SectionCard({ cardSx, titleSx, title, action, children }) {
         {/* Padding and content area inside the card. */}
         <CardContent>
           {/* Header row with title on one side and action on the other. */}
-          <Box sx={{ display: "flex", justifyContent: "space-between", mb: 3 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
             {/* Section title text. */}
             <Typography variant="h6" sx={titleSx}>
               {title}
@@ -81,27 +88,27 @@ function SectionCard({ cardSx, titleSx, title, action, children }) {
         </CardContent>
       </Card>
     </>
-  );
+  )
 }
 
 // Dashboard statistics view that shows assignments and weekly donations.
 export default function Statistics() {
-  const { activeTheme } = useTheme();
-  const { colors, layout } = activeTheme;
+  const { activeTheme } = useTheme()
+  const { colors, layout } = activeTheme
 
   const cardSx = {
     borderRadius: 4,
-    height: "100%",
-    width: "100%",
+    height: '100%',
+    width: '100%',
     bgcolor: colors.surface,
     color: colors.text,
-    boxShadow: "0 2px 10px rgba(0,0,0,0.08)",
+    boxShadow: '0 2px 10px rgba(0,0,0,0.08)',
     border: `1px solid ${colors.border}`,
-  };
+  }
 
-  const titleSx = { fontWeight: "bold", color: colors.primary };
-  const tableCellSx = { color: colors.text, borderColor: colors.border };
-  const headerCellSx = { color: colors.mutedText, borderColor: colors.border };
+  const titleSx = { fontWeight: 'bold', color: colors.primary }
+  const tableCellSx = { color: colors.text, borderColor: colors.border }
+  const headerCellSx = { color: colors.mutedText, borderColor: colors.border }
 
   return (
     <>
@@ -111,24 +118,24 @@ export default function Statistics() {
           p: 3,
           bgcolor: colors.background,
           color: colors.text,
-          minHeight: "100vh",
-          width: "100%",
+          minHeight: '100vh',
+          width: '100%',
         }}
       >
         {/* Two-column grid that collapses to one column on small screens. */}
         <Box
           sx={{
-            display: "grid",
+            display: 'grid',
             gap: 3,
-            width: "100%",
+            width: '100%',
             gridTemplateColumns: {
-              xs: "1fr",
-              md: "repeat(3, minmax(0, 1fr))",
+              xs: '1fr',
+              md: 'repeat(3, minmax(0, 1fr))',
             },
           }}
         >
           {/* Left card: latest speaker assignments table. */}
-          <Box sx={{ gridColumn: { md: "span 1" } }}>
+          <Box sx={{ gridColumn: { md: 'span 1' } }}>
             {/* Reusable card that wraps the table section. */}
             <SectionCard
               cardSx={cardSx}
@@ -137,10 +144,7 @@ export default function Statistics() {
               action={
                 <>
                   {/* Link-style action for viewing all records. */}
-                  <Typography
-                    variant="body2"
-                    sx={{ color: colors.secondary, cursor: "pointer" }}
-                  >
+                  <Typography variant="body2" sx={{ color: colors.secondary, cursor: 'pointer' }}>
                     عرض الكل
                   </Typography>
                 </>
@@ -149,7 +153,7 @@ export default function Statistics() {
               {/* Table container for assignment rows. */}
               <TableContainer>
                 {/* Table with mosque, speaker, and date columns. */}
-                <Table sx={{ "& .MuiTableCell-root": { color: colors.text } }}>
+                <Table sx={{ '& .MuiTableCell-root': { color: colors.text } }}>
                   {/* Column headers row. */}
                   <TableHead>
                     {/* Header row for the table. */}
@@ -183,7 +187,7 @@ export default function Statistics() {
                             sx={{
                               bgcolor: colors.accent,
                               color: colors.primary,
-                              fontWeight: "bold",
+                              fontWeight: 'bold',
                             }}
                           />
                         </TableCell>
@@ -196,7 +200,7 @@ export default function Statistics() {
           </Box>
 
           {/* Right card: weekly donation trend chart. */}
-          <Box sx={{ gridColumn: { md: "span 2" } }}>
+          <Box sx={{ gridColumn: { md: 'span 2' } }}>
             {/* Reusable card that wraps the chart section. */}
             <SectionCard
               cardSx={cardSx}
@@ -213,16 +217,13 @@ export default function Statistics() {
               }
             >
               {/* Fixed chart area that keeps the graph responsive. */}
-              <Box sx={{ width: "100%", height: 300 }}>
+              <Box sx={{ width: '100%', height: 300 }}>
                 {/* Responsive wrapper around the line chart. */}
                 <ResponsiveContainer width="100%" height="100%">
                   {/* Line chart using the weekly donation data. */}
                   <LineChart data={chartData}>
                     {/* Background grid for easier reading. */}
-                    <CartesianGrid
-                      strokeDasharray="3 3"
-                      stroke={colors.border}
-                    />
+                    <CartesianGrid strokeDasharray="3 3" stroke={colors.border} />
                     {/* X axis with Arabic day labels. */}
                     <XAxis
                       dataKey="day"
@@ -230,10 +231,7 @@ export default function Statistics() {
                       tick={{ fill: layout.subTitle }}
                     />
                     {/* Y axis with numeric values. */}
-                    <YAxis
-                      stroke={layout.subTitle}
-                      tick={{ fill: layout.subTitle }}
-                    />
+                    <YAxis stroke={layout.subTitle} tick={{ fill: layout.subTitle }} />
                     {/* Tooltip for hovered chart values. */}
                     <Tooltip
                       contentStyle={{
@@ -246,19 +244,104 @@ export default function Statistics() {
                       itemStyle={{ color: colors.primary }}
                     />
                     {/* Main donation trend line. */}
-                    <Line
-                      type="monotone"
-                      dataKey="value"
-                      stroke={colors.primary}
-                      strokeWidth={3}
-                    />
+                    <Line type="monotone" dataKey="value" stroke={colors.primary} strokeWidth={3} />
                   </LineChart>
                 </ResponsiveContainer>
               </Box>
             </SectionCard>
           </Box>
         </Box>
+
+        {/* Mosque Density by Region Section */}
+        <Box sx={{ mt: 4 }}>
+          <Box
+            sx={{
+              display: 'grid',
+              gap: 3,
+              width: '100%',
+              gridTemplateColumns: {
+                xs: '1fr',
+                md: 'repeat(2, minmax(0, 1fr))',
+              },
+            }}
+          >
+            <Box sx={{ gridColumn: { md: 'span 2' } }}>
+              <SectionCard
+                cardSx={cardSx}
+                titleSx={titleSx}
+                title="كثافة المساجد في المناطق"
+                action={
+                  <>
+                    <Typography
+                      variant="caption"
+                      sx={{ color: colors.mutedText, fontSize: '0.8rem' }}
+                    >
+                      التوزيع الجغرافي
+                    </Typography>
+                  </>
+                }
+              >
+                <Box sx={{ display: 'grid', gap: 2.5 }}>
+                  {regionDensity.map((item) => (
+                    <Box
+                      key={item.region}
+                      sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}
+                    >
+                      {/* Region name and count */}
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                        }}
+                      >
+                        <Typography
+                          sx={{
+                            fontWeight: 600,
+                            color: colors.text,
+                            fontSize: '0.95rem',
+                          }}
+                        >
+                          {item.region}
+                        </Typography>
+                        <Typography
+                          sx={{
+                            fontWeight: 'bold',
+                            color: colors.primary,
+                            fontSize: '1rem',
+                          }}
+                        >
+                          {item.count}
+                        </Typography>
+                      </Box>
+                      {/* Progress bar */}
+                      <Box
+                        sx={{
+                          width: '100%',
+                          height: 8,
+                          borderRadius: 4,
+                          bgcolor: colors.border,
+                          overflow: 'hidden',
+                        }}
+                      >
+                        <Box
+                          sx={{
+                            height: '100%',
+                            width: `${item.percentage}%`,
+                            bgcolor: colors.primary,
+                            borderRadius: 4,
+                            transition: 'width 0.3s ease',
+                          }}
+                        />
+                      </Box>
+                    </Box>
+                  ))}
+                </Box>
+              </SectionCard>
+            </Box>
+          </Box>
+        </Box>
       </Box>
     </>
-  );
+  )
 }

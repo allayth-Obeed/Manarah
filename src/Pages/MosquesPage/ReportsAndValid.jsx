@@ -1,11 +1,11 @@
-import React from "react";
-import { Box, Typography } from "@mui/material";
-import { Shield, BarChart } from "@mui/icons-material";
-import { Button } from "@mui/material";
-import { useTheme } from "../../theme/themeContext";
+import React from 'react'
+import { Box, Typography } from '@mui/material'
+import { Shield, BarChart } from '@mui/icons-material'
+import AppButton from '../../components/common/AppButton'
+import { useTheme } from '../../theme/themeContext'
 
 export default function ReportsAndValid() {
-  const { activeTheme } = useTheme();
+  const { activeTheme } = useTheme()
 
   return (
     <Box className="flex flex-row gap-4 p-4">
@@ -21,8 +21,8 @@ export default function ReportsAndValid() {
           توثيق الأوقاف
         </Typography>
         <Typography className="text-gray-600 text-sm">
-          تأكد من تحديث كافة الصكوك القانونية والخرائط المساحية للمساجد الحديثة
-          في النظام لضمان الحماية القانونية للأصول.
+          تأكد من تحديث كافة الصكوك القانونية والخرائط المساحية للمساجد الحديثة في النظام لضمان
+          الحماية القانونية للأصول.
         </Typography>
       </Box>
 
@@ -49,32 +49,32 @@ export default function ReportsAndValid() {
             </Typography>
           </Box>
           <Typography className="text-emerald-200 mt-3 pr-6">
-            تم إكمال 85٪ من خطة الصيانة السنوية للمساجد التابعة للمديرية. يمكنك
-            تنزيل التقرير الكامل بصيغة PDF لمراجعة كافة التفاصيل.
+            تم إكمال 85٪ من خطة الصيانة السنوية للمساجد التابعة للمديرية. يمكنك تنزيل التقرير الكامل
+            بصيغة PDF لمراجعة كافة التفاصيل.
           </Typography>
         </Box>
 
-        <Button
+        <AppButton
           variant="contained"
           sx={{
-            position: "absolute",
+            position: 'absolute',
             right: 36,
             bottom: 20,
-            minWidth: 140,
             height: 44,
-            px: 2,
-            py: 0.5,
-            borderRadius: 1.5,
             boxShadow: 2,
-            bgcolor: activeTheme.colors.secondary,
-            color: "#fff",
             zIndex: 30,
-            textTransform: "none",
           }}
+          backgroundColor={activeTheme.colors.secondary}
+          textColor={activeTheme.colors.onSecondary}
+          borderColor={activeTheme.colors.secondary}
+          borderRadius={1.5}
+          minWidth={140}
+          px={2}
+          py={0.5}
         >
           تحميل التقرير الكامل
-        </Button>
+        </AppButton>
       </Box>
     </Box>
-  );
+  )
 }

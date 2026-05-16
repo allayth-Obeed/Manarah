@@ -1,69 +1,68 @@
-import React from "react";
-import { Box, Button, Typography, Card, Stack } from "@mui/material";
-import AddIcon from "@mui/icons-material/Add";
-import { useTheme } from "../../theme/themeContext";
+import React from 'react'
+import { Box, Typography, Card, Stack } from '@mui/material'
+import AddIcon from '@mui/icons-material/Add'
+import AppButton from '../../components/common/AppButton'
+import { useTheme } from '../../theme/themeContext'
 
 export default function FilterSearch() {
-  const { activeTheme } = useTheme();
+  const { activeTheme } = useTheme()
 
   return (
-    <Box
-      dir="rtl"
-      sx={{ display: "flex", flexDirection: "column", gap: 2, py: 2 
-      }}
-    >
-      <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-            <Typography variant="body1">تصفية بـ:</Typography>
+    <Box dir="rtl" sx={{ display: 'flex', flexDirection: 'column', gap: 2, py: 2 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+        <Typography variant="body1">تصفية بـ:</Typography>
         {/* filtering */}
-        <Box sx={{ display: "flex", alignItems: "center", gap: 3 , bgcolor:activeTheme.colors.bgelem , px:2.5 , py:1.5 , borderRadius:1.5}}>
-            <Button
-              variant="outlined"
-              sx={{
-                textTransform: "none",
-                borderRadius: 1.5,
-                px: 5,
-                paddingRight: 0.4,
-                py: 0.8,
-                fontSize: 13,
-                bgcolor:activeTheme.colors.btn,
-                color:activeTheme.colors.mutedText
-              }}
-            >
-              كل المناطق
-            </Button>
-            
-            <Button
-              variant="outlined"
-              sx={{
-                textTransform: "none",
-                borderRadius: 1.5,
-                px: 5,
-                paddingRight: 0.4,
-                py: 0.8,
-                fontSize: 13,
-                bgcolor:activeTheme.colors.btn,
-                color:activeTheme.colors.mutedText
-              }}
-            >
-              كل الحالات
-            </Button>
-            <Box sx={{flexGrow:1}} />
-            
-            {/* Apply button */}
-            <Button
-              variant="contained"
-              sx={{
-                textTransform: "none",
-                borderRadius: 1.5,
-                bgcolor: activeTheme.colors.primary,
-                color: "#fff",
-                px: 7,
-                py: 0.8,
-                fontWeight: 600,
-              }}
-            >
-              تطبيق الفلترة
-            </Button>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 3,
+            bgcolor: activeTheme.colors.bgelem,
+            px: 2.5,
+            py: 1.5,
+            borderRadius: 1.5,
+          }}
+        >
+          <AppButton
+            variant="outlined"
+            backgroundColor={activeTheme.colors.btn}
+            textColor={activeTheme.colors.mutedText}
+            borderColor={activeTheme.colors.border}
+            borderRadius={1.5}
+            px={5}
+            py={0.8}
+            fontSize={13}
+          >
+            كل المناطق
+          </AppButton>
+
+          <AppButton
+            variant="outlined"
+            backgroundColor={activeTheme.colors.btn}
+            textColor={activeTheme.colors.mutedText}
+            borderColor={activeTheme.colors.border}
+            borderRadius={1.5}
+            px={5}
+            py={0.8}
+            fontSize={13}
+          >
+            كل الحالات
+          </AppButton>
+          <Box sx={{ flexGrow: 1 }} />
+
+          {/* Apply button */}
+          <AppButton
+            variant="contained"
+            backgroundColor={activeTheme.colors.primary}
+            textColor={activeTheme.colors.onPrimary}
+            borderColor={activeTheme.colors.primary}
+            borderRadius={1.5}
+            px={7}
+            py={0.8}
+            fontWeight={600}
+          >
+            تطبيق الفلترة
+          </AppButton>
         </Box>
         <Box sx={{ flexGrow: 1 }} />
         {/* Stats cards */}
@@ -72,11 +71,11 @@ export default function FilterSearch() {
             px: 2.5,
             py: 1,
             minWidth: 140,
-            textAlign: "center",
+            textAlign: 'center',
             borderRadius: 1.5,
             bgcolor: activeTheme.colors.primary,
-            color: "#fff",
-            boxShadow: "0 3px 8px rgba(0,102,71,0.25)",
+            color: activeTheme.colors.onPrimary,
+            boxShadow: '0 3px 8px rgba(0,102,71,0.25)',
           }}
         >
           <Typography variant="h6" sx={{ fontWeight: 900, fontSize: 18 }}>
@@ -87,22 +86,25 @@ export default function FilterSearch() {
 
         <Card
           sx={{
-             px: 2.5,
+            px: 2.5,
             py: 1,
             minWidth: 140,
-            textAlign: "center",
+            textAlign: 'center',
             borderRadius: 1.5,
-            boxShadow: "0 2px 4px rgba(0,0,0,0.6)",
-            bgcolor:'#E4E2DE'
+            boxShadow: '0 2px 4px rgba(0,0,0,0.18)',
+            bgcolor: activeTheme.colors.surface,
+            border: `1px solid ${activeTheme.colors.danger300}`,
           }}
         >
-          <Typography variant="h6" sx={{ fontWeight: 800, fontSize: 18 }}>
+          <Typography
+            variant="h6"
+            sx={{ fontWeight: 800, fontSize: 18, color: activeTheme.colors.danger700 }}
+          >
             12
           </Typography>
           <Typography
             sx={{
-              color:
-                activeTheme.layout?.subTitle || activeTheme.colors.mutedText,
+              color: activeTheme.colors.mutedText,
               fontSize: 11,
             }}
           >
@@ -111,5 +113,5 @@ export default function FilterSearch() {
         </Card>
       </Box>
     </Box>
-  );
+  )
 }
