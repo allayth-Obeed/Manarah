@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="627" viewBox="0 0 1200 627">
+  <defs>
+    <style>
+      .text{font-family:Inter, Arial, Helvetica, sans-serif; fill:#0f172a; font-size:28px}
+      .small{font-size:18px}
+    </style>
+  </defs>
+  <rect width="1200" height="627" fill="#f3f4f6"/>
+  <g transform="translate(60,60)">
+    <rect width="540" height="507" rx="16" fill="#ffffff" stroke="#e6eef8"/>
+    <text x="30" y="40" class="text">Light Mode — Manarah</text>
+    <rect x="30" y="70" width="220" height="120" rx="12" fill="#ffffff" stroke="#e6eef8"/>
+    <circle cx="170" cy="130" r="26" fill="#ffd166"/>
+    <text x="30" y="230" class="small text">أيقونات، بطاقات، ونصوص واضحة على خلفية فاتحة</text>
+  </g>
+  <g transform="translate(600,60)">
+    <rect width="540" height="507" rx="16" fill="#071126" stroke="#0b1220"/>
+    <text x="30" y="40" class="text" style="fill:#e6eef8">Dark Mode — Manarah</text>
+    <rect x="30" y="70" width="220" height="120" rx="12" fill="#071a2b"/>
+    <circle cx="170" cy="130" r="26" fill="#60a5fa"/>
+    <text x="30" y="230" class="small text" style="fill:#94a3b8">نصوص وأيقونات متباينة على خلفية داكنة</text>
+  </g>
+  <g transform="translate(480,520)">
+    <rect x="0" y="-60" width="240" height="44" rx="22" fill="#e2e8f0"/>
+    <circle cx="36" cy="-38" r="16" fill="#ffd166"/>
+    <circle cx="204" cy="-38" r="16" fill="#0b1220"/>
+    <text x="0" y="-80" class="small text">تبديل الوضع — انتقال سلس</text>
+  </g>
+</svg>

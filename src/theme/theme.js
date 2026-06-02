@@ -35,7 +35,7 @@ export const themeTokens = {
       // Date box / small emphasis background
       dateBg: '#F5EBD3',
       // Element background used in filter bars and similar blocks.
-      bgelem: '#B0B0B0',
+      bgelem: '#F1F4F2',
       // Button background color for light controls.
       btn: '#F3F4F6',
       // Danger colors (new shades taken from provided design)
@@ -52,7 +52,7 @@ export const themeTokens = {
       // Inactive navigation item color.
       navInactive: '#7C879B',
       // Active navigation item background.
-      navActiveBg: '#ECEFEE',
+      navActiveBg: ' #CFE2F9',
       // Hover background for navigation items.
       navHoverBg: '#F5F7F8',
       // Active navigation item text color.
@@ -102,7 +102,7 @@ export const themeTokens = {
       // A darker primary used in some UI elements
       primaryDark: '#063B2B',
       // Primary brand color for buttons and focus states.
-      primary: '#004D34',
+      primary: '#004D35',
       // Secondary accent color for highlights.
       secondary: '#EAB308',
       // Text color used on secondary backgrounds in dark mode
@@ -114,7 +114,7 @@ export const themeTokens = {
       // Element background used in filter bars and similar blocks.
       bgelem: '#1A1A1A',
       // Button background color for dark controls.
-      btn: '#3E3E3E',
+      btn: '#2C2C2C',
       // Danger colors (dark variants)
       danger100: '#2B0B0B',
       danger300: '#4C0F0F',

@@ -1,63 +1,63 @@
-import AppBar from "@mui/material/AppBar";
-import Toolbar from "@mui/material/Toolbar";
-import { Avatar, Box, Divider, IconButton } from "@mui/material";
-import Typography from "@mui/material/Typography";
-import { styled } from "@mui/material/styles";
-import InputBase from "@mui/material/InputBase";
-import SearchIcon from "@mui/icons-material/Search";
-import AccountCircle from "@mui/icons-material/AccountCircle";
-import NotificationsIcon from "@mui/icons-material/Notifications";
-import LightModeIcon from "@mui/icons-material/LightMode";
-import DarkModeIcon from "@mui/icons-material/DarkMode";
-import { useTheme } from "../../theme/themeContext";
+import AppBar from '@mui/material/AppBar'
+import Toolbar from '@mui/material/Toolbar'
+import { Avatar, Box, Divider, IconButton } from '@mui/material'
+import Typography from '@mui/material/Typography'
+import { styled } from '@mui/material/styles'
+import InputBase from '@mui/material/InputBase'
+import SearchIcon from '@mui/icons-material/Search'
+import AccountCircle from '@mui/icons-material/AccountCircle'
+import NotificationsIcon from '@mui/icons-material/Notifications'
+import LightModeIcon from '@mui/icons-material/LightMode'
+import DarkModeIcon from '@mui/icons-material/DarkMode'
+import { useTheme } from '../../theme/themeContext'
 
-const drawerWidth = 240;
+const drawerWidth = 240
 
-const Search = styled("div")(({ theme }) => ({
-  position: "relative",
+const Search = styled('div')(({ theme }) => ({
+  position: 'relative',
   borderRadius: theme.shape.borderRadius,
-  width: "100%",
+  width: '100%',
   maxWidth: 430,
-}));
+}))
 
-const SearchIconWrapper = styled("div")(({ theme }) => ({
+const SearchIconWrapper = styled('div')(({ theme }) => ({
   padding: theme.spacing(0, 1),
-  height: "100%",
-  position: "absolute",
+  height: '100%',
+  position: 'absolute',
   right: 0,
-  pointerEvents: "none",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-}));
+  pointerEvents: 'none',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+}))
 
 const StyledInputBase = styled(InputBase)(({ theme }) => ({
-  color: "inherit",
-  "& .MuiInputBase-input": {
+  color: 'inherit',
+  '& .MuiInputBase-input': {
     padding: theme.spacing(1, 1, 1, 1),
     paddingRight: `calc(1em + ${theme.spacing(4)})`,
-    textAlign: "right",
-    transition: theme.transitions.create("width"),
-    width: "100%",
+    textAlign: 'right',
+    transition: theme.transitions.create('width'),
+    width: '100%',
   },
-}));
+}))
 
 function TopBar() {
-  const { activeTheme, themeMode, toggleTheme } = useTheme();
-  const palette = activeTheme.layout;
+  const { activeTheme, themeMode, toggleTheme } = useTheme()
+  const palette = activeTheme.layout
 
   const user = {
-    name: "احمد الموصلي",
-    role: "مشرف النظام",
-  };
+    name: 'أحمد المشرف',
+    role: 'مشرف النظام',
+  }
 
   return (
     <AppBar
       position="fixed"
       sx={{
-        width: { xs: "100%", md: `calc(100% - ${drawerWidth}px)` },
+        width: { xs: '100%', md: `calc(100% - ${drawerWidth}px)` },
         mr: { xs: 0, md: `${drawerWidth}px` },
-        boxShadow: "none",
+        boxShadow: 'none',
         borderBottom: `1px solid ${palette.sidebarBorder}`,
         backgroundColor: palette.sidebarBg,
         color: activeTheme.colors.text,
@@ -66,9 +66,9 @@ function TopBar() {
       <Toolbar sx={{ px: { xs: 1.5, md: 2.5 }, minHeight: 72 }}>
         <Box
           sx={{
-            width: "100%",
-            display: "flex",
-            alignItems: "center",
+            width: '100%',
+            display: 'flex',
+            alignItems: 'center',
             gap: { xs: 1, md: 2 },
           }}
         >
@@ -76,14 +76,14 @@ function TopBar() {
             sx={{
               px: 1,
               py: 0.5,
-              minWidth: { xs: "auto", md: 300 },
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
+              minWidth: { xs: 'auto', md: 300 },
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
               gap: 1,
             }}
           >
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <Avatar
                 sx={{
                   width: 30,
@@ -99,7 +99,7 @@ function TopBar() {
                   sx={{
                     fontSize: 14,
                     fontWeight: 700,
-                    display: { xs: "none", sm: "block" },
+                    display: { xs: 'none', sm: 'block' },
                   }}
                 >
                   {user.name}
@@ -108,7 +108,7 @@ function TopBar() {
                   sx={{
                     fontSize: 11,
                     color: activeTheme.colors.mutedText,
-                    display: { xs: "none", sm: "block" },
+                    display: { xs: 'none', sm: 'block' },
                   }}
                 >
                   {user.role}
@@ -124,36 +124,30 @@ function TopBar() {
                 size="small"
                 sx={{ color: activeTheme.colors.mutedText }}
               >
-                {themeMode === "dark" ? (
+                {themeMode === 'dark' ? (
                   <LightModeIcon fontSize="small" />
                 ) : (
                   <DarkModeIcon fontSize="small" />
                 )}
               </IconButton>
-              <IconButton
-                size="small"
-                sx={{ color: activeTheme.colors.mutedText }}
-              >
+              <IconButton size="small" sx={{ color: activeTheme.colors.mutedText }}>
                 <AccountCircle fontSize="small" />
               </IconButton>
-              <IconButton
-                size="small"
-                sx={{ color: activeTheme.colors.mutedText }}
-              >
+              <IconButton size="small" sx={{ color: activeTheme.colors.mutedText }}>
                 <NotificationsIcon fontSize="small" />
               </IconButton>
             </Box>
           </Box>
-          <Box sx={{ flexGrow: 1, display: "flex", justifyContent: "center"}}>
+          <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center' }}>
             {/* CHANGES: search uses theme tokens from `palette` for background and border */}
             <Search
               sx={{
                 border: `1px solid ${palette.searchBorder}`,
                 backgroundColor: palette.searchBaseBg,
                 borderRadius: 4,
-                width: { xs: "100%", sm: "60%", md: "auto" },
-                maxWidth: { xs: "100%", sm: 430 },
-                "&:hover": {
+                width: { xs: '100%', sm: '60%', md: 'auto' },
+                maxWidth: { xs: '100%', sm: 430 },
+                '&:hover': {
                   backgroundColor: palette.searchHoverBg,
                 },
               }}
@@ -164,7 +158,7 @@ function TopBar() {
               <StyledInputBase
                 dir="rtl"
                 placeholder="بحث عن مسجد أو إمام..."
-                inputProps={{ "aria-label": "search" }}
+                inputProps={{ 'aria-label': 'search' }}
               />
             </Search>
           </Box>
@@ -173,25 +167,46 @@ function TopBar() {
             sx={{
               px: 1.5,
               py: 0.5,
-              minWidth: "fit-content",
+              minWidth: 'fit-content',
             }}
           >
-            <Typography
-              variant="h6"
-              component="div"
-              sx={{
-                fontWeight: 700,
-                lineHeight: 1.1,
-                color: activeTheme.colors.primary,
-              }}
-            >
-              مديرية الأوقاف
-            </Typography>
+            <Box className="group" sx={{ cursor: 'pointer' }}>
+              <Typography
+                variant="h6"
+                component="div"
+                sx={{
+                  fontWeight: 700,
+                  lineHeight: 1.1,
+                  color: activeTheme.colors.primary,
+                }}
+              >
+                مديرية الأوقاف
+              </Typography>
+              <Typography
+                sx={{
+                  fontSize: 12,
+                  lineHeight: 1.3,
+                  color: activeTheme.colors.secondary,
+                  transition: 'opacity 0.2s ease, transform 0.2s ease',
+                  display: { xs: 'block' },
+                  '@media (min-width:768px)': {
+                    opacity: 0,
+                    transform: 'translateY(-4px)',
+                    '.group:hover &': {
+                      opacity: 1,
+                      transform: 'translateY(0)',
+                    },
+                  },
+                }}
+              >
+                نظام إدارة الأصول
+              </Typography>
+            </Box>
           </Box>
         </Box>
       </Toolbar>
     </AppBar>
-  );
+  )
 }
 
-export default TopBar;
+export default TopBar

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="627" viewBox="0 0 1200 627">
+  <style> .label{font-family:Inter, Arial, sans-serif; font-size:18px; fill:#0f172a} </style>
+  <rect width="1200" height="627" fill="#fff"/>
+  <g transform="translate(80,60)">
+    <text x="0" y="0" class="label" style="font-size:28px">Color tokens — Manarah</text>
+    <g transform="translate(0,30)">
+      <rect x="0" y="10" width="160" height="120" fill="#ffffff" stroke="#e6eef8"/>
+      <text x="10" y="155" class="label">--bg: #ffffff</text>
+      <rect x="200" y="10" width="160" height="120" fill="#f8fafc" stroke="#e6eef8"/>
+      <text x="210" y="155" class="label">--surface: #f8fafc</text>
+      <rect x="400" y="10" width="160" height="120" fill="#0f172a"/>
+      <text x="410" y="155" class="label" style="fill:#fff">--text: #0f172a</text>
+      <rect x="600" y="10" width="160" height="120" fill="#64748b"/>
+      <text x="610" y="155" class="label">--muted: #64748b</text>
+      <rect x="800" y="10" width="160" height="120" fill="#2563eb"/>
+      <text x="810" y="155" class="label" style="fill:#fff">--primary: #2563eb</text>
+    </g>
+  </g>
+</svg>

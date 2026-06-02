@@ -1,26 +1,41 @@
 import './App.css'
 import AppLayout from './Pages/MainPage/AppLayout'
 import { ThemeProvider } from './theme/themeProvider'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
-import Preachers from './Pages/PreachersPage/Preachers'
-import Employees from './Pages/EmployeesPage/Employees'
-import Mosque from './Pages/MosquesPage/Mosque'
-import Dashboard from './Pages/DashboardPage/Dashboard'
+import { lazy, Suspense } from 'react'
+import { createBrowserRouter, Navigate, Outlet, RouterProvider } from 'react-router-dom'
+
+const Preachers = lazy(() => import('./Pages/PreachersPage/Preachers'))
+const Employees = lazy(() => import('./Pages/EmployeesPage/Employees'))
+const Mosque = lazy(() => import('./Pages/MosquesPage/Mosque'))
+const Dashboard = lazy(() => import('./Pages/DashboardPage/Dashboard'))
+const Announcements = lazy(() => import('./Pages/Announcements/Announcements'))
+
+const router = createBrowserRouter([
+  {
+    path: '/',
+    element: (
+      <AppLayout>
+        <Outlet />
+      </AppLayout>
+    ),
+    children: [
+      { index: true, element: <Dashboard /> },
+      { path: 'preachers', element: <Preachers /> },
+      { path: 'employees', element: <Employees /> },
+      { path: 'mosques', element: <Mosque /> },
+      { path: '*', element: <Navigate to="/" replace /> },
+      { path: 'announcements', element: <Announcements /> },
+    ],
+  },
+])
 
 function App() {
   return (
-    <BrowserRouter>
-      <ThemeProvider>
-        <AppLayout>
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/preachers" element={<Preachers />} />
-            <Route path="/employees" element={<Employees />} />
-            <Route path="/mosques" element={<Mosque />} />
-          </Routes>
-        </AppLayout>
-      </ThemeProvider>
-    </BrowserRouter>
+    <ThemeProvider>
+      <Suspense fallback={null}>
+        <RouterProvider router={router} />
+      </Suspense>
+    </ThemeProvider>
   )
 }
 

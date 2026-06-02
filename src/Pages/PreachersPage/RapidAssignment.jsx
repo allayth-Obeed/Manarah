@@ -3,7 +3,7 @@ import React from 'react'
 import { Avatar, Box, Card, CardContent, Typography } from '@mui/material'
 
 import { useTheme } from '../../theme/themeContext'
-import { CalendarToday, HomeWorkOutlined, WarningAmber, Settings } from '@mui/icons-material'
+import { CalendarToday, HomeWorkOutlined, WarningAmber, Settings, Person2Outlined } from '@mui/icons-material'
 import AppButton from '../../components/common/AppButton'
 
 export default function RapidAssignment() {
@@ -13,6 +13,10 @@ export default function RapidAssignment() {
     <Box sx={{ direction: 'rtl' }}>
       {/* Form Card */}
       <Card sx={{ borderRadius: 2, p: 2, background: activeTheme.colors.surface }}>
+
+         <Typography variant="h6" fontWeight={700} mb={2} color={activeTheme.colors.text}>
+         الجمعة القادمة
+        </Typography>
         <CardContent sx={{ p: 0 }}>
           {/* Date Box */}
           <Box display="flex" justifyContent="flex-end" mb={2}>
@@ -35,8 +39,11 @@ export default function RapidAssignment() {
           </Box>
 
           {/* Mosque */}
-          <Box display="flex" alignItems="center" gap={1} mb={2}>
-            <HomeWorkOutlined fontSize="small" color="action" />
+          <Box
+            mb={2}
+            sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '4' }}
+          >
+            <HomeWorkOutlined fontSize="small" color="action" sx={{ marginLeft: 1 }} />
             <Typography variant="body2" color="text.secondary">
               المسجد المستهدف
             </Typography>
@@ -56,20 +63,22 @@ export default function RapidAssignment() {
           </Box>
 
           {/* Imam */}
-          <Box display="flex" alignItems="center" gap={1} mb={2}>
+          <Box sx={{display:"flex", alignItems:"center",flexDirection:"row"}} mb={2}>
+            <Person2Outlined fontSize="small" color="action" sx={{ marginLeft: 1 }} />
             <Typography variant="body2" color="text.secondary">
-              المحطوب المختار
+              الخطيب المختار
             </Typography>
           </Box>
 
           <Box
-            display="flex"
-            gap={1}
             sx={{
               p: 1.5,
               background: activeTheme.colors.panelBg,
               borderRadius: 1.5,
               mb: 2,
+              display: 'flex',
+              gap: 1,
+              flexDirection: 'row',
               alignItems: 'center',
             }}
           >

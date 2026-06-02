@@ -29,7 +29,7 @@ const navItems = [
   { label: 'توزيع الخطباء', icon: EventNoteOutlinedIcon, path: '/preachers' },
   { label: 'الموظفين', icon: BadgeOutlinedIcon, path: '/employees' },
   { label: 'التبرعات', icon: PaymentsOutlinedIcon, path: '/donations' },
-  { label: 'الإعلانات', icon: CampaignOutlinedIcon, path: '/ads' },
+  { label: 'الإعلانات', icon: CampaignOutlinedIcon, path: '/announcements' },
 ]
 
 const AppLayout = ({ children }) => {
@@ -73,16 +73,20 @@ const AppLayout = ({ children }) => {
           variant="permanent"
           anchor="right"
         >
-          <Box className=" mt-3 mb-2  flex items-start gap-1.5">
+          <Box
+            className="mt-3 mb-2 flex items-start gap-1.5 group"
+            sx={{ cursor: 'pointer' }}
+          >
             <Box
               sx={{
                 bgcolor: activeTheme.colors.primary,
               }}
               className="w-10 h-10 rounded-md text-white flex items-center justify-center"
+              // make when be hover show explanation of the typograghy has heddin
             >
               <MosqueRoundedIcon fontSize="18px" />
             </Box>
-            <Box>
+            <Box className="hidden md:block">
               <Typography
                 sx={{
                   fontSize: 31,
