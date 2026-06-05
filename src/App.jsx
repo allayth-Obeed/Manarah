@@ -9,6 +9,7 @@ const Employees = lazy(() => import('./Pages/EmployeesPage/Employees'))
 const Mosque = lazy(() => import('./Pages/MosquesPage/Mosque'))
 const Dashboard = lazy(() => import('./Pages/DashboardPage/Dashboard'))
 const Announcements = lazy(() => import('./Pages/Announcements/Announcements'))
+const Donations =lazy(()=> import('./Pages/DonationsPage/Donations'))
 
 const router = createBrowserRouter([
   {
@@ -25,6 +26,7 @@ const router = createBrowserRouter([
       { path: 'mosques', element: <Mosque /> },
       { path: '*', element: <Navigate to="/" replace /> },
       { path: 'announcements', element: <Announcements /> },
+      { path: 'Donations', element: <Donations /> },
     ],
   },
 ])
