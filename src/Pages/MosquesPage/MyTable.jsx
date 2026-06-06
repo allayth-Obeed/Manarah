@@ -73,7 +73,8 @@ const TOTAL_PAGES = PAGE_INDEXES.length
 // تُرجع أنماط العرض (أيقونة، خلفية، نوع الشيب) بناءً على حالة المسجد.
 // تستعمل القيمة الافتراضية إذا لم تكن الحالة معرفة صراحةً.
 const getStatusStyle = (status, colors) => {
-  if (status === 'نشط') {
+  // دعم حالات الموظفين البسيطة إلى جانب حالات المساجد
+  if (status === 'على رأس العمل' || status === 'نشط') {
     return {
       iconBg: alpha(colors.primary, 0.12),
       icon: <MosqueIcon sx={{ color: colors.primary, fontSize: 20 }} />,
@@ -81,6 +82,18 @@ const getStatusStyle = (status, colors) => {
         color: colors.primary,
         bgcolor: alpha(colors.primary, 0.12),
         border: `1px solid ${alpha(colors.primary, 0.2)}`,
+      },
+    }
+  }
+
+  if (status === 'إجازة') {
+    return {
+      iconBg: alpha(colors.secondary, 0.14),
+      icon: <BuildIcon sx={{ color: colors.secondary, fontSize: 20 }} />,
+      chipSx: {
+        color: colors.secondary,
+        bgcolor: alpha(colors.secondary, 0.14),
+        border: `1px solid ${alpha(colors.secondary, 0.25)}`,
       },
     }
   }
@@ -127,34 +140,132 @@ const sortRows = (rows, orderBy, order) => {
   })
 }
 
-// مكوّن الجدول الرئيسي لعرض بيانات المساجد.
-// يدير الحالة المحلية (الصفحة، ترتيب الأعمدة)، يحسب الصفوف المرتبة،
-// ويعرض واجهة المستخدم بما في ذلك أزرار التصفح والإجراءات.
-const MyTable = () => {
+// مكوّن الجدول القابل لإعادة الاستخدام.
+// يقبل `rows` و `columns` وقيَم الترحيل كخصائص، ويعطي سلوكًا افتراضيًا لصفحات المساجد إذا لم تُمرّر خصائص.
+const MyTable = ({
+  rows: propRows,
+  columns: propColumns,
+  totalRows: propTotalRows,
+  totalPages: propTotalPages,
+  entityLabel = 'مسجد',
+  rowsPerPage: propRowsPerPage,
+}) => {
   const { activeTheme } = useTheme()
   const colors = activeTheme.colors
+
+  const rows = propRows || ROWS
+  const columns = propColumns || COLUMNS
+  const rowsPerPage = propRowsPerPage || ROWS_PER_PAGE
+  const totalRows = propTotalRows || TOTAL_ROWS
+  const totalPages = propTotalPages || TOTAL_PAGES
+  const pageIndexes = propTotalPages
+    ? Array.from({ length: totalPages }, (_, i) => i)
+    : PAGE_INDEXES
+
   const [page, setPage] = React.useState(0)
-  const [orderBy, setOrderBy] = React.useState('mosque')
+  const [orderBy, setOrderBy] = React.useState(columns[0]?.key || 'mosque')
   const [order, setOrder] = React.useState('asc')
 
-  // يغيّر الصفحة الحالية إلى `newPage` إذا كانت ضمن النطاق المسموح.
   const handleChangePage = (newPage) => {
-    if (newPage < 0 || newPage >= TOTAL_PAGES) return
+    if (newPage < 0 || newPage >= totalPages) return
     setPage(newPage)
   }
 
-  // يتعامل مع طلبات ترتيب الأعمدة: عكس اتجاه الترتيب إذا نقرنا على العمود نفسه
-  // أو تحديد عمود جديد للترتيب.
   const handleRequestSort = (property) => {
     const isAsc = orderBy === property && order === 'asc'
     setOrder(isAsc ? 'desc' : 'asc')
     setOrderBy(property)
   }
 
-  const sortedRows = React.useMemo(() => sortRows(ROWS, orderBy, order), [orderBy, order])
+  const sortedRows = React.useMemo(() => sortRows(rows, orderBy, order), [rows, orderBy, order])
 
-  const rangeStart = page * ROWS_PER_PAGE + 1
-  const rangeEnd = Math.min((page + 1) * ROWS_PER_PAGE, TOTAL_ROWS)
+  const rangeStart = page * rowsPerPage + 1
+  const rangeEnd = Math.min((page + 1) * rowsPerPage, totalRows)
+
+  // دوال مساعدة للعرض حسب نوع العمود
+  const renderCellContent = (row, column) => {
+    const value = row[column.key]
+
+    // حالة خاصة لعرض بيانات المسجد كما كانت سابقًا
+    if (!propColumns && column.key === 'mosque') {
+      const statusStyle = getStatusStyle(row.status, colors)
+      const isMaintenance = row.status === 'تحت الصيانة'
+      const mutedColor = colors.mutedText
+
+      return (
+        <Stack direction="row" spacing={2} alignItems="center" justifyContent="flex-end">
+          <Box
+            sx={{
+              width: 33,
+              height: 33,
+              borderRadius: 1.5,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              bgcolor: statusStyle.iconBg,
+            }}
+          >
+            {statusStyle.icon}
+          </Box>
+          <Box sx={{ textAlign: 'right', paddingRight: 1 }}>
+            <Typography sx={{ fontWeight: 700, color: isMaintenance ? mutedColor : colors.text }}>
+              {row.mosque}
+            </Typography>
+            <Typography sx={{ fontSize: 12, color: isMaintenance ? mutedColor : colors.mutedText }}>
+              {row.founded}
+            </Typography>
+          </Box>
+        </Stack>
+      )
+    }
+
+    // avatar: اسم + صورة (أو أحرف اسمية) + سطر فرعي إن وُجد
+    if (column.type === 'avatar') {
+      const parts = []
+      if (row.job) parts.push(row.job)
+      if (row.subtitle) parts.push(row.subtitle)
+      if (row.founded) parts.push(row.founded)
+      const subtitle = parts.join(' • ')
+      const imgSrc = row.avatar || row.imamImg || row.img
+      const initials = String(value || '')
+        .split(' ')
+        .map((n) => n[0])
+        .slice(0, 2)
+        .join('')
+
+      return (
+        <Stack direction="row" spacing={1} alignItems="center" justifyContent="flex-end">
+          <Avatar src={imgSrc} sx={{ width: 40, height: 40 }}>
+            {!imgSrc && initials}
+          </Avatar>
+          <Box sx={{ textAlign: 'right' }}>
+            <Typography sx={{ fontWeight: 700 }}>{value}</Typography>
+            {subtitle ? (
+              <Typography sx={{ fontSize: 11, color: colors.mutedText }}>{subtitle}</Typography>
+            ) : null}
+          </Box>
+        </Stack>
+      )
+    }
+
+    if (column.type === 'chip') {
+      const statusStyle = getStatusStyle(value || row.status, colors)
+      return (
+        <Chip
+          label={value || row.status}
+          size="small"
+          variant="outlined"
+          sx={{ px: 1, ...statusStyle.chipSx }}
+        />
+      )
+    }
+
+    if (column.key === 'capacity' && typeof value === 'number') {
+      return formatNumber(value)
+    }
+
+    return value ?? ''
+  }
 
   return (
     <Paper
@@ -169,16 +280,11 @@ const MyTable = () => {
       <TableContainer>
         <Table
           dir="rtl"
-          sx={{
-            direction: 'rtl',
-            '& .MuiTableCell-root': {
-              borderColor: colors.border,
-            },
-          }}
+          sx={{ direction: 'rtl', '& .MuiTableCell-root': { borderColor: colors.border } }}
         >
           <TableHead>
             <TableRow>
-              {COLUMNS.map((column) => (
+              {columns.map((column) => (
                 <TableCell
                   key={column.key}
                   align={column.align}
@@ -196,9 +302,7 @@ const MyTable = () => {
                     sx={{
                       color: colors.mutedText,
                       '&.Mui-active': { color: colors.primary },
-                      '& .MuiTableSortLabel-icon': {
-                        color: `${colors.primary} !important`,
-                      },
+                      '& .MuiTableSortLabel-icon': { color: `${colors.primary} !important` },
                     }}
                   >
                     {column.label}
@@ -219,7 +323,6 @@ const MyTable = () => {
           </TableHead>
           <TableBody>
             {sortedRows.map((row) => {
-              const statusStyle = getStatusStyle(row.status, colors)
               const isMaintenance = row.status === 'تحت الصيانة'
               const mutedColor = colors.mutedText
 
@@ -227,113 +330,50 @@ const MyTable = () => {
                 <TableRow
                   key={row.id}
                   hover
-                  sx={{
-                    '&:hover': {
-                      bgcolor: alpha(colors.primary, 0.04),
-                    },
-                  }}
+                  sx={{ '&:hover': { bgcolor: alpha(colors.primary, 0.04) } }}
                 >
-                  <TableCell align="right">
+                  {columns.map((column) => (
+                    <TableCell
+                      key={column.key}
+                      align={column.align}
+                      sx={{ color: isMaintenance ? mutedColor : colors.text }}
+                    >
+                      {renderCellContent(row, column)}
+                    </TableCell>
+                  ))}
+
+                  <TableCell align="center">
                     <Stack
                       direction="row"
-                      spacing={2}
+                      spacing={0.75}
+                      justifyContent="center"
                       alignItems="center"
-                      justifyContent="flex-end"
                     >
-                      <Box
-                        sx={{
-                          width: 33,
-                          height: 33,
-                          borderRadius: 1.5,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          bgcolor: statusStyle.iconBg,
-                        }}
-                      >
-                        {statusStyle.icon}
-                      </Box>
-                      <Box sx={{ textAlign: 'right', paddingRight: 1 }}>
+                      {row.avatar ? (
                         <Typography
+                          component="a"
                           sx={{
+                            color: colors.primary,
                             fontWeight: 700,
-                            color: isMaintenance ? mutedColor : colors.text,
+                            cursor: 'pointer',
+                            textDecoration: 'none',
+                            fontSize: 13,
                           }}
                         >
-                          {row.mosque}
+                          عرض التفاصيل
                         </Typography>
-                        <Typography
-                          sx={{
-                            fontSize: 12,
-                            color: isMaintenance ? mutedColor : colors.mutedText,
-                          }}
-                        >
-                          {row.founded}
-                        </Typography>
-                      </Box>
-                    </Stack>
-                  </TableCell>
+                      ) : null}
 
-                  <TableCell align="right" sx={{ color: isMaintenance ? mutedColor : colors.text }}>
-                    {row.location}
-                  </TableCell>
-
-                  <TableCell align="right">
-                    <Stack
-                      direction="row"
-                      spacing={1}
-                      alignItems="center"
-                      justifyContent="flex-end"
-                    >
-                      <Avatar
-                        src={row.imamImg}
-                        sx={{
-                          width: 32,
-                          height: 32,
-                          opacity: isMaintenance ? 0.55 : 1,
-                        }}
-                      />
-                      <Typography sx={{ color: isMaintenance ? mutedColor : colors.text }}>
-                        {row.imam}
-                      </Typography>
-                    </Stack>
-                  </TableCell>
-
-                  <TableCell
-                    align="center"
-                    sx={{ color: isMaintenance ? mutedColor : colors.text }}
-                  >
-                    {formatNumber(row.capacity)}
-                  </TableCell>
-
-                  <TableCell align="center">
-                    <Chip
-                      label={row.status}
-                      size="small"
-                      variant="outlined"
-                      sx={{
-                        px: 1,
-                        ...statusStyle.chipSx,
-                      }}
-                    />
-                  </TableCell>
-
-                  <TableCell align="center">
-                    <Stack direction="row" spacing={0.5} justifyContent="center">
                       <IconButton size="small" aria-label="more">
                         <MoreVertIcon
                           fontSize="small"
-                          sx={{
-                            color: isMaintenance ? mutedColor : colors.mutedText,
-                          }}
+                          sx={{ color: isMaintenance ? mutedColor : colors.mutedText }}
                         />
                       </IconButton>
                       <IconButton size="small" aria-label="delete">
                         <DeleteIcon
                           fontSize="small"
-                          sx={{
-                            color: isMaintenance ? mutedColor : colors.mutedText,
-                          }}
+                          sx={{ color: isMaintenance ? mutedColor : colors.mutedText }}
                         />
                       </IconButton>
                     </Stack>
@@ -344,6 +384,7 @@ const MyTable = () => {
           </TableBody>
         </Table>
       </TableContainer>
+
       {/* الشريط السفلي */}
       <Box
         sx={{
@@ -356,15 +397,15 @@ const MyTable = () => {
           bgcolor: alpha(colors.primary, 0.02),
         }}
       >
-        <Typography sx={{ color: colors.mutedText, fontSize: 13 }}>
-          {`عرض ${rangeStart}-${rangeEnd} من أصل ${TOTAL_ROWS.toLocaleString('en-US')} مسجداً`}
-        </Typography>
+        <Typography
+          sx={{ color: colors.mutedText, fontSize: 13 }}
+        >{`عرض ${rangeStart}-${rangeEnd} من أصل ${totalRows.toLocaleString('en-US')} ${entityLabel}اً`}</Typography>
 
         <Box dir="ltr" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <IconButton
             size="small"
             onClick={() => handleChangePage(page + 1)}
-            disabled={page === TOTAL_PAGES - 1}
+            disabled={page === totalPages - 1}
             sx={{
               border: `1px solid ${colors.border}`,
               borderRadius: 1,
@@ -377,7 +418,7 @@ const MyTable = () => {
             <ChevronLeftIcon fontSize="small" />
           </IconButton>
 
-          {PAGE_INDEXES.map((pageIndex) => (
+          {pageIndexes.map((pageIndex) => (
             <Box
               key={pageIndex}
               onClick={() => handleChangePage(pageIndex)}
@@ -388,9 +429,7 @@ const MyTable = () => {
                 alignItems: 'center',
                 justifyContent: 'center',
                 borderRadius: 1.25,
-                border: `1px solid ${
-                  pageIndex === page ? activeTheme.layout.navActiveBorder : colors.border
-                }`,
+                border: `1px solid ${pageIndex === page ? activeTheme.layout.navActiveBorder : colors.border}`,
                 bgcolor: pageIndex === page ? colors.primary : colors.surface,
                 color: pageIndex === page ? colors.surface : colors.text,
                 fontSize: 14,

@@ -252,10 +252,10 @@ export default function DonationsOverview() {
                   <Typography
                     sx={{ fontSize: 11, fontWeight: 800, color: colors.secondary, mb: 0.5 }}
                   >
-                    قصة النجاح
+                    قصص النجاح
                   </Typography>
                   <Typography sx={{ fontSize: 14, fontWeight: 700, color: colors.onPrimary }}>
-                    اكتمال ترميم مسجد الصحابة بفضل تبرعاتكم
+                    اكتمال ترميم مسجد الصحابة
                   </Typography>
                 </Box>
               </Box>
