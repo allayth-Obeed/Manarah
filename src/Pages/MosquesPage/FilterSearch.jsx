@@ -1,10 +1,8 @@
-import React from 'react'
 import { Box, Typography, Card, Stack } from '@mui/material'
-import AddIcon from '@mui/icons-material/Add'
 import AppButton from '../../components/common/AppButton'
 import { useTheme } from '../../theme/themeContext'
 
-export default function FilterSearch() {
+export default function FilterSearch({ onApplyFilter }) {
   const { activeTheme } = useTheme()
 
   return (
@@ -60,6 +58,7 @@ export default function FilterSearch() {
             px={7}
             py={0.8}
             fontWeight={600}
+            onClick={onApplyFilter}
           >
             تطبيق الفلترة
           </AppButton>

@@ -22,6 +22,7 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 import DeleteIcon from '@mui/icons-material/Delete'
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import MosqueIcon from '@mui/icons-material/Mosque'
+import PersonIcon from '@mui/icons-material/Person'
 import { useTheme } from '../../theme/themeContext'
 
 const ROWS = [
@@ -31,7 +32,6 @@ const ROWS = [
     founded: 'تاريخ التأسيس: 1994',
     location: 'الزهراء، حمص',
     imam: 'د. محمود المشهداني',
-    imamImg: 'https://via.placeholder.com/40',
     capacity: 2500,
     status: 'نشط',
   },
@@ -41,7 +41,6 @@ const ROWS = [
     founded: 'تاريخ التأسيس: 2005',
     location: 'الحميدية، حمص',
     imam: 'الشيخ علي الراوي',
-    imamImg: 'https://via.placeholder.com/40',
     capacity: 1800,
     status: 'نشط',
   },
@@ -51,7 +50,6 @@ const ROWS = [
     founded: 'خاضع للترميم حاليا',
     location: 'المدينة القديمة، حمص',
     imam: 'غير معرّف',
-    imamImg: 'https://via.placeholder.com/40',
     capacity: 3200,
     status: 'تحت الصيانة',
   },
@@ -149,6 +147,8 @@ const MyTable = ({
   totalPages: propTotalPages,
   entityLabel = 'مسجد',
   rowsPerPage: propRowsPerPage,
+  onRowMoreClick,
+  onRowDeleteClick,
 }) => {
   const { activeTheme } = useTheme()
   const colors = activeTheme.colors
@@ -226,17 +226,11 @@ const MyTable = ({
       if (row.subtitle) parts.push(row.subtitle)
       if (row.founded) parts.push(row.founded)
       const subtitle = parts.join(' • ')
-      const imgSrc = row.avatar || row.imamImg || row.img
-      const initials = String(value || '')
-        .split(' ')
-        .map((n) => n[0])
-        .slice(0, 2)
-        .join('')
 
       return (
         <Stack direction="row" spacing={1} alignItems="center" justifyContent="flex-end">
-          <Avatar src={imgSrc} sx={{ width: 40, height: 40 }}>
-            {!imgSrc && initials}
+          <Avatar sx={{ width: 40, height: 40 }}>
+            <PersonIcon sx={{ fontSize: 22 }} />
           </Avatar>
           <Box sx={{ textAlign: 'right' }}>
             <Typography sx={{ fontWeight: 700 }}>{value}</Typography>
@@ -244,6 +238,17 @@ const MyTable = ({
               <Typography sx={{ fontSize: 11, color: colors.mutedText }}>{subtitle}</Typography>
             ) : null}
           </Box>
+        </Stack>
+      )
+    }
+
+    if (!propColumns && column.key === 'imam') {
+      return (
+        <Stack direction="row" spacing={1} alignItems="center" justifyContent="flex-end">
+          <Avatar sx={{ width: 36, height: 36 }}>
+            <PersonIcon sx={{ fontSize: 20 }} />
+          </Avatar>
+          <Typography sx={{ fontWeight: 600 }}>{value}</Typography>
         </Stack>
       )
     }
@@ -364,13 +369,21 @@ const MyTable = ({
                         </Typography>
                       ) : null}
 
-                      <IconButton size="small" aria-label="more">
+                      <IconButton
+                        size="small"
+                        aria-label="more"
+                        onClick={() => onRowMoreClick?.(row)}
+                      >
                         <MoreVertIcon
                           fontSize="small"
                           sx={{ color: isMaintenance ? mutedColor : colors.mutedText }}
                         />
                       </IconButton>
-                      <IconButton size="small" aria-label="delete">
+                      <IconButton
+                        size="small"
+                        aria-label="delete"
+                        onClick={() => onRowDeleteClick?.(row)}
+                      >
                         <DeleteIcon
                           fontSize="small"
                           sx={{ color: isMaintenance ? mutedColor : colors.mutedText }}
