@@ -1,9 +1,10 @@
-import React from 'react'
+import React, { useState } from 'react'
 import MainFun from '../DashboardPage/MainFun'
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined'
 import PersonAddAlt1OutlinedIcon from '@mui/icons-material/PersonAddAlt1Outlined'
 import EmployeesHeader from './EmployeesHeader'
 import MyTable from '../MosquesPage/MyTable'
+import EmployeesDialogs from '../../components/Dialogs/EmployeesDialogs'
 
 const employeeColumns = [
   {
@@ -67,7 +68,24 @@ const employeeRows = [
   },
 ]
 
+const initialEmployeeForm = {
+  name: '',
+  nationalId: '',
+  jobTitle: '',
+  hireDate: '',
+}
+
 export default function Employees() {
+  const [addOpen, setAddOpen] = useState(false)
+  const [employeeForm, setEmployeeForm] = useState(initialEmployeeForm)
+
+  const handleAddSubmit = (e) => {
+    e?.preventDefault()
+    console.log('Employee form submitted:', employeeForm)
+    setAddOpen(false)
+    setEmployeeForm(initialEmployeeForm)
+  }
+
   return (
     <div>
       <MainFun
@@ -77,6 +95,7 @@ export default function Employees() {
         addButton="إضافة موظف جديد"
         announcementIcon={<FileDownloadOutlinedIcon />}
         addIcon={<PersonAddAlt1OutlinedIcon />}
+        onAddClick={() => setAddOpen(true)}
       />
 
       <EmployeesHeader />
@@ -87,6 +106,14 @@ export default function Employees() {
         totalRows={employeeRows.length}
         totalPages={1}
         entityLabel="موظف"
+      />
+
+      <EmployeesDialogs
+        addOpen={addOpen}
+        setAddOpen={setAddOpen}
+        employeeForm={employeeForm}
+        setEmployeeForm={setEmployeeForm}
+        handleAddSubmit={handleAddSubmit}
       />
     </div>
   )

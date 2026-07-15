@@ -73,10 +73,7 @@ const AppLayout = ({ children }) => {
           variant="permanent"
           anchor="right"
         >
-          <Box
-            className="mt-3 mb-2 flex items-start gap-1.5 group"
-            sx={{ cursor: 'pointer' }}
-          >
+          <Box className="mt-3 mb-2 flex items-start gap-1.5 group" sx={{ cursor: 'pointer' }}>
             <Box
               sx={{
                 bgcolor: activeTheme.colors.primary,

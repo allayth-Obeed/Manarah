@@ -13,7 +13,7 @@ const defaultLabels = {
 
 const defaultIcons = {
   announcementIcon: <CampaignOutlinedIcon sx={{ color: 'activeTheme.colors.primary' }} />,
-  addIcon: <AddIcon sx={{ border: '2px solid', borderRadius: '50%'}} />,
+  addIcon: <AddIcon sx={{ border: '2px solid', borderRadius: '50%' }} />,
 }
 
 export default function MainFun({
@@ -23,8 +23,10 @@ export default function MainFun({
   addButton = defaultLabels.addButton,
   announcementIcon = defaultIcons.announcementIcon,
   addIcon = defaultIcons.addIcon,
-  showAnnouncementButton = true, // خاصية جديدة
-  showAddButton = true, // خاصية جديدة
+  showAnnouncementButton = true,
+  showAddButton = true,
+  onAnnouncementClick,
+  onAddClick,
 }) {
   const { activeTheme } = useTheme()
   return (
@@ -65,6 +67,7 @@ export default function MainFun({
               py={0.8}
               fontSize={14}
               minWidth={140}
+              onClick={onAnnouncementClick}
               sx={{ mr: 2, boxShadow: '0 6px 12px rgba(0,0,0,0.08)', flexDirection: 'row-reverse' }}
             >
               {announcementButton}
@@ -85,6 +88,7 @@ export default function MainFun({
               py={0.8}
               fontSize={14}
               minWidth={140}
+              onClick={onAddClick}
               sx={{ mr: 2, boxShadow: '0 6px 12px rgba(0,0,0,0.08)', flexDirection: 'row-reverse' }}
             >
               {addButton}
