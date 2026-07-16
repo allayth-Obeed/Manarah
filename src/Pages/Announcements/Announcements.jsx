@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import MainFun from '../DashboardPage/MainFun'
 import AnnouncementsStats from '../../components/Announcements/AnnouncementsStats'
 import AnnouncementCard from '../../components/Announcements/AnnouncementCard'
+import AnnouncementsDialogs from '../../components/Dialogs/AnnouncementsDialogs'
 import mosqueImg from '../../assets/images/Mosque.png'
 
 const MOCK = [
@@ -29,9 +30,20 @@ const MOCK = [
   },
 ]
 
+const initialAnnouncementForm = {
+  title: '',
+  content: '',
+  date: '',
+  status: 'مسودة',
+}
+
 export default function Announcements() {
   const [loading, setLoading] = useState(true)
   const [items, setItems] = useState([])
+  const [addOpen, setAddOpen] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
+  const [selectedRow, setSelectedRow] = useState(null)
+  const [announcementForm, setAnnouncementForm] = useState(initialAnnouncementForm)
 
   useEffect(() => {
     const t = setTimeout(() => {
@@ -41,6 +53,19 @@ export default function Announcements() {
     return () => clearTimeout(t)
   }, [])
 
+  const handleAddSubmit = (e) => {
+    e?.preventDefault()
+    console.log('Announcement form submitted:', announcementForm)
+    setAddOpen(false)
+    setAnnouncementForm(initialAnnouncementForm)
+  }
+
+  const handleConfirmDelete = () => {
+    console.log('Announcement deleted:', selectedRow?.title)
+    setDeleteOpen(false)
+    setSelectedRow(null)
+  }
+
   return (
     <div className="space-y-6">
       <MainFun
@@ -48,6 +73,7 @@ export default function Announcements() {
         description="إدارة وتنسيق التعميمات الرسمية، إعلانات الوظائف، والفعاليات الدينية للمديرية."
         showAnnouncementButton={false}
         addButton="إعلان جديد"
+        onAddClick={() => setAddOpen(true)}
       />
 
       <AnnouncementsStats
@@ -86,6 +112,18 @@ export default function Announcements() {
               />
             ))}
       </section>
+
+      <AnnouncementsDialogs
+        addOpen={addOpen}
+        setAddOpen={setAddOpen}
+        announcementForm={announcementForm}
+        setAnnouncementForm={setAnnouncementForm}
+        handleAddSubmit={handleAddSubmit}
+        deleteOpen={deleteOpen}
+        setDeleteOpen={setDeleteOpen}
+        selectedRow={selectedRow}
+        handleConfirmDelete={handleConfirmDelete}
+      />
     </div>
   )
 }

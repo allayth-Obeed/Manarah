@@ -90,6 +90,7 @@ export default function MainAssignment({
   monthLabel = DEFAULT_MONTH_LABEL,
   onPreviousMonth,
   onNextMonth,
+  onConfirmAssign,
 }) {
   const { activeTheme } = useTheme()
 
@@ -240,7 +241,7 @@ export default function MainAssignment({
         }}
       >
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-          <RapidAssignment />
+          <RapidAssignment onConfirmAssign={onConfirmAssign} />
           {weeklySummary}
         </Box>
         <Box>{listCard}</Box>

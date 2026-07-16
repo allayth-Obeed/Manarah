@@ -1,3 +1,4 @@
+import { memo, useMemo } from 'react'
 import { useTheme } from '../../theme/themeContext'
 import Box from '@mui/material/Box'
 import Drawer from '@mui/material/Drawer'
@@ -32,16 +33,83 @@ const navItems = [
   { label: 'الإعلانات', icon: CampaignOutlinedIcon, path: '/announcements' },
 ]
 
+const NavItem = memo(({ item, pathname, palette }) => {
+  const isActive = pathname === item.path
+  const ItemIcon = item.icon
+
+  return (
+    <ListItem disablePadding sx={{ mb: 0.5 }}>
+      <ListItemButton
+        component={NavLink}
+        to={item.path}
+        prefetch="intent"
+        className="justify-center md:justify-start"
+        sx={{
+          borderRadius: 0,
+          minHeight: 44,
+          px: 2,
+          gap: 1,
+          borderRight: isActive
+            ? `3px solid ${palette.navActiveBorder}`
+            : '3px solid transparent',
+          backgroundColor: isActive ? palette.navActiveBg : 'transparent',
+          '&:hover': {
+            backgroundColor: isActive ? palette.navActiveBg : palette.navHoverBg,
+          },
+        }}
+      >
+        <ListItemIcon
+          sx={{
+            minWidth: 28,
+            color: isActive ? palette.navActiveText : palette.navInactive,
+          }}
+        >
+          <ItemIcon sx={{ fontSize: 20 }} />
+        </ListItemIcon>
+        <ListItemText
+          primary={item.label}
+          sx={{
+            m: 0,
+            textAlign: 'right',
+            overflow: 'hidden',
+            whiteSpace: 'nowrap',
+            WebkitMaskImage: {
+              xs: 'linear-gradient(to left, rgba(0,0,0,0), rgba(0,0,0,1) 60%)',
+              md: 'none',
+            },
+            maskImage: {
+              xs: 'linear-gradient(to left, rgba(0,0,0,0), rgba(0,0,0,1) 60%)',
+              md: 'none',
+            },
+            '& .MuiTypography-root': {
+              fontSize: 14,
+              fontWeight: isActive ? 700 : 600,
+              color: isActive ? palette.navActiveText : palette.navInactive,
+            },
+          }}
+        />
+      </ListItemButton>
+    </ListItem>
+  )
+})
+
 const AppLayout = ({ children }) => {
-  // CHANGES LOG:
-  // - `palette` values moved out of this file and into `activeTheme.layout`.
-  // - We removed the local `activeIndex` state and now derive active nav
-  //   from the current route `pathname` (see `isActive` below).
-  // - `TopBar` no longer receives `palette` or `activeTheme` as props;
-  //   it reads theme tokens directly via `useTheme()`.
   const { activeTheme, themeMode, toggleTheme } = useTheme()
   const { pathname } = useLocation()
   const palette = activeTheme.layout
+
+  const navList = useMemo(
+    () =>
+      navItems.map((item) => (
+        <NavItem
+          key={item.label}
+          item={item}
+          pathname={pathname}
+          palette={palette}
+        />
+      )),
+    [pathname, palette]
+  )
 
   return (
     <div
@@ -75,11 +143,8 @@ const AppLayout = ({ children }) => {
         >
           <Box className="mt-3 mb-2 flex items-start gap-1.5 group" sx={{ cursor: 'pointer' }}>
             <Box
-              sx={{
-                bgcolor: activeTheme.colors.primary,
-              }}
+              sx={{ bgcolor: activeTheme.colors.primary }}
               className="w-10 h-10 rounded-md text-white flex items-center justify-center"
-              // make when be hover show explanation of the typograghy has heddin
             >
               <MosqueRoundedIcon fontSize="18px" />
             </Box>
@@ -100,67 +165,7 @@ const AppLayout = ({ children }) => {
             </Box>
           </Box>
 
-          <List sx={{ mt: 1 }}>
-            {navItems.map((item) => {
-              const ItemIcon = item.icon
-              // CHANGES: derive active state from route pathname
-              const isActive = pathname === item.path
-
-              return (
-                <ListItem key={item.label} disablePadding sx={{ mb: 0.5 }}>
-                  <ListItemButton
-                    component={NavLink}
-                    to={item.path}
-                    className="justify-center md:justify-start"
-                    sx={{
-                      borderRadius: 0,
-                      minHeight: 44,
-                      px: 2,
-                      gap: 1,
-                      borderRight: isActive
-                        ? `3px solid ${palette.navActiveBorder}`
-                        : '3px solid transparent',
-                      backgroundColor: isActive ? palette.navActiveBg : 'transparent',
-                      '&:hover': {
-                        backgroundColor: isActive ? palette.navActiveBg : palette.navHoverBg,
-                      },
-                    }}
-                  >
-                    <ListItemIcon
-                      sx={{
-                        minWidth: 28,
-                        color: isActive ? palette.navActiveText : palette.navInactive,
-                      }}
-                    >
-                      <ItemIcon sx={{ fontSize: 20 }} />
-                    </ListItemIcon>
-                    <ListItemText
-                      primary={item.label}
-                      sx={{
-                        m: 0,
-                        textAlign: 'right',
-                        overflow: 'hidden',
-                        whiteSpace: 'nowrap',
-                        WebkitMaskImage: {
-                          xs: 'linear-gradient(to left, rgba(0,0,0,0), rgba(0,0,0,1) 60%)',
-                          md: 'none',
-                        },
-                        maskImage: {
-                          xs: 'linear-gradient(to left, rgba(0,0,0,0), rgba(0,0,0,1) 60%)',
-                          md: 'none',
-                        },
-                        '& .MuiTypography-root': {
-                          fontSize: 14,
-                          fontWeight: isActive ? 700 : 600,
-                          color: isActive ? palette.navActiveText : palette.navInactive,
-                        },
-                      }}
-                    />
-                  </ListItemButton>
-                </ListItem>
-              )
-            })}
-          </List>
+          <List sx={{ mt: 1 }}>{navList}</List>
 
           <Box sx={{ flexGrow: 1 }} />
 
@@ -208,14 +213,11 @@ const AppLayout = ({ children }) => {
 
           <Box sx={{ height: 6 }} />
         </Drawer>
-        {/* for main content */}
         <Box
           dir="ltr"
           component="main"
-          sx={{
-            bgcolor: activeTheme.colors.background,
-          }}
-          className="flex flex-col  flex-1 p-6 mt-20"
+          sx={{ bgcolor: activeTheme.colors.background }}
+          className="flex flex-col flex-1 p-6 mt-20"
         >
           {children}
         </Box>

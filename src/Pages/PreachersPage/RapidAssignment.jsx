@@ -6,7 +6,7 @@ import { useTheme } from '../../theme/themeContext'
 import { CalendarToday, HomeWorkOutlined, WarningAmber, Settings, Person2Outlined } from '@mui/icons-material'
 import AppButton from '../../components/common/AppButton'
 
-export default function RapidAssignment() {
+export default function RapidAssignment({ onConfirmAssign }) {
   const { activeTheme } = useTheme()
 
   return (
@@ -130,6 +130,7 @@ export default function RapidAssignment() {
             hoverBackgroundColor={activeTheme.colors.primaryDark}
             py={1.5}
             borderRadius={2}
+            onClick={onConfirmAssign}
           >
             تثبيت التكليف
           </AppButton>

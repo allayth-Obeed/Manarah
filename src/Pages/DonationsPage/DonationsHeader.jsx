@@ -193,7 +193,7 @@ function StatCard({ card, colors }) {
   )
 }
 
-export default function DonationsHeader() {
+export default function DonationsHeader({ onAddClick }) {
   const { activeTheme } = useTheme()
   const { colors } = activeTheme
 
@@ -206,6 +206,7 @@ export default function DonationsHeader() {
         addButton="إصدار تقرير"
         announcementIcon={<FilterAltOutlinedIcon />}
         addIcon={<DescriptionOutlinedIcon />}
+        onAddClick={onAddClick}
       />
 
       <Box sx={{ display: 'flex', gap: 2, alignItems: 'stretch' }}>
