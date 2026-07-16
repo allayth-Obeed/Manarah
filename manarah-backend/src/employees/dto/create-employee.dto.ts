@@ -1,0 +1,40 @@
+import {
+  IsString,
+  IsNotEmpty,
+  IsOptional,
+  IsNumber,
+  IsDateString,
+} from 'class-validator';
+
+export class CreateEmployeeDto {
+  @IsOptional()
+  userId?: number;
+
+  @IsString()
+  @IsNotEmpty({ message: 'الاسم الأول مطلوب' })
+  firstName: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'الاسم الأخير مطلوب' })
+  lastName: string;
+
+  @IsString()
+  @IsNotEmpty({ message: 'الوظيفة مطلوبة' })
+  position: string;
+
+  @IsOptional()
+  @IsString()
+  department?: string;
+
+  @IsOptional()
+  @IsString()
+  phone?: string;
+
+  @IsOptional()
+  @IsNumber({}, { message: 'الراتب يجب أن يكون رقماً' })
+  salary?: number;
+
+  @IsOptional()
+  @IsDateString({}, { message: 'تاريخ التوظيف غير صالح' })
+  hireDate?: string;
+}

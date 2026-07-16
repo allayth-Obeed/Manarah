@@ -26,7 +26,7 @@ const router = createBrowserRouter([
       { path: 'mosques', element: <Mosque /> },
       { path: '*', element: <Navigate to="/" replace /> },
       { path: 'announcements', element: <Announcements /> },
-      { path: 'Donations', element: <Donations /> },
+      { path: 'donations', element: <Donations /> },
     ],
   },
 ])

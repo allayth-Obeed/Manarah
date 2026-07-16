@@ -1,0 +1,132 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model for authentication
+model User {
+  id          Int      @id @default(autoincrement())
+  email       String   @unique
+  password    String
+  name        String
+  role        Role     @default(USER)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  mosques     Mosque[] @relation("MosqueManager")
+  preacher    Preacher? @relation("PreacherUser")
+  employee    Employee? @relation("EmployeeUser")
+}
+
+// Mosque model
+model Mosque {
+  id          Int        @id @default(autoincrement())
+  name        String
+  address     String
+  city        String
+  latitude    Float?
+  longitude   Float?
+  phone       String?
+  capacity    Int?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  managerId   Int?
+  manager     User?      @relation("MosqueManager", fields: [managerId], references: [id])
+  preachers   PreacherAssignment[]
+  announcements Announcement[]
+  donations   Donation[]
+}
+
+// Preacher model
+model Preacher {
+  id          Int        @id @default(autoincrement())
+  userId      Int?       @unique
+  user        User?      @relation("PreacherUser", fields: [userId], references: [id])
+  firstName   String
+  lastName    String
+  phone       String?
+  email       String?
+  specialization String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  assignments PreacherAssignment[]
+}
+
+// Employee model
+model Employee {
+  id          Int        @id @default(autoincrement())
+  userId      Int?       @unique
+  user        User?      @relation("EmployeeUser", fields: [userId], references: [id])
+  firstName   String
+  lastName    String
+  position    String
+  department  String?
+  phone       String?
+  salary      Float?
+  hireDate    DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+// Preacher Assignment to Mosque
+model PreacherAssignment {
+  id          Int        @id @default(autoincrement())
+  preacherId  Int
+  mosqueId    Int
+  startDate   DateTime   @default(now())
+  endDate     DateTime?
+  isActive    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  preacher    Preacher   @relation(fields: [preacherId], references: [id])
+  mosque      Mosque     @relation(fields: [mosqueId], references: [id])
+  @@unique([preacherId, mosqueId])
+}
+
+// Announcement model
+model Announcement {
+  id          Int        @id @default(autoincrement())
+  title       String
+  content     String
+  mosqueId    Int
+  priority    Priority   @default(MEDIUM)
+  isActive    Boolean    @default(true)
+  startDate   DateTime   @default(now())
+  endDate     DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  mosque      Mosque     @relation(fields: [mosqueId], references: [id])
+}
+
+// Donation model
+model Donation {
+  id          Int        @id @default(autoincrement())
+  donorName   String
+  amount      Float
+  mosqueId    Int
+  donationDate DateTime   @default(now())
+  purpose     String?
+  notes       String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  mosque      Mosque     @relation(fields: [mosqueId], references: [id])
+}
+
+// Enums
+enum Role {
+  ADMIN
+  MANAGER
+  USER
+  PREACHER
+  EMPLOYEE
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+}
