@@ -32,7 +32,7 @@ export class UsersService {
         email: data.email,
         password: data.password,
         name: data.name,
-        role: data.role || 'USER',
+        role: (data.role || 'USER') as any,
       },
     });
   }

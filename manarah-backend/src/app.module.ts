@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { PrismaService } from './prisma/prisma.service';
+import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { MosquesModule } from './mosques/mosques.module';
@@ -15,6 +15,7 @@ import { DonationsModule } from './donations/donations.module';
       isGlobal: true,
       envFilePath: ['.env', '.env.local'],
     }),
+    PrismaModule,
     AuthModule,
     UsersModule,
     MosquesModule,
@@ -24,7 +25,7 @@ import { DonationsModule } from './donations/donations.module';
     DonationsModule,
   ],
   controllers: [],
-  providers: [PrismaService],
-  exports: [PrismaService],
+  providers: [],
+  exports: [],
 })
 export class AppModule {}
