@@ -1,31 +1,36 @@
 import { Controller, Get, Res, UseGuards } from '@nestjs/common';
 import { Response } from 'express';
-import { EmployeesService } from '../employees/employees.service';
+import { ReportsService } from './reports.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard'; // بيانات حساسة (رواتب) — لازم تقييد بالدور أيضاً
+import { Roles } from '../auth/decorators/roles.decorator';
+import { Role } from '@prisma/client';
 
 @Controller('reports')
-@UseGuards(JwtAuthGuard) // جميع مسارات التقارير محمية بـ JWT
+@UseGuards(JwtAuthGuard, RolesGuard) // جميع مسارات التقارير محمية بـ JWT + الدور
+@Roles(Role.ADMIN, Role.MANAGER)
 export class ReportsController {
-  constructor(private readonly employeesService: EmployeesService) {}
+  constructor(private readonly reportsService: ReportsService) {}
 
   @Get('employees/download')
   async downloadEmployeesReport(@Res() res: Response) {
-    const employees = await this.employeesService.findAll();
+    // نقل توليد CSV إلى ReportsService (مع إصلاح الهروب من الفواصل/الاقتباسات)
+    const csvContent = await this.reportsService.generateEmployeesCsv();
 
-    // إنشاء محتوى CSV مع BOM لدعم العربية في Excel
-    const BOM = '\uFEFF';
-    const csvHeader = 'الاسم الأول,الاسم الأخير,الوظيفة,القسم,رقم الهاتف,الراتب,تاريخ التوظيف\n';
-    const csvRows = employees
-      .map((emp: any) =>
-        `${emp.firstName || ''},${emp.lastName || ''},${emp.position || ''},${emp.department || ''},${emp.phone || ''},${emp.salary || ''},${emp.hireDate || ''}`
-      )
-      .join('\n');
-
-    const csvContent = BOM + csvHeader + csvRows;
-
-    // إعداد الاستجابة لتنزيل الملف
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', 'attachment; filename=employees_report.csv');
+    res.setHeader('Content-Length', Buffer.byteLength(csvContent));
+
+    return res.send(csvContent);
+  }
+
+  @Get('mosques/download')
+  async downloadMosquesReport(@Res() res: Response) {
+    // تقرير مساجد جديد بنفس نمط تقرير الموظفين
+    const csvContent = await this.reportsService.generateMosquesCsv();
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename=mosques_report.csv');
     res.setHeader('Content-Length', Buffer.byteLength(csvContent));
 
     return res.send(csvContent);

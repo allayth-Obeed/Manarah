@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateAnnouncementDto } from './dto/create-announcement.dto';
+import { UpdateAnnouncementDto } from './dto/update-announcement.dto';
 
 @Injectable()
 export class AnnouncementsService {
@@ -30,15 +31,20 @@ export class AnnouncementsService {
   }
 
   async create(createAnnouncementDto: CreateAnnouncementDto) {
+    // التحقق من وجود المسجد أولاً بدل ترك خطأ FK خام يتسرب كـ 500 عام
+    const mosque = await this.prisma.mosque.findUnique({
+      where: { id: createAnnouncementDto.mosqueId },
+    });
+    if (!mosque) {
+      throw new NotFoundException('المسجد غير موجود');
+    }
+
     return this.prisma.announcement.create({
       data: createAnnouncementDto,
     });
   }
 
-  async update(
-    id: number,
-    updateAnnouncementDto: Partial<CreateAnnouncementDto>,
-  ) {
+  async update(id: number, updateAnnouncementDto: UpdateAnnouncementDto) {
     // التحقق من وجود الإعلان قبل التحديث لتجنب أخطاء Prisma غير المعالجة
     const existing = await this.prisma.announcement.findUnique({
       where: { id },

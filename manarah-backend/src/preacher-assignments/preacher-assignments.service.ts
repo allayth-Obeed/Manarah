@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, ConflictException } from '@nestjs/common
 import { PrismaService } from '../prisma/prisma.service'
 import { Prisma } from '@prisma/client'
 import { CreatePreacherAssignmentDto } from './dto/create-preacher-assignment.dto'
+import { UpdatePreacherAssignmentDto } from './dto/update-preacher-assignment.dto'
 
 @Injectable()
 export class PreacherAssignmentsService {
@@ -114,7 +115,7 @@ export class PreacherAssignmentsService {
     }
   }
 
-  async update(id: number, updatePreacherAssignmentDto: Partial<CreatePreacherAssignmentDto>) {
+  async update(id: number, updatePreacherAssignmentDto: UpdatePreacherAssignmentDto) {
     // التحقق من وجود التعيين قبل التحديث
     const existing = await this.prisma.preacherAssignment.findUnique({
       where: { id },

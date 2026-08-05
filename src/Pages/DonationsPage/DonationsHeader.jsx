@@ -19,7 +19,7 @@ const summaryCards = [
   {
     title: 'المتبرعون الجدد',
     value: '284',
-    extra: '18%',
+    // extra يُحسب لاحقاً من بيانات حقيقية بدل "18%" الثابتة (انظر donorGrowthLabel أدناه)
     icon: CurrencyExchangeRoundedIcon,
     iconBg: 'dateBg',
     iconColor: 'secondary',
@@ -28,8 +28,8 @@ const summaryCards = [
     title: 'إجمالي التبرعات السنوي',
     value: '1,450,280',
     currency: 'د.ا',
-    progress: '75% من المستهدف',
-    growth: '+12.5%',
+    // تم حذف progress (نسبة هدف 75%) نهائياً: لا يوجد مفهوم "هدف/target" بنموذج التبرعات بالباك اند
+    // growth يُحسب لاحقاً من بيانات حقيقية بدل "+12.5%" الثابتة
     dark: true,
   },
 ]
@@ -94,30 +94,7 @@ function StatCard({ card, colors }) {
             </Box>
           </Box>
         </Box>
-
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <Box
-            sx={{
-              flex: 1,
-              height: 4,
-              borderRadius: 999,
-              backgroundColor: 'rgba(255,255,255,0.16)',
-              overflow: 'hidden',
-            }}
-          >
-            <Box
-              sx={{
-                width: '75%',
-                height: '100%',
-                borderRadius: 999,
-                backgroundColor: 'rgba(255,255,255,0.78)',
-              }}
-            />
-          </Box>
-          <Typography sx={{ fontSize: 11, color: colors.onPrimaryMuted, whiteSpace: 'nowrap' }}>
-            {card.progress}
-          </Typography>
-        </Box>
+        {/* تم حذف شريط تقدّم "75% من المستهدف" بالكامل: لا يوجد حقل "هدف" حقيقي بالباك اند لعرضه */}
       </Box>
     )
   }
@@ -202,16 +179,46 @@ export default function DonationsHeader({ onAddClick, donations = [] }) {
   const avgMonthly = donations.length > 0 ? Math.round(totalDonations / Math.max(donations.length, 1)) : 0
   const uniqueDonors = new Set(donations.map((d) => d.donorName)).size
 
+  // ADDED: حساب نمو حقيقي (الشهر الحالي مقابل الشهر السابق) من donationDate الفعلي بدل الأرقام الثابتة "18%" و"+12.5%"
+  const now = new Date()
+  const prevMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+  const isInMonth = (dateValue, month, year) => {
+    if (!dateValue) return false
+    const d = new Date(dateValue)
+    return d.getMonth() === month && d.getFullYear() === year
+  }
+  const currentMonthDonations = donations.filter((d) =>
+    isInMonth(d.donationDate || d.createdAt, now.getMonth(), now.getFullYear()),
+  )
+  const prevMonthDonations = donations.filter((d) =>
+    isInMonth(d.donationDate || d.createdAt, prevMonthDate.getMonth(), prevMonthDate.getFullYear()),
+  )
+  // نسبة نمو إجمالي المبلغ المتبرَّع به هذا الشهر مقابل الشهر السابق
+  const currentMonthTotal = currentMonthDonations.reduce((s, d) => s + (d.amount || 0), 0)
+  const prevMonthTotal = prevMonthDonations.reduce((s, d) => s + (d.amount || 0), 0)
+  const totalGrowthPct =
+    prevMonthTotal > 0 ? Math.round(((currentMonthTotal - prevMonthTotal) / prevMonthTotal) * 100) : null
+  const growthLabel = totalGrowthPct === null ? 'لا يوجد شهر سابق للمقارنة' : `${totalGrowthPct >= 0 ? '+' : ''}${totalGrowthPct}%`
+  // نسبة نمو عدد المتبرعين الفريدين هذا الشهر مقابل الشهر السابق
+  const currentMonthDonors = new Set(currentMonthDonations.map((d) => d.donorName)).size
+  const prevMonthDonors = new Set(prevMonthDonations.map((d) => d.donorName)).size
+  const donorGrowthPct =
+    prevMonthDonors > 0 ? Math.round(((currentMonthDonors - prevMonthDonors) / prevMonthDonors) * 100) : null
+  const donorGrowthLabel =
+    donorGrowthPct === null ? undefined : `${donorGrowthPct >= 0 ? '+' : ''}${donorGrowthPct}%`
+
   // تحديث البطاقات بالبيانات الحقيقية
   const dynamicCards = summaryCards.map((card) => {
     if (card.title === 'متوسط التبرع الشهري') {
       return { ...card, value: avgMonthly.toLocaleString('en-US') }
     }
     if (card.title === 'المتبرعون الجدد') {
-      return { ...card, value: String(uniqueDonors) }
+      // extra حقيقي محسوب بدل "18%" الثابتة؛ يختفي تلقائياً لو لا يوجد شهر سابق للمقارنة
+      return { ...card, value: String(uniqueDonors), extra: donorGrowthLabel }
     }
     if (card.title === 'إجمالي التبرعات السنوي') {
-      return { ...card, value: totalDonations.toLocaleString('en-US') }
+      // growth حقيقي محسوب بدل "+12.5%" الثابتة
+      return { ...card, value: totalDonations.toLocaleString('en-US'), growth: growthLabel }
     }
     return card
   })

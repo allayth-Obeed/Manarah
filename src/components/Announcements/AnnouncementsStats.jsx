@@ -1,18 +1,19 @@
 import React from 'react'
 import { useTheme } from '../../theme/themeContext'
 
-const AnnouncementsStats = ({
-  announcements = [],
-  mainLabel = 'أحدث وصول للجمهور',
-  mainValue = '15,240+',
-  mainCaption = 'مشاهدة هذا الأسبوع',
-}) => {
+// MODIFIED: حُذفت mainValue/mainCaption الوهمية ("15,240+ مشاهدة") — لا يوجد حقل "مشاهدات" بنموذج الإعلان بالباك اند أصلاً
+const AnnouncementsStats = ({ announcements = [] }) => {
   const { activeTheme } = useTheme()
   const { colors, layout } = activeTheme
 
   // حساب الإحصائيات من البيانات الحقيقية
   const activeAds = announcements.filter((a) => a.isActive).length
   const totalAds = announcements.length
+  // ADDED: مقياس حقيقي ثالث محسوب من البيانات الفعلية بدل رقم المشاهدات المُلفَّق
+  const highPriorityAds = announcements.filter((a) => a.priority === 'HIGH').length
+  const mainLabel = 'إعلانات عالية الأولوية'
+  const mainValue = String(highPriorityAds)
+  const mainCaption = `من أصل ${totalAds} إعلاناً`
 
   return (
     <div dir="rtl" className="w-full">

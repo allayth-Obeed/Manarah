@@ -3,7 +3,9 @@ import {
   IsNotEmpty,
   IsOptional,
   IsNumber,
+  IsEnum,
 } from 'class-validator';
+import { MosqueStatus } from '@prisma/client';
 
 export class CreateMosqueDto {
   @IsString()
@@ -33,4 +35,9 @@ export class CreateMosqueDto {
   @IsOptional()
   @IsNumber({}, { message: 'السعة يجب أن تكون رقماً' })
   capacity?: number;
+
+  // ADDED: حالة المسجد الحقيقية (نشط/قيد الصيانة) — لم يكن لها حقل فعلي بالباك اند سابقاً
+  @IsOptional()
+  @IsEnum(MosqueStatus, { message: 'حالة المسجد غير صالحة' })
+  status?: MosqueStatus;
 }

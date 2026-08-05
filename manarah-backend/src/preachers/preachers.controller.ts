@@ -11,7 +11,11 @@ import {
 } from '@nestjs/common';
 import { PreachersService } from './preachers.service';
 import { CreatePreacherDto } from './dto/create-preacher.dto';
+import { UpdatePreacherDto } from './dto/update-preacher.dto'; // class حقيقية بدل Partial<> النوعية غير المتحقَّق منها
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard'; // تفعيل التحقق من الدور بعد JWT
+import { Roles } from '../auth/decorators/roles.decorator';
+import { Role } from '@prisma/client';
 
 @Controller('preachers')
 @UseGuards(JwtAuthGuard) // جميع مسارات الخطباء محمية بـ JWT
@@ -29,19 +33,25 @@ export class PreachersController {
   }
 
   @Post()
+  @UseGuards(RolesGuard) // إضافة داعية: ADMIN/MANAGER فقط
+  @Roles(Role.ADMIN, Role.MANAGER)
   create(@Body() createPreacherDto: CreatePreacherDto) {
     return this.preachersService.create(createPreacherDto);
   }
 
   @Patch(':id')
+  @UseGuards(RolesGuard) // تعديل داعية: ADMIN/MANAGER فقط
+  @Roles(Role.ADMIN, Role.MANAGER)
   update(
     @Param('id', ParseIntPipe) id: number,
-    @Body() updatePreacherDto: Partial<CreatePreacherDto>,
+    @Body() updatePreacherDto: UpdatePreacherDto,
   ) {
     return this.preachersService.update(id, updatePreacherDto);
   }
 
   @Delete(':id')
+  @UseGuards(RolesGuard) // حذف داعية: ADMIN/MANAGER فقط
+  @Roles(Role.ADMIN, Role.MANAGER)
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.preachersService.remove(id);
   }

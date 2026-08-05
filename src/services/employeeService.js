@@ -12,31 +12,8 @@
  * - downloadEmployeesReport: تنزيل تقرير الموظفين بصيغة CSV
  */
 
-import axios from 'axios';
-
-// رابط الـ API الأساسي - Backend يعمل على المنفذ 3001
-// تم تعديل المسار من api/v1 إلى api لتتوافق مع إعدادات NestJS
-const API_BASE_URL = 'http://localhost:3001/api';
-
-// إنشاء مثيث axios مع الإعدادات الأساسية
-const apiClient = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
-
-// ✅ تم الإضافة: interceptor لإضافة Bearer token تلقائياً لكل طلب من localStorage
-apiClient.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('accessToken');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => Promise.reject(error)
-);
+// عميل axios موحّد بدل إنشاء نسخة خاصة بهذا الملف (كان مكرراً بـ 6 ملفات خدمات)
+import apiClient from './apiClient';
 
 /**
  * جلب جميع الموظفين

@@ -30,3 +30,9 @@ coverage
 # Prisma
 prisma/*.db
 prisma/migrations/
+
+# ADDED: صور المستخدمين المرفوعة محلياً — لا يجب رفعها لمستودع Git
+uploads/*
+!uploads/avatars
+uploads/avatars/*
+!uploads/avatars/.gitkeep

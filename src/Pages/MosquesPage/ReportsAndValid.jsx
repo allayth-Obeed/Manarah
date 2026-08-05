@@ -1,32 +1,60 @@
-import React from 'react'
+import React, { useMemo, useState } from 'react' // ADDED: useMemo/useState لحساب الملخص الحقيقي وحالة تحميل التقرير
 import { Box, Typography } from '@mui/material'
 import { Shield, BarChart } from '@mui/icons-material'
 import AppButton from '../../components/common/AppButton'
 import { useTheme } from '../../theme/themeContext'
+import { downloadMosquesReport } from '../../services/reportService' // ADDED: استدعاء تنزيل تقرير المساجد الحقيقي
 
-export default function ReportsAndValid() {
+// mosques: القائمة الحقيقية القادمة من الـ API لحساب ملخص فعلي بدل النص التسويقي الثابت
+export default function ReportsAndValid({ mosques = [] }) {
   const { activeTheme } = useTheme()
+  const [downloading, setDownloading] = useState(false) // ADDED: تعطيل الزر أثناء التنزيل لمنع نقرات متكررة
+
+  // ملخص حقيقي محسوب من بيانات المساجد بدل نسبة "85%" المُلفَّقة (لا يوجد مفهوم "خطة صيانة" بالـ schema)
+  const summary = useMemo(() => {
+    // MODIFIED: parseInt بدل Number — Mosque.jsx يحوّل capacity مسبقاً لنص عرض مثل "500 مصلٍ" لجدول المساجد،
+    // و Number("500 مصلٍ") يساوي NaN فيصير المجموع صفراً دائماً؛ parseInt يقرأ الرقم من بداية النص بأمان
+    const totalCapacity = mosques.reduce((sum, m) => sum + (parseInt(m.capacity, 10) || 0), 0)
+    const missingPhone = mosques.filter((m) => !m.phone).length
+    return { totalCapacity, missingPhone }
+  }, [mosques])
+
+  // تنزيل تقرير CSV حقيقي من الباك اند بدل زر بلا أي وظيفة
+  const handleDownload = async () => {
+    setDownloading(true)
+    try {
+      await downloadMosquesReport()
+    } catch {
+      // الخطأ مسجَّل بالفعل داخل reportService؛ لا حاجة لإجراء إضافي هنا
+    } finally {
+      setDownloading(false)
+    }
+  }
 
   return (
     <Box className="flex flex-row gap-4 p-4">
-      {/* بطاقة توثيق الأوقاف */}
+      {/* بطاقة توثيق الأوقاف — MODIFIED: ألوان Tailwind الثابتة (bg-gray-100/text-gray-800...) استُبدلت برموز الثيم */}
       <Box
-        className="flex-none w-1/3 bg-gray-100 rounded-xl p-6 flex flex-col items-start gap-4 h-[234px]"
+        className="flex-none w-1/3 rounded-xl p-6 flex flex-col items-start gap-4 h-[234px]"
         dir="rtl"
+        style={{ backgroundColor: activeTheme.colors.bgelem }}
       >
-        <Box className="bg-gray-200 w-14 h-14 flex items-center justify-center rounded-full">
-          <Shield className="text-green-700 w-7 h-7" />
+        <Box
+          className="w-14 h-14 flex items-center justify-center rounded-full"
+          style={{ backgroundColor: activeTheme.colors.accent }}
+        >
+          <Shield className="w-7 h-7" style={{ color: activeTheme.colors.primary }} />
         </Box>
-        <Typography variant="h6" className="text-gray-800 font-semibold">
+        <Typography variant="h6" className="font-semibold" style={{ color: activeTheme.colors.text }}>
           توثيق الأوقاف
         </Typography>
-        <Typography className="text-gray-600 text-sm">
+        <Typography className="text-sm" style={{ color: activeTheme.colors.mutedText }}>
           تأكد من تحديث كافة الصكوك القانونية والخرائط المساحية للمساجد الحديثة في النظام لضمان
           الحماية القانونية للأصول.
         </Typography>
       </Box>
 
-      {/* بطاقة التقرير السنوي لصيانة المساجد */}
+      {/* بطاقة ملخص المساجد الحقيقي (كانت نسبة صيانة ثابتة 85% بلا مصدر بيانات حقيقي) */}
       <Box
         className="flex-1 bg-gradient-to-br from-emerald-900 to-green-800 rounded-xl p-6 flex flex-col justify-between gap-4 text-white h-[234px] relative"
         dir="rtl"
@@ -45,12 +73,16 @@ export default function ReportsAndValid() {
               <BarChart className="w-6 h-6 text-green-300" />
             </Box>
             <Typography variant="h5" className="font-semibold text-white">
-              التقارير السنوية لصيانة المساجد
+              ملخص المساجد
             </Typography>
           </Box>
           <Typography className="text-emerald-200 mt-3 pr-6">
-            تم إكمال 85٪ من خطة الصيانة السنوية للمساجد التابعة للمديرية. يمكنك تنزيل التقرير الكامل
-            بصيغة PDF لمراجعة كافة التفاصيل.
+            {/* رقمان حقيقيان مشتقان من بيانات المساجد الفعلية بدل نص "85% من خطة الصيانة" الوهمي */}
+            إجمالي السعة الاستيعابية لكل المساجد: {summary.totalCapacity.toLocaleString('en-US')} مصلٍ.{' '}
+            {summary.missingPhone > 0
+              ? `${summary.missingPhone} مسجد بلا رقم هاتف مسجَّل.`
+              : 'جميع المساجد لديها رقم هاتف مسجَّل.'}{' '}
+            يمكنك تنزيل تقرير كامل بصيغة CSV لمراجعة كل التفاصيل.
           </Typography>
         </Box>
 
@@ -71,8 +103,10 @@ export default function ReportsAndValid() {
           minWidth={140}
           px={2}
           py={0.5}
+          onClick={handleDownload} // ADDED: تفعيل الزر فعلياً بدل عدم فعل أي شيء
+          disabled={downloading} // ADDED: منع نقرات متكررة أثناء التنزيل
         >
-          تحميل التقرير الكامل
+          {downloading ? 'جارٍ التنزيل...' : 'تحميل التقرير الكامل'}
         </AppButton>
       </Box>
     </Box>

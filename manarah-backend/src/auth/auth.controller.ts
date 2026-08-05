@@ -44,19 +44,21 @@ export class AuthController {
     // JwtAuthGuard يتحقق من التوكن ويضيف user إلى request
     const userId = (req.user as any)?.userId;
     if (!userId) {
-      return { valid: true };
+      // لا يوجد userId بالتوكن: جلسة غير صالحة — نفس شكل رد حالة "المستخدم غير موجود" أدناه
+      return { valid: false };
     }
 
-    // جلب بيانات المستخدم الكاملة من قاعدة البيانات
-    const user = await this.usersService.findById(userId);
-    if (!user) {
-      return { valid: true };
+    try {
+      // جلب بيانات المستخدم الكاملة من قاعدة البيانات
+      const user = await this.usersService.findById(userId);
+      const { password, ...safeUser } = user;
+      return {
+        valid: true,
+        user: safeUser,
+      };
+    } catch {
+      // findById يرمي NotFoundException لو حُذف المستخدم بعد إصدار التوكن — نوحّد الرد بدل تسرب 404 خام
+      return { valid: false };
     }
-
-    const { password, ...safeUser } = user;
-    return {
-      valid: true,
-      user: safeUser,
-    };
   }
 }

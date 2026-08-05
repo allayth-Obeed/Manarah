@@ -20,40 +20,11 @@ import BuildIcon from '@mui/icons-material/Build'
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
 import ChevronRightIcon from '@mui/icons-material/ChevronRight'
 import DeleteIcon from '@mui/icons-material/Delete'
+import EditIcon from '@mui/icons-material/Edit' // ADDED: زر تعديل اختياري (يظهر فقط عند تمرير onRowEditClick)
 import MoreVertIcon from '@mui/icons-material/MoreVert'
 import MosqueIcon from '@mui/icons-material/Mosque'
 import PersonIcon from '@mui/icons-material/Person'
 import { useTheme } from '../../theme/themeContext'
-
-const ROWS = [
-  {
-    id: 1,
-    mosque: 'جامع النبي يونس',
-    founded: 'تاريخ التأسيس: 1994',
-    location: 'الزهراء، حمص',
-    imam: 'د. محمود المشهداني',
-    capacity: 2500,
-    status: 'نشط',
-  },
-  {
-    id: 2,
-    mosque: 'جامع الخلفاء',
-    founded: 'تاريخ التأسيس: 2005',
-    location: 'الحميدية، حمص',
-    imam: 'الشيخ علي الراوي',
-    capacity: 1800,
-    status: 'نشط',
-  },
-  {
-    id: 3,
-    mosque: 'جامع النور الكبير',
-    founded: 'خاضع للترميم حاليا',
-    location: 'المدينة القديمة، حمص',
-    imam: 'غير معرّف',
-    capacity: 3200,
-    status: 'تحت الصيانة',
-  },
-]
 
 const COLUMNS = [
   { key: 'mosque', label: 'اسم المسجد', align: 'right' },
@@ -63,7 +34,9 @@ const COLUMNS = [
   { key: 'status', label: 'الحالة', align: 'center' },
 ]
 
-const TOTAL_ROWS = 1240
+// تم حذف ROWS/TOTAL_ROWS الوهمية: كل المستدعين الحاليين يمرّرون rows/totalRows حقيقية دائماً
+// ADDED: مرجع ثابت لمصفوفة فارغة بدل [] جديدة بكل رندر — يمنع تغيّر رابط useMemo أدناه في كل مرة
+const EMPTY_ROWS = []
 const ROWS_PER_PAGE = 10
 const PAGE_INDEXES = [2, 1, 0]
 const TOTAL_PAGES = PAGE_INDEXES.length
@@ -96,7 +69,7 @@ const getStatusStyle = (status, colors) => {
     }
   }
 
-  if (status === 'تحت الصيانة') {
+  if (status === 'قيد الصيانة') {
     return {
       iconBg: alpha(colors.secondary, 0.14),
       icon: <BuildIcon sx={{ color: colors.secondary, fontSize: 20 }} />,
@@ -148,15 +121,16 @@ const MyTable = ({
   entityLabel = 'مسجد',
   rowsPerPage: propRowsPerPage,
   onRowMoreClick,
+  onRowEditClick, // ADDED: اختياري — لو مُرِّر يظهر زر تعديل إضافي (تستخدمه صفحة المساجد فقط حالياً)
   onRowDeleteClick,
 }) => {
   const { activeTheme } = useTheme()
   const colors = activeTheme.colors
 
-  const rows = propRows || ROWS
+  const rows = propRows ?? EMPTY_ROWS // MODIFIED: مرجع ثابت لمصفوفة فارغة بدل بيانات وهمية أو [] جديدة بكل رندر
   const columns = propColumns || COLUMNS
   const rowsPerPage = propRowsPerPage || ROWS_PER_PAGE
-  const totalRows = propTotalRows || TOTAL_ROWS
+  const totalRows = propTotalRows ?? 0 // MODIFIED: ?? بدل || حتى لا يتحول 0 (لا نتائج) إلى رقم وهمي
   const totalPages = propTotalPages || TOTAL_PAGES
   const pageIndexes = propTotalPages
     ? Array.from({ length: totalPages }, (_, i) => i)
@@ -189,7 +163,7 @@ const MyTable = ({
     // حالة خاصة لعرض بيانات المسجد كما كانت سابقًا
     if (!propColumns && column.key === 'mosque') {
       const statusStyle = getStatusStyle(row.status, colors)
-      const isMaintenance = row.status === 'تحت الصيانة'
+      const isMaintenance = row.status === 'قيد الصيانة'
       const mutedColor = colors.mutedText
 
       return (
@@ -328,7 +302,7 @@ const MyTable = ({
           </TableHead>
           <TableBody>
             {sortedRows.map((row) => {
-              const isMaintenance = row.status === 'تحت الصيانة'
+              const isMaintenance = row.status === 'قيد الصيانة'
               const mutedColor = colors.mutedText
 
               return (
@@ -369,6 +343,19 @@ const MyTable = ({
                         </Typography>
                       ) : null}
 
+                      {/* ADDED: زر تعديل اختياري — يظهر فقط للصفحات التي تمرّر onRowEditClick (المساجد حالياً) */}
+                      {onRowEditClick ? (
+                        <IconButton
+                          size="small"
+                          aria-label="edit"
+                          onClick={() => onRowEditClick(row)}
+                        >
+                          <EditIcon
+                            fontSize="small"
+                            sx={{ color: isMaintenance ? mutedColor : colors.mutedText }}
+                          />
+                        </IconButton>
+                      ) : null}
                       <IconButton
                         size="small"
                         aria-label="more"

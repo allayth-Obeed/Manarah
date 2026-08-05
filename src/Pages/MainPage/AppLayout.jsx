@@ -1,4 +1,4 @@
-import { memo, useMemo } from 'react'
+import { memo, useMemo, useState } from 'react' // MODIFIED: useState لقائمة الإعدادات المنسدلة
 import { useTheme } from '../../theme/themeContext'
 import Box from '@mui/material/Box'
 import Drawer from '@mui/material/Drawer'
@@ -9,6 +9,8 @@ import ListItem from '@mui/material/ListItem'
 import ListItemButton from '@mui/material/ListItemButton'
 import ListItemIcon from '@mui/material/ListItemIcon'
 import ListItemText from '@mui/material/ListItemText'
+import Popover from '@mui/material/Popover' // ADDED: لعرض قائمة الإعدادات عند الضغط على الزر
+import Switch from '@mui/material/Switch' // ADDED: مفتاح تبديل الوضع الليلي داخل قائمة الإعدادات
 import GridViewOutlinedIcon from '@mui/icons-material/GridViewOutlined'
 import MosqueOutlinedIcon from '@mui/icons-material/MosqueOutlined'
 import BadgeOutlinedIcon from '@mui/icons-material/BadgeOutlined'
@@ -20,7 +22,9 @@ import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined'
 import LogoutOutlinedIcon from '@mui/icons-material/LogoutOutlined'
 import MosqueRoundedIcon from '@mui/icons-material/MosqueRounded'
 import TopBar from './TopBar'
-import { NavLink, useLocation } from 'react-router-dom'
+import { NavLink, useLocation, useNavigate } from 'react-router-dom' // MODIFIED: useNavigate للتوجيه بعد تسجيل الخروج
+import useAuth from '../../hooks/useAuth' // ADDED: signOut الحقيقي لزر تسجيل الخروج بالقائمة الجانبية
+import { validateToken } from '../../services/authService' // ADDED: عرض بيانات الحساب الحقيقية داخل قائمة الإعدادات
 
 const drawerWidth = 240
 
@@ -96,7 +100,12 @@ const NavItem = memo(({ item, pathname, palette }) => {
 const AppLayout = ({ children }) => {
   const { activeTheme, themeMode, toggleTheme } = useTheme()
   const { pathname } = useLocation()
+  const navigate = useNavigate() // ADDED: للتنقل إلى صفحة تسجيل الدخول بعد الخروج
+  const { signOut } = useAuth() // ADDED: نفس منطق تسجيل الخروج المستخدم في TopBar
   const palette = activeTheme.layout
+
+  const [settingsAnchor, setSettingsAnchor] = useState(null) // ADDED: عنصر الإرساء لقائمة الإعدادات المنسدلة (null = مغلقة)
+  const [accountInfo, setAccountInfo] = useState({ name: '', email: '', role: '' }) // ADDED: بيانات الحساب الحقيقية المعروضة بالإعدادات
 
   const navList = useMemo(
     () =>
@@ -110,6 +119,27 @@ const AppLayout = ({ children }) => {
       )),
     [pathname, palette]
   )
+
+  // ADDED: فتح قائمة الإعدادات وجلب بيانات الحساب الحقيقية عند الضغط على الزر
+  const handleOpenSettings = async (event) => {
+    setSettingsAnchor(event.currentTarget)
+    const result = await validateToken()
+    if (result.valid && result.user) {
+      setAccountInfo({
+        name: result.user.name || '',
+        email: result.user.email || '',
+        role: result.user.role || '',
+      })
+    }
+  }
+
+  const handleCloseSettings = () => setSettingsAnchor(null) // ADDED: إغلاق قائمة الإعدادات
+
+  // ADDED: تسجيل خروج حقيقي لزر القائمة الجانبية بدل زر بلا أي أثر
+  const handleSidebarSignOut = async () => {
+    await signOut()
+    navigate('/auth/signin')
+  }
 
   return (
     <div
@@ -171,7 +201,8 @@ const AppLayout = ({ children }) => {
 
           <List>
             <ListItem disablePadding sx={{ mb: 0.5 }}>
-              <ListItemButton sx={{ minHeight: 42, px: 2, gap: 1 }}>
+              {/* MODIFIED: فتح قائمة إعدادات حقيقية بدل زر بلا أي أثر */}
+              <ListItemButton sx={{ minHeight: 42, px: 2, gap: 1 }} onClick={handleOpenSettings}>
                 <ListItemIcon sx={{ minWidth: 28, color: palette.navInactive }}>
                   <SettingsOutlinedIcon sx={{ fontSize: 20 }} />
                 </ListItemIcon>
@@ -191,7 +222,8 @@ const AppLayout = ({ children }) => {
             </ListItem>
 
             <ListItem disablePadding>
-              <ListItemButton sx={{ minHeight: 42, px: 2, gap: 1 }}>
+              {/* MODIFIED: تسجيل خروج حقيقي بدل زر بلا أي أثر (كان مكرراً وميتاً مقارنة بزر TopBar) */}
+              <ListItemButton sx={{ minHeight: 42, px: 2, gap: 1 }} onClick={handleSidebarSignOut}>
                 <ListItemIcon sx={{ minWidth: 28, color: palette.danger }}>
                   <LogoutOutlinedIcon sx={{ fontSize: 20 }} />
                 </ListItemIcon>
@@ -211,13 +243,49 @@ const AppLayout = ({ children }) => {
             </ListItem>
           </List>
 
+          {/* ADDED: قائمة الإعدادات المنسدلة — بيانات الحساب الحقيقية + مفتاح الوضع الليلي */}
+          <Popover
+            open={Boolean(settingsAnchor)}
+            anchorEl={settingsAnchor}
+            onClose={handleCloseSettings}
+            anchorOrigin={{ vertical: 'top', horizontal: 'left' }}
+            transformOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+          >
+            <Box sx={{ p: 2.5, minWidth: 220, bgcolor: activeTheme.colors.surface }} dir="rtl">
+              <Typography sx={{ fontSize: 14, fontWeight: 700, color: activeTheme.colors.text }}>
+                {accountInfo.name || '...'}
+              </Typography>
+              <Typography sx={{ fontSize: 12, color: activeTheme.colors.mutedText, mb: 1.5 }}>
+                {accountInfo.email || '...'}
+              </Typography>
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  pt: 1,
+                  borderTop: `1px solid ${activeTheme.colors.border}`,
+                }}
+              >
+                <Typography sx={{ fontSize: 13, color: activeTheme.colors.text }}>
+                  الوضع الليلي
+                </Typography>
+                <Switch checked={themeMode === 'dark'} onChange={toggleTheme} size="small" />
+              </Box>
+            </Box>
+          </Popover>
+
           <Box sx={{ height: 6 }} />
         </Drawer>
         <Box
           dir="ltr"
           component="main"
           sx={{ bgcolor: activeTheme.colors.background }}
-          className="flex flex-col flex-1 p-6 mt-20"
+          // MODIFIED: أضيف min-w-0 overflow-x-hidden — flex:1 وحدها لا تمنع flex item من التمدد
+          // بعرض محتواه الداخلي (الجدول/البطاقات) بدل الانكماش لمساحته المتاحة فعلياً، لأن القيمة
+          // الافتراضية min-width:auto تمنع الانكماش تحت العرض الجوهري للمحتوى؛ هذا كان يدفع جزءاً من
+          // كل صفحة (RTL) خارج حدود الشاشة يسارياً بصمت بدل عرضه كاملاً أو التفاف/تمرير المحتوى بشكل صحيح
+          className="flex flex-col flex-1 min-w-0 overflow-x-hidden p-6 mt-20"
         >
           {children}
         </Box>

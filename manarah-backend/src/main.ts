@@ -1,11 +1,17 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { NestExpressApplication } from '@nestjs/platform-express'; // ADDED: يلزم لاستخدام useStaticAssets
+import { join } from 'path'; // ADDED
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  // MODIFIED: NestExpressApplication بدل NestApplication الافتراضي لإتاحة useStaticAssets (تقديم صور المستخدمين)
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
   const configService = app.get(ConfigService);
+
+  // ADDED: تقديم مجلد uploads كملفات ثابتة على /uploads (صور المستخدمين المرفوعة)
+  app.useStaticAssets(join(process.cwd(), 'uploads'), { prefix: '/uploads' });
 
   // Enable validation globally
   app.useGlobalPipes(

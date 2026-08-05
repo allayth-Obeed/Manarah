@@ -2,7 +2,7 @@
  * Sign Up Page Component
  * صفحة إنشاء حساب جديد إبداعية مع تصميم حديث
  */
-import React, { useState } from 'react'
+import React, { useRef, useState } from 'react' // MODIFIED: useRef للوصول لعنصر اختيار الملف المخفي
 import { useNavigate, Link } from 'react-router-dom'
 import { useTheme } from '../../theme/themeContext'
 import AuthBackground from '../../components/common/AuthBackground'
@@ -13,7 +13,10 @@ import EmailIcon from '@mui/icons-material/Email'
 import PhoneIcon from '@mui/icons-material/Phone'
 import VisibilityIcon from '@mui/icons-material/Visibility'
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff'
+import CameraAltIcon from '@mui/icons-material/CameraAlt' // ADDED: أيقونة اختيار/تغيير الصورة الشخصية
+import CloseIcon from '@mui/icons-material/Close' // ADDED: زر إزالة الصورة المختارة
 import useAuth from '../../hooks/useAuth'
+import { uploadAvatar } from '../../services/userService' // ADDED: رفع الصورة الشخصية بعد نجاح إنشاء الحساب
 
 const SignUpPage = () => {
   const { activeTheme } = useTheme()
@@ -36,6 +39,40 @@ const SignUpPage = () => {
 
   // حالة الخطأ
   const [errors, setErrors] = useState({})
+
+  // ADDED: حالة الصورة الشخصية المختارة (ملف + رابط معاينة محلي) — اختيارية عند التسجيل
+  const [photoFile, setPhotoFile] = useState(null)
+  const [photoPreview, setPhotoPreview] = useState(null)
+  const [photoError, setPhotoError] = useState('')
+  const fileInputRef = useRef(null)
+
+  // ADDED: التحقق من نوع/حجم الصورة محلياً قبل رفعها (نفس القيود المفروضة بالباك اند: jpeg/png/webp حتى 2MB)
+  const handlePhotoChange = (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp']
+    if (!allowedTypes.includes(file.type)) {
+      setPhotoError('الصورة يجب أن تكون بصيغة JPEG أو PNG أو WEBP')
+      return
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setPhotoError('حجم الصورة يجب ألا يتجاوز 2 ميجابايت')
+      return
+    }
+
+    setPhotoError('')
+    setPhotoFile(file)
+    setPhotoPreview(URL.createObjectURL(file)) // ADDED: معاينة فورية قبل الرفع الفعلي
+  }
+
+  // ADDED: إزالة الصورة المختارة قبل الإرسال
+  const handleRemovePhoto = () => {
+    setPhotoFile(null)
+    setPhotoPreview(null)
+    setPhotoError('')
+    if (fileInputRef.current) fileInputRef.current.value = ''
+  }
 
   // التعامل مع تغيير الحقول
   const handleChange = (field) => (e) => {
@@ -94,6 +131,16 @@ const SignUpPage = () => {
 
     const result = await signUp(formData)
     if (result.success) {
+      // ADDED: رفع الصورة الشخصية (إن اختارها المستخدم) بعد نجاح إنشاء الحساب وتسجيل الدخول التلقائي —
+      // التوكن أصبح متوفراً الآن بالتخزين المحلي، وهو مطلوب لمصادقة طلب الرفع
+      if (photoFile) {
+        try {
+          await uploadAvatar(photoFile)
+        } catch (err) {
+          // لا نمنع إكمال التسجيل بسبب فشل رفع الصورة — الحساب أُنشئ بنجاح بالفعل، يمكنه إضافة الصورة لاحقاً
+          console.error('خطأ في رفع الصورة الشخصية:', err)
+        }
+      }
       navigate('/')
     }
   }
@@ -107,11 +154,51 @@ const SignUpPage = () => {
       <div className="w-full max-w-md">
         {/* جزء التصميم العلوي */}
         <div className="text-center mb-8">
-          {/* شعار المشروع */}
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl mb-4 shadow-lg relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-[#006747] to-[#0D5B3E] animate-pulse" />
-            <span className="relative text-3xl font-bold text-white">م</span>
+          {/* MODIFIED: استُبدل شعار "م" الثابت بمُنتقي صورة شخصية حقيقي — اختياري عند إنشاء الحساب */}
+          <div className="relative inline-block mb-4">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={handlePhotoChange}
+              className="hidden"
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="inline-flex items-center justify-center w-20 h-20 rounded-2xl shadow-lg relative overflow-hidden cursor-pointer"
+              title="اختر صورة شخصية"
+            >
+              {photoPreview ? (
+                // ADDED: معاينة الصورة المختارة بدل الشعار الثابت
+                <img src={photoPreview} alt="الصورة الشخصية" className="w-full h-full object-cover" />
+              ) : (
+                <>
+                  {/* MODIFIED: تغميق إضافي — نفس الأخضر الداكن والعميق جداً من الهوية بدل الأخضر السابق */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-[#054239] to-[#002623]" />
+                  <CameraAltIcon className="relative text-white" sx={{ fontSize: 28 }} />
+                </>
+              )}
+            </button>
+            {photoPreview && (
+              // ADDED: زر صغير لإزالة الصورة المختارة قبل الإرسال
+              <button
+                type="button"
+                onClick={handleRemovePhoto}
+                className="absolute -top-1.5 -left-1.5 w-6 h-6 rounded-full bg-[#DC2626] text-white flex items-center justify-center shadow"
+                title="إزالة الصورة"
+              >
+                <CloseIcon sx={{ fontSize: 14 }} />
+              </button>
+            )}
           </div>
+          {photoError && (
+            <p className="text-xs text-[#DC2626] mb-2">{photoError}</p>
+          )}
+          {/* ADDED: توضيح أن اختيار الصورة اختياري وليس شعاراً ثابتاً كما كان سابقاً */}
+          <p className="text-xs mb-2" style={{ color: activeTheme.colors.mutedText }}>
+            {photoPreview ? 'اضغط لتغيير الصورة' : 'اختياري: اضغط لإضافة صورة شخصية'}
+          </p>
 
           <h1 className="text-3xl font-bold mb-2" style={{ color: activeTheme.colors.text }}>
             إنشاء حساب جديد
@@ -245,7 +332,7 @@ const SignUpPage = () => {
               disabled={loading}
               className={`
                 w-full mt-8 py-4 rounded-xl font-bold text-lg transition-all duration-300
-                bg-gradient-to-r from-[#006747] to-[#0D5B3E] text-white
+                bg-gradient-to-r from-[#054239] to-[#002623] text-white
                 hover:shadow-lg hover:scale-[1.02] transform
                 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
                 flex items-center justify-center gap-2
@@ -284,7 +371,7 @@ const SignUpPage = () => {
           </span>
           <Link
             to="/auth/signin"
-            className="text-sm font-medium text-[#006747] hover:text-[#C5A059] transition-colors"
+            className="text-sm font-medium text-[#054239] hover:text-[#B9A779] transition-colors" // MODIFIED: تغميق إضافي لأخضر الهوية
           >
             سجل دخولك الآن
           </Link>

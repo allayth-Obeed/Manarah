@@ -1,13 +1,9 @@
-import React from 'react'
+import React, { useMemo } from 'react' // ADDED: useMemo لحساب التوزيع وأحدث تبرع بدون إعادة حساب كل رندر
 import { Box, Typography } from '@mui/material'
 import MosquePhoto from '../../assets/images/Mosque.png'
 import { useTheme } from '../../theme/themeContext'
 
-const allocationRows = [
-  { label: 'صيانة المساجد', value: '45%' },
-  { label: 'المشاريع التعليمية', value: '30%' },
-  { label: 'الإغاثة المباشرة', value: '25%' },
-]
+// تم حذف allocationRows الثابتة (45%/30%/25%): تُحسب الآن داخل المكوّن من حقل purpose الحقيقي
 
 function AllocationBar({ label, value, fill, colors }) {
   return (
@@ -130,6 +126,29 @@ export default function DonationsOverview({ donations = [], onRowClick, onDelete
   const { activeTheme } = useTheme()
   const { colors } = activeTheme
 
+  // ADDED: توزيع حقيقي محسوب بتجميع مبالغ التبرعات حسب حقل purpose الفعلي بدل النسب الثابتة (45%/30%/25%)
+  const allocationRows = useMemo(() => {
+    const totalAmount = donations.reduce((sum, d) => sum + (d.amount || 0), 0)
+    if (totalAmount === 0) return []
+    const grouped = donations.reduce((acc, d) => {
+      const key = d.purpose || 'غير محدد'
+      acc[key] = (acc[key] || 0) + (d.amount || 0)
+      return acc
+    }, {})
+    return Object.entries(grouped)
+      .map(([label, amount]) => ({ label, pct: Math.round((amount / totalAmount) * 100) }))
+      .sort((a, b) => b.pct - a.pct)
+      .slice(0, 5) // أعلى 5 أغراض تبرع فقط للحفاظ على وضوح الواجهة
+  }, [donations])
+
+  // ADDED: أحدث تبرع فعلي بدل نص "قصة نجاح" الثابت غير المرتبط بأي بيانات
+  const latestDonation = useMemo(() => {
+    if (donations.length === 0) return null
+    return [...donations].sort(
+      (a, b) => new Date(b.donationDate || b.createdAt) - new Date(a.donationDate || a.createdAt),
+    )[0]
+  }, [donations])
+
   // تحويل التبرعات من الـ API إلى صفوف النشاط مع الاحتفاظ بالكائن الأصلي
   const activityRows = donations.slice(0, 5).map((donation) => {
     const initial = (donation.donorName || '؟').charAt(0)
@@ -189,18 +208,25 @@ export default function DonationsOverview({ donations = [], onRowClick, onDelete
               </Typography>
             </Box>
 
-            {allocationRows.map((row, index) => (
-              <AllocationBar
-                key={row.label}
-                label={row.label}
-                value={row.value}
-                fill={index === 0 ? '92%' : index === 1 ? '64%' : '46%'}
-                colors={colors}
-              />
-            ))}
+            {/* MODIFIED: نسبة row.pct الحقيقية بدل fill الثابت (92%/64%/46%) المرتبط سابقاً بترتيب وهمي */}
+            {allocationRows.length === 0 ? (
+              <Typography sx={{ fontSize: 13, color: colors.mutedText, textAlign: 'center', py: 2 }}>
+                لا توجد بيانات تبرعات بعد
+              </Typography>
+            ) : (
+              allocationRows.map((row) => (
+                <AllocationBar
+                  key={row.label}
+                  label={row.label}
+                  value={`${row.pct}%`}
+                  fill={`${row.pct}%`}
+                  colors={colors}
+                />
+              ))
+            )}
           </Box>
 
-          {/* Success story card (قصص النجاح) */}
+          {/* MODIFIED: بطاقة "أحدث تبرع" ببيانات حقيقية بدل نص "قصص النجاح" الثابت غير المرتبط بأي بيانات */}
           <Box>
             <Box
               sx={{
@@ -214,7 +240,7 @@ export default function DonationsOverview({ donations = [], onRowClick, onDelete
               <Box
                 component="img"
                 src={MosquePhoto}
-                alt="قصص النجاح"
+                alt="أحدث تبرع"
                 sx={{
                   position: 'absolute',
                   inset: 0,
@@ -247,10 +273,13 @@ export default function DonationsOverview({ donations = [], onRowClick, onDelete
                   <Typography
                     sx={{ fontSize: 11, fontWeight: 800, color: colors.secondary, mb: 0.5 }}
                   >
-                    قصص النجاح
+                    أحدث تبرع
                   </Typography>
+                  {/* MODIFIED: اسم المتبرع الحقيقي والمسجد بدل "اكتمال ترميم مسجد الصحابة" الثابت */}
                   <Typography sx={{ fontSize: 14, fontWeight: 700, color: colors.onPrimary }}>
-                    اكتمال ترميم مسجد الصحابة
+                    {latestDonation
+                      ? `${latestDonation.donorName || 'متبرع'} — ${(latestDonation.amount || 0).toLocaleString('en-US')} إلى ${latestDonation.mosque?.name || 'مسجد'}`
+                      : 'لا توجد تبرعات بعد'}
                   </Typography>
                 </Box>
               </Box>

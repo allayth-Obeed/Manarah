@@ -8,7 +8,7 @@ import {
 
 export class CreateDonationDto {
   @IsString()
-  @IsNotEmpty({ message: 'اسم المتبرض مطلوب' })
+  @IsNotEmpty({ message: 'اسم المتبرع مطلوب' })
   donorName: string;
 
   @IsNumber({}, { message: 'المبلغ مطلوب' })

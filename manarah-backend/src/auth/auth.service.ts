@@ -8,6 +8,7 @@ import { UsersService } from '../users/users.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import * as bcrypt from 'bcryptjs';
+import { Role } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -47,6 +48,7 @@ export class AuthService {
         email: user.email,
         name: user.name,
         role: user.role,
+        avatarUrl: user.avatarUrl, // ADDED: ليعرضها الفرونت اند بالشريط العلوي مباشرة بعد الدخول
       },
     };
   }
@@ -67,6 +69,7 @@ export class AuthService {
     const user = await this.usersService.create({
       ...registerDto,
       password: hashedPassword,
+      role: Role.USER, // كل تسجيل عام يُنشأ بدور USER دائماً؛ ترقية الأدوار تتم يدوياً فقط
     });
 
     const { password, ...result } = user;

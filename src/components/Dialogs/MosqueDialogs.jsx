@@ -22,7 +22,8 @@ import { useTheme } from '../../theme/themeContext'
  */
 export default function MosqueDialogs({
   addOpen, setAddOpen, mosqueForm, setMosqueForm,
-  handleAddSubmit, assignOpen, setAssignOpen,
+  handleAddSubmit, editOpen, setEditOpen, handleEditSubmit, // ADDED: ديالوج التعديل (بيانات + حالة المسجد)
+  assignOpen, setAssignOpen,
   selectedRow, selectedPreacherId, setSelectedPreacherId, filteredPreachers,
   handleConfirmAssign, deleteOpen, setDeleteOpen, handleConfirmDelete,
   snackbarOpen, snackbarMessage
@@ -35,6 +36,34 @@ export default function MosqueDialogs({
     '& .MuiOutlinedInput-root': { backgroundColor: colors.bgelem, borderRadius: 2, height: 48, '& fieldset': { border: 'none' }, '&:hover fieldset': { border: 'none' }, '&.Mui-focused fieldset': { border: 'none' } },
     '& input': { textAlign: 'right', fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 400, fontSize: 16, color: colors.text, '&::placeholder': { color: colors.mutedText, opacity: 1 } },
   }
+
+  // ADDED: نمط قائمة الحالة المنسدلة (نشط/قيد الصيانة) — نفس أسلوب حقول النموذج الأخرى
+  const selectSx = {
+    '& .MuiOutlinedInput-root': { backgroundColor: colors.bgelem, borderRadius: 2, height: 48, '& fieldset': { border: 'none' }, '&:hover fieldset': { border: 'none' }, '&.Mui-focused fieldset': { border: 'none' } },
+    '& .MuiSelect-select': { textAlign: 'right', fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 400, fontSize: 16, color: colors.text, py: 1.5 },
+  }
+
+  // ADDED: حقل حالة المسجد الحقيقي (يُستخدم بديالوجي الإضافة والتعديل معاً)
+  const StatusField = () => (
+    <Stack spacing={0.5}>
+      <Typography sx={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 500, fontSize: 14, color: colors.text, lineHeight: '20px', textAlign: 'right' }}>الحالة</Typography>
+      <TextField
+        select
+        value={mosqueForm.status || 'ACTIVE'}
+        onChange={(e) => setMosqueForm((p) => ({ ...p, status: e.target.value }))}
+        fullWidth
+        sx={selectSx}
+        SelectProps={{
+          IconComponent: () => <svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginLeft: 8 }}><path d="M1 1.5L6 6.5L11 1.5" stroke={colors.mutedText} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+        }}
+        SelectDisplayProps={{ style: { direction: 'rtl' } }}
+        MenuProps={{ sx: { '& .MuiMenu-paper': { direction: 'rtl', bgcolor: colors.surface }, '& .MuiMenuItem-root': { justifyContent: 'flex-end', fontFamily: '"IBM Plex Sans Arabic", sans-serif', color: colors.text } } }}
+      >
+        <MenuItem value="ACTIVE" sx={{ justifyContent: 'flex-end' }}>نشط</MenuItem>
+        <MenuItem value="MAINTENANCE" sx={{ justifyContent: 'flex-end' }}>قيد الصيانة</MenuItem>
+      </TextField>
+    </Stack>
+  )
 
   return (
     <>
@@ -68,12 +97,60 @@ export default function MosqueDialogs({
                 <Typography sx={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 500, fontSize: 14, color: colors.text, lineHeight: '20px', textAlign: 'right' }}>رقم الهاتف</Typography>
                 <TextField value={mosqueForm.phone} onChange={(e) => setMosqueForm((p) => ({ ...p, phone: e.target.value }))} placeholder="05xxxxxxxx" fullWidth sx={inputSx} />
               </Stack>
+              {/* ADDED: حالة المسجد عند الإنشاء (نشط افتراضياً) */}
+              <StatusField />
             </Stack>
           </Box>
         </DialogContent>
         <DialogActions sx={{ px: 4, pt: 1, pb: 4, gap: 1.5, justifyContent: 'flex-start', flexDirection: 'row-reverse' }}>
           <AppButton variant="contained" backgroundColor="linear-gradient(135deg, #C5A059 0%, #9E7E43 100%)" textColor="#FFFFFF" borderColor="transparent" onClick={(e) => { e?.preventDefault(); handleAddSubmit?.(e); setAddOpen(false); }} sx={{ background: 'linear-gradient(135deg, #C5A059 0%, #9E7E43 100%) !important', borderRadius: 2, height: 48, px: 4 }}>حفظ البيانات</AppButton>
           <AppButton variant="contained" backgroundColor={colors.btn} textColor={colors.text} borderColor="transparent" onClick={() => setAddOpen(false)} sx={{ borderRadius: 2, height: 48, px: 3, '&:hover': { backgroundColor: colors.border } }}>إلغاء</AppButton>
+        </DialogActions>
+      </Dialog>
+
+      {/* ============= Dialog تعديل بيانات/حالة مسجد (جديد) ============= */}
+      {/* ADDED: أول مكان يمكن فيه تعديل مسجد موجود فعلياً، بما في ذلك حقل الحالة (نشط/قيد الصيانة) */}
+      <Dialog open={editOpen} onClose={() => setEditOpen(false)} maxWidth="sm" fullWidth
+        PaperProps={{ sx: { borderRadius: 3, bgcolor: colors.surface, color: colors.text, maxWidth: 672, boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', border: `1px solid ${colors.border}` } }}>
+        <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 4, pt: 4, pb: 0, mb: 3 }}>
+          <IconButton onClick={() => setEditOpen(false)} sx={{ color: colors.mutedText, p: 0, '& svg': { fontSize: 22 } }}><CloseIcon /></IconButton>
+          <Box sx={{ display: 'flex', alignItems: 'center', borderRight: `4px solid ${colors.secondary}`, pr: 1.5 }}>
+            <Typography sx={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 700, fontSize: 20, color: isDark ? colors.secondary : colors.primary, lineHeight: '28px' }}>تعديل بيانات المسجد</Typography>
+          </Box>
+        </DialogTitle>
+        <DialogContent sx={{ px: 4, pt: 3, pb: 0, overflow: 'visible' }}>
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 3, direction: 'rtl' }}>
+            <Stack spacing={3}>
+              <Stack spacing={0.5}>
+                <Typography sx={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 500, fontSize: 14, color: colors.text, lineHeight: '20px', textAlign: 'right' }}>اسم المسجد</Typography>
+                <TextField value={mosqueForm.name} onChange={(e) => setMosqueForm((p) => ({ ...p, name: e.target.value }))} placeholder="أدخل اسم المسجد" fullWidth sx={inputSx} />
+              </Stack>
+              <Stack spacing={0.5}>
+                <Typography sx={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 500, fontSize: 14, color: colors.text, lineHeight: '20px', textAlign: 'right' }}>المدينة</Typography>
+                <TextField value={mosqueForm.city} onChange={(e) => setMosqueForm((p) => ({ ...p, city: e.target.value }))} placeholder="مثال: الرياض" fullWidth sx={inputSx} />
+              </Stack>
+              <Stack spacing={0.5}>
+                <Typography sx={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 500, fontSize: 14, color: colors.text, lineHeight: '20px', textAlign: 'right' }}>السعة</Typography>
+                <TextField type="number" value={mosqueForm.capacity} onChange={(e) => setMosqueForm((p) => ({ ...p, capacity: e.target.value }))} placeholder="عدد المصلّين" fullWidth sx={inputSx} />
+              </Stack>
+            </Stack>
+            <Stack spacing={3}>
+              <Stack spacing={0.5}>
+                <Typography sx={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 500, fontSize: 14, color: colors.text, lineHeight: '20px', textAlign: 'right' }}>العنوان</Typography>
+                <TextField value={mosqueForm.address} onChange={(e) => setMosqueForm((p) => ({ ...p, address: e.target.value }))} placeholder="الحي / الشارع" fullWidth sx={inputSx} />
+              </Stack>
+              <Stack spacing={0.5}>
+                <Typography sx={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 500, fontSize: 14, color: colors.text, lineHeight: '20px', textAlign: 'right' }}>رقم الهاتف</Typography>
+                <TextField value={mosqueForm.phone} onChange={(e) => setMosqueForm((p) => ({ ...p, phone: e.target.value }))} placeholder="05xxxxxxxx" fullWidth sx={inputSx} />
+              </Stack>
+              {/* ADDED: تعديل الحالة الحقيقية للمسجد — هذا هو المطلوب أساساً */}
+              <StatusField />
+            </Stack>
+          </Box>
+        </DialogContent>
+        <DialogActions sx={{ px: 4, pt: 1, pb: 4, gap: 1.5, justifyContent: 'flex-start', flexDirection: 'row-reverse' }}>
+          <AppButton variant="contained" backgroundColor="linear-gradient(135deg, #C5A059 0%, #9E7E43 100%)" textColor="#FFFFFF" borderColor="transparent" onClick={(e) => { e?.preventDefault(); handleEditSubmit?.(e); }} sx={{ background: 'linear-gradient(135deg, #C5A059 0%, #9E7E43 100%) !important', borderRadius: 2, height: 48, px: 4 }}>حفظ التعديلات</AppButton>
+          <AppButton variant="contained" backgroundColor={colors.btn} textColor={colors.text} borderColor="transparent" onClick={() => setEditOpen(false)} sx={{ borderRadius: 2, height: 48, px: 3, '&:hover': { backgroundColor: colors.border } }}>إلغاء</AppButton>
         </DialogActions>
       </Dialog>
 

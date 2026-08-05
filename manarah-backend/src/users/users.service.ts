@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { Role } from '@prisma/client';
 
 @Injectable()
 export class UsersService {
@@ -25,15 +26,23 @@ export class UsersService {
     email: string;
     password: string;
     name: string;
-    role?: string;
+    role?: Role;
   }) {
     return this.prisma.user.create({
       data: {
         email: data.email,
         password: data.password,
         name: data.name,
-        role: (data.role || 'USER') as any,
+        role: data.role || Role.USER,
       },
+    });
+  }
+
+  // ADDED: تحديث رابط الصورة الشخصية للمستخدم بعد رفعها
+  async updateAvatar(id: number, avatarUrl: string) {
+    return this.prisma.user.update({
+      where: { id },
+      data: { avatarUrl },
     });
   }
 
@@ -52,6 +61,10 @@ export class UsersService {
 
     // حذف البيانات المرتبطة أولاً إن وجدت
     if (user.preacher) {
+      // يجب حذف تعيينات هذا الخطيب أولاً وإلا فشل الحذف بخطأ قيد مفتاح أجنبي خام
+      await this.prisma.preacherAssignment.deleteMany({
+        where: { preacherId: user.preacher.id },
+      });
       await this.prisma.preacher.delete({
         where: { id: user.preacher.id },
       });

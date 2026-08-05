@@ -1,12 +1,7 @@
-import {
-  IsEmail,
-  IsString,
-  MinLength,
-  IsOptional,
-  IsEnum,
-} from 'class-validator';
-import { Role } from '@prisma/client';
+import { IsEmail, IsString, MinLength } from 'class-validator';
 
+// لا يوجد حقل role هنا عمداً: التسجيل العام لا يجوز أن يحدد دور المستخدم
+// (كان بالإمكان لأي شخص التسجيل كـ ADMIN مباشرة) — الدور يُفرض دائماً USER في auth.service
 export class RegisterDto {
   @IsEmail({}, { message: 'البريد الإلكتروني غير صالح' })
   email: string;
@@ -17,8 +12,4 @@ export class RegisterDto {
 
   @IsString()
   name: string;
-
-  @IsOptional()
-  @IsEnum(Role, { message: 'الدور غير صالح' })
-  role?: Role;
 }

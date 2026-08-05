@@ -4,6 +4,7 @@
  */
 import React, { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
+import '@fontsource/amiri/700.css' // ADDED: خط Amiri الكلاسيكي الأنيق لعبارة "استعن بالله ولا تعجز" فقط
 import { useTheme } from '../../theme/themeContext'
 import AuthBackground from '../../components/common/AuthBackground'
 import AuthInput from '../../components/common/AuthInput'
@@ -11,6 +12,7 @@ import EmailIcon from '@mui/icons-material/Email'
 import LockIcon from '@mui/icons-material/Lock'
 import VisibilityIcon from '@mui/icons-material/Visibility'
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff'
+import MosqueRoundedIcon from '@mui/icons-material/MosqueRounded' // ADDED: نفس أيقونة الشعار المستخدمة بالقائمة الجانبية بدل حرف "م"
 import useAuth from '../../hooks/useAuth'
 
 const SignInPage = () => {
@@ -54,15 +56,30 @@ const SignInPage = () => {
         <div className="text-center mb-8">
           {/* شعار المشروع */}
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl mb-4 shadow-lg relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-[#006747] to-[#0D5B3E] animate-pulse" />
-            <span className="relative text-3xl font-bold text-white">م</span>
+            {/* MODIFIED: تغميق إضافي — الأخضر الداكن والعميق جداً من الهوية بدل الدرجة الفاتحة */}
+            <div className="absolute inset-0 bg-gradient-to-br from-[#054239] to-[#002623] animate-pulse" />
+            {/* MODIFIED: أيقونة مسجد (نفس شعار القائمة الجانبية) بدل حرف "م" المفرد */}
+            <MosqueRoundedIcon className="relative text-white" sx={{ fontSize: 36 }} />
           </div>
 
+          {/* MODIFIED: تحية إسلامية بدل "مرحباً بعودتك" */}
           <h1 className="text-3xl font-bold mb-2" style={{ color: activeTheme.colors.text }}>
-            مرحباً بعودتك
+            السلام عليكم
           </h1>
           <p className="text-sm" style={{ color: activeTheme.colors.mutedText }}>
             قم بتسجيل الدخول للمتابعة إلى لوحة التحكم
+          </p>
+
+          {/* ADDED: عبارة تحفيزية بخط Amiri الأنيق فوق نموذج الدخول */}
+          <p
+            className="mt-3 text-xl"
+            style={{
+              fontFamily: '"Amiri", serif',
+              fontWeight: 700,
+              color: activeTheme.colors.secondary,
+            }}
+          >
+            استعن بالله ولا تعجز
           </p>
         </div>
 
@@ -114,7 +131,7 @@ const SignInPage = () => {
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
-                  className="w-4 h-4 rounded border-[#E2E8F0] text-[#006747] focus:ring-[#006747]"
+                  className="w-4 h-4 rounded border-[#E2E8F0] text-[#054239] focus:ring-[#054239]" // MODIFIED: تغميق إضافي لأخضر الهوية
                 />
                 <span className="text-sm" style={{ color: activeTheme.colors.mutedText }}>
                   تذكرني
@@ -123,7 +140,7 @@ const SignInPage = () => {
 
               <Link
                 to="/auth/signup"
-                className="text-sm font-medium text-[#006747] hover:text-[#C5A059] transition-colors"
+                className="text-sm font-medium text-[#054239] hover:text-[#B9A779] transition-colors" // MODIFIED: تغميق إضافي لأخضر الهوية
               >
                 إنشاء حساب جديد
               </Link>
@@ -135,7 +152,7 @@ const SignInPage = () => {
               disabled={loading}
               className={`
                 w-full mt-6 py-4 rounded-xl font-bold text-lg transition-all duration-300
-                bg-gradient-to-r from-[#006747] to-[#0D5B3E] text-white
+                bg-gradient-to-r from-[#054239] to-[#002623] text-white
                 hover:shadow-lg hover:scale-[1.02] transform
                 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
                 flex items-center justify-center gap-2

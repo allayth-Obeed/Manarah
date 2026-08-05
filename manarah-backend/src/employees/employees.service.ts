@@ -1,6 +1,19 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { Prisma } from '@prisma/client';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
+import { UpdateEmployeeDto } from './dto/update-employee.dto';
+
+// حقول المستخدم المسموح إرجاعها مع بيانات الموظف — يستبعد password صراحة
+const SAFE_USER_SELECT = {
+  id: true,
+  email: true,
+  name: true,
+  role: true,
+  isActive: true,
+  createdAt: true,
+  updatedAt: true,
+} as const;
 
 @Injectable()
 export class EmployeesService {
@@ -9,7 +22,7 @@ export class EmployeesService {
   async findAll() {
     return this.prisma.employee.findMany({
       include: {
-        user: true,
+        user: { select: SAFE_USER_SELECT }, // select بدل include: true لمنع تسريب password المشفّرة
       },
     });
   }
@@ -18,7 +31,7 @@ export class EmployeesService {
     const employee = await this.prisma.employee.findUnique({
       where: { id },
       include: {
-        user: true,
+        user: { select: SAFE_USER_SELECT }, // select بدل include: true لمنع تسريب password المشفّرة
       },
     });
 
@@ -30,15 +43,25 @@ export class EmployeesService {
   }
 
   async create(createEmployeeDto: CreateEmployeeDto) {
-    return this.prisma.employee.create({
-      data: createEmployeeDto,
-    });
+    try {
+      return await this.prisma.employee.create({
+        data: createEmployeeDto,
+      });
+    } catch (error) {
+      // كانت هذه الدالة بدون try/catch — أي خطأ Prisma خام كان يتسرب كـ 500 عام
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === 'P2002') {
+          throw new ConflictException('هذا المستخدم مرتبط بموظف آخر بالفعل');
+        }
+        if (error.code === 'P2003') {
+          throw new BadRequestException('معرف المستخدم غير موجود');
+        }
+      }
+      throw error;
+    }
   }
 
-  async update(
-    id: number,
-    updateEmployeeDto: Partial<CreateEmployeeDto>,
-  ) {
+  async update(id: number, updateEmployeeDto: UpdateEmployeeDto) {
     // التحقق من وجود الموظف قبل التحديث لتجنب أخطاء Prisma غير المعالجة
     const existing = await this.prisma.employee.findUnique({
       where: { id },

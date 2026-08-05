@@ -3,6 +3,9 @@
  * يتعامل مع عمليات المصادقة (تسجيل الدخول/التسجيل) وإدارة الرموز المميزة
  */
 
+// عميل axios موحّد بدل fetch الخام — يوحّد معالجة الأخطاء وإعادة التوجيه عند 401
+import apiClient from './apiClient'
+
 // قراءة الرمز المميز من التخزين المحلي
 const getStoredToken = () => {
   try {
@@ -35,35 +38,24 @@ const removeToken = () => {
   }
 }
 
-// عنوان الـ API الأساسي
-const API_BASE_URL = 'http://localhost:3001/api'
-
 // طلب تسجيل الدخول - متصل بالـ API الحقيقي
 // ملاحظة: الباك إند (NestJS) يعيد { access_token, user } وليس { accessToken, user }
 const signIn = async (email, password) => {
-  const response = await fetch(`${API_BASE_URL}/auth/login`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ email, password }),
-  })
-
-  if (!response.ok) {
-    const errorData = await response.json()
-    throw new Error(errorData.message || 'فشل تسجيل الدخول')
-  }
-
-  const data = await response.json()
-  // ✅ تم التعديل: الباك إند يعيد access_token (snake_case) فتعيينه إلى accessToken (camelCase) للتوافق مع باقي التطبيق
-  return {
-    accessToken: data.access_token,
-    user: {
-      id: data.user?.id,
-      email: data.user?.email,
-      name: data.user?.name,
-      role: data.user?.role,
-    },
+  try {
+    // apiClient.post يرمي استثناءً تلقائياً عند رد غير ناجح (بدل فحص response.ok يدوياً)
+    const { data } = await apiClient.post('/auth/login', { email, password })
+    return {
+      accessToken: data.access_token,
+      user: {
+        id: data.user?.id,
+        email: data.user?.email,
+        name: data.user?.name,
+        role: data.user?.role,
+      },
+    }
+  } catch (error) {
+    // رسالة الخطأ من الباك اند تصل عبر error.response.data.message مع axios
+    throw new Error(error.response?.data?.message || 'فشل تسجيل الدخول')
   }
 }
 
@@ -71,60 +63,41 @@ const signIn = async (email, password) => {
 // ملاحظة: الباك إند (AuthService.register) لا يعيد access_token عند التسجيل، فقط يعيد user object
 // لذلك هنا نضطر لتسجيل الدخول بعد التسجيل للحصول على التوكن
 const signUp = async (userData) => {
-  // أولاً: إنشاء الحساب
-  const response = await fetch(`${API_BASE_URL}/auth/register`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
+  try {
+    // أولاً: إنشاء الحساب (بدون role — الباك اند يفرض USER دائماً على التسجيل العام)
+    await apiClient.post('/auth/register', {
       name: userData.fullName,
       email: userData.email,
       password: userData.password,
-    }),
-  })
-
-  if (!response.ok) {
-    const errorData = await response.json()
-    throw new Error(errorData.message || 'فشل إنشاء الحساب')
+    })
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'فشل إنشاء الحساب')
   }
 
-  // ثانياً: بعد التسجيل الناجح، نسجل دخول للحصول على التوكن
-  // لأن الباك إند لا يعيد توكن في register
-  const loginResponse = await fetch(`${API_BASE_URL}/auth/login`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
+  try {
+    // ثانياً: بعد التسجيل الناجح، نسجل دخول للحصول على التوكن لأن الباك إند لا يعيد توكن في register
+    const { data: loginData } = await apiClient.post('/auth/login', {
       email: userData.email,
       password: userData.password,
-    }),
-  })
-
-  if (!loginResponse.ok) {
-    // إذا فشل تسجيل الدخول، نرجع نجاح التسجيل فقط بدون توكن
-    const data = await response.json()
+    })
+    return {
+      accessToken: loginData.access_token,
+      user: {
+        id: loginData.user?.id,
+        email: loginData.user?.email,
+        name: loginData.user?.name,
+        role: loginData.user?.role,
+      },
+    }
+  } catch {
+    // فشل تسجيل الدخول بعد التسجيل الناجح: نرجع نجاح بدون توكن (سيسجل المستخدم دخوله يدوياً)
     return {
       accessToken: null,
       user: {
-        id: data.id,
-        email: data.email,
-        name: data.name,
-        role: data.role,
+        email: userData.email,
+        name: userData.fullName,
       },
     }
-  }
-
-  const loginData = await loginResponse.json()
-  return {
-    accessToken: loginData.access_token,
-    user: {
-      id: loginData.user?.id,
-      email: loginData.user?.email,
-      name: loginData.user?.name,
-      role: loginData.user?.role,
-    },
   }
 }
 
@@ -135,36 +108,24 @@ const signOut = async () => {
   return Promise.resolve({ success: true })
 }
 
-// التحقق من صلاحية الرمز المميز
-// ✅ تم التعديل: الآن يرسل طلب GET إلى /api/users/me للتحقق من صحة التوكن عبر JwtAuthGuard
+// التحقق من صلاحية الرمز المميز وجلب بيانات المستخدم الحقيقية
 const validateToken = async () => {
   const token = getStoredToken()
   if (!token) return { valid: false }
 
   try {
-    // محاولة فك التوكن محلياً للحصول على معلومات المستخدم
-    // نستخدم fetch للتحقق من صحة التوكن عبر API
-    const response = await fetch(`${API_BASE_URL}/auth/me`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-    })
-
-    if (!response.ok) {
-      // إذا كان التوكن غير صالح، نمسحه
+    const { data } = await apiClient.get('/auth/me')
+    if (!data.valid) {
+      // الباك اند نفسه أعاد valid:false (توكن بدون userId أو مستخدم محذوف)
       removeToken()
       return { valid: false }
     }
-
-    const data = await response.json()
     return {
       valid: true,
       user: data.user || data,
     }
   } catch {
-    // إذا فشل الاتصال بالخادم لا نعتبر الجلسة صالحة.
-    // هذا يضمن ظهور صفحة تسجيل الدخول أولاً بدل الدخول التلقائي بتوكن قديم.
+    // فشل الاتصال أو توكن مرفوض: لا نعتبر الجلسة صالحة
     removeToken()
     return { valid: false }
   }

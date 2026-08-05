@@ -1,5 +1,6 @@
 import React from 'react'
 import defaultImg from '../../assets/images/announcement-default.svg'
+import { useTheme } from '../../theme/themeContext' // ADDED: لاستبدال ألوان Tailwind الثابتة برموز الثيم المتوافقة مع الوضع الليلي
 
 // AnnouncementCard: reusable, RTL-friendly, API-ready props
 export default function AnnouncementCard({
@@ -14,17 +15,22 @@ export default function AnnouncementCard({
   onDeleteClick,
 }) {
   const src = typeof image === 'string' && image.trim() ? image : defaultImg
+  const { activeTheme } = useTheme() // ADDED: نفس نمط الثيم المستخدم ببقية المشروع بدل كلاسات bg-white/text-gray-* الثابتة
+  const { colors } = activeTheme
 
   return (
     <article
       dir="rtl"
       onClick={onClick}
-      className="w-full border-2 border-dashed border-blue-400 rounded-lg p-4 flex gap-4 items-start bg-white hover:shadow-md transition-shadow cursor-pointer"
+      // MODIFIED: حُذفت bg-white من الكلاسات، وتُضبط الخلفية والألوان الآن عبر style من رموز الثيم
+      className="w-full border-2 border-dashed border-blue-400 rounded-lg p-4 flex gap-4 items-start hover:shadow-md transition-shadow cursor-pointer"
+      style={{ backgroundColor: colors.surface, color: colors.text }}
     >
       <img
         src={src}
         alt={title || 'announcement'}
-        className="w-24 h-20 object-cover rounded-md flex-shrink-0 bg-gray-50"
+        className="w-24 h-20 object-cover rounded-md flex-shrink-0"
+        style={{ backgroundColor: colors.bgelem }} // MODIFIED: بدل bg-gray-50 الثابت
         onError={(event) => {
           event.currentTarget.src = defaultImg
         }}
@@ -32,14 +38,16 @@ export default function AnnouncementCard({
 
       <div className="flex-1">
         <div className="flex items-start justify-between gap-4">
-          <h3 className="text-base md:text-lg font-semibold text-gray-900 leading-tight">
+          {/* MODIFIED: بدل text-gray-900 الثابت */}
+          <h3 className="text-base md:text-lg font-semibold leading-tight" style={{ color: colors.text }}>
             {title}
           </h3>
         </div>
 
         <p
-          className="mt-2 text-sm text-gray-600 leading-relaxed"
+          className="mt-2 text-sm leading-relaxed"
           style={{
+            color: colors.mutedText, // MODIFIED: بدل text-gray-600 الثابت
             WebkitLineClamp: 3,
             display: '-webkit-box',
             WebkitBoxOrient: 'vertical',
@@ -49,12 +57,16 @@ export default function AnnouncementCard({
           {excerpt}
         </p>
 
-        <div className="mt-3 flex items-center justify-between text-sm text-gray-500">
+        <div
+          className="mt-3 flex items-center justify-between text-sm"
+          style={{ color: colors.mutedText }} // MODIFIED: بدل text-gray-500 الثابت
+        >
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4 text-gray-400"
+                className="h-4 w-4"
+                style={{ color: colors.mutedText }} // MODIFIED: بدل text-gray-400 الثابت
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -72,7 +84,8 @@ export default function AnnouncementCard({
             <div className="flex items-center gap-2">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4 text-gray-400"
+                className="h-4 w-4"
+                style={{ color: colors.mutedText }} // MODIFIED: بدل text-gray-400 الثابت
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -96,7 +109,8 @@ export default function AnnouncementCard({
             <div className="flex items-center gap-2">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4 text-gray-400"
+                className="h-4 w-4"
+                style={{ color: colors.mutedText }} // MODIFIED: بدل text-gray-400 الثابت
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -112,7 +126,8 @@ export default function AnnouncementCard({
             </div>
           </div>
 
-          <div className="flex items-center gap-2 text-green-600">
+          {/* MODIFIED: بدل text-green-600 الثابت — نستخدم primary من الثيم */}
+          <div className="flex items-center gap-2" style={{ color: colors.primary }}>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               className="h-4 w-4"
@@ -134,7 +149,11 @@ export default function AnnouncementCard({
                 e.stopPropagation()
                 onDeleteClick()
               }}
-              className="text-red-500 hover:text-red-700 text-sm font-medium flex items-center gap-1"
+              // MODIFIED: بدل text-red-500 hover:text-red-700 الثابتة — نستخدم danger500/danger700 من الثيم
+              className="text-sm font-medium flex items-center gap-1"
+              style={{ color: colors.danger500 }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = colors.danger700 }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = colors.danger500 }}
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
