@@ -29,7 +29,12 @@ function TotalCard({ title, total, badges }) {
   );
 }
 
-export default function EmployeesHeader() {
+export default function EmployeesHeader({ employees = [] }) {
+  // حساب الإحصائيات من البيانات الحقيقية
+  const totalEmployees = employees.length
+  const onDuty = employees.filter((e) => e.status !== 'إجازة').length
+  const onLeave = employees.length - onDuty
+
   return (
     <div className="px-4 py-3 font-sans">
 
@@ -38,17 +43,17 @@ export default function EmployeesHeader() {
         <StaffCard
           icon={<CalendarMonthOutlinedIcon sx={{ fontSize: 22, color: '#c0392b' }} />}
           label="في إجازة"
-          value="56"
+          value={String(onLeave)}
         />
         <StaffCard
           icon={<CheckCircleOutlinedIcon sx={{ fontSize: 22, color: '#27ae60' }} />}
           label="على رأس العمل"
-          value="1,192"
+          value={String(onDuty)}
         />
         <TotalCard
           title="إجمالي الكادر الديني"
-          total="1,248"
-          badges={["408 مؤون", "840 إطار"]}
+          total={String(totalEmployees)}
+          badges={[`${onDuty} على رأس العمل`, `${onLeave} في إجازة`]}
         />
       </div>
 
@@ -58,21 +63,21 @@ export default function EmployeesHeader() {
           <StaffCard
             icon={<CalendarMonthOutlinedIcon sx={{ fontSize: 22, color: '#c0392b' }} />}
             label="في إجازة"
-            value="56"
+            value={String(onLeave)}
           />
         </div>
         <div className="w-1/4">
           <StaffCard
             icon={<CheckCircleOutlinedIcon sx={{ fontSize: 22, color: '#27ae60' }} />}
             label="على رأس العمل"
-            value="1,192"
+            value={String(onDuty)}
           />
         </div>
         <div className="w-1/2">
           <TotalCard
             title="إجمالي الكادر الديني"
-            total="1,248"
-            badges={["408 مؤون", "840 إطار"]}
+            total={String(totalEmployees)}
+            badges={[`${onDuty} على رأس العمل`, `${onLeave} في إجازة`]}
           />
         </div>
       </div>

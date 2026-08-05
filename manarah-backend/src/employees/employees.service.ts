@@ -39,6 +39,14 @@ export class EmployeesService {
     id: number,
     updateEmployeeDto: Partial<CreateEmployeeDto>,
   ) {
+    // التحقق من وجود الموظف قبل التحديث لتجنب أخطاء Prisma غير المعالجة
+    const existing = await this.prisma.employee.findUnique({
+      where: { id },
+    });
+    if (!existing) {
+      throw new NotFoundException('الموظف غير موجود');
+    }
+
     return this.prisma.employee.update({
       where: { id },
       data: updateEmployeeDto,
@@ -46,6 +54,14 @@ export class EmployeesService {
   }
 
   async remove(id: number) {
+    // التحقق من وجود الموظف قبل الحذف لتجنب أخطاء Prisma غير المعالجة
+    const existing = await this.prisma.employee.findUnique({
+      where: { id },
+    });
+    if (!existing) {
+      throw new NotFoundException('الموظف غير موجود');
+    }
+
     return this.prisma.employee.delete({
       where: { id },
     });

@@ -36,15 +36,35 @@ export class PreachersService {
   }
 
   async create(createPreacherDto: CreatePreacherDto) {
-    return this.prisma.preacher.create({
-      data: createPreacherDto,
-    });
+    try {
+      const preacher = await this.prisma.preacher.create({
+        data: createPreacherDto,
+        include: {
+          user: true,
+          assignments: {
+            include: { mosque: true },
+          },
+        },
+      });
+      return preacher;
+    } catch (error) {
+      console.error('خطأ في إنشاء الخطيب:', error);
+      throw new Error('فشل في إنشاء الخطيب: ' + (error instanceof Error ? error.message : 'خطأ غير معروف'));
+    }
   }
 
   async update(
     id: number,
     updatePreacherDto: Partial<CreatePreacherDto>,
   ) {
+    // التحقق من وجود الخطيب قبل التحديث لتجنب أخطاء Prisma غير المعالجة
+    const existing = await this.prisma.preacher.findUnique({
+      where: { id },
+    });
+    if (!existing) {
+      throw new NotFoundException('الخطيب غير موجود');
+    }
+
     return this.prisma.preacher.update({
       where: { id },
       data: updatePreacherDto,
@@ -52,6 +72,14 @@ export class PreachersService {
   }
 
   async remove(id: number) {
+    // التحقق من وجود الخطيب قبل الحذف لتجنب أخطاء Prisma غير المعالجة
+    const existing = await this.prisma.preacher.findUnique({
+      where: { id },
+    });
+    if (!existing) {
+      throw new NotFoundException('الخطيب غير موجود');
+    }
+
     return this.prisma.preacher.delete({
       where: { id },
     });

@@ -8,6 +8,8 @@ import { PreachersModule } from './preachers/preachers.module';
 import { EmployeesModule } from './employees/employees.module';
 import { AnnouncementsModule } from './announcements/announcements.module';
 import { DonationsModule } from './donations/donations.module';
+import { ReportsModule } from './reports/reports.module';
+import { PreacherAssignmentsModule } from './preacher-assignments/preacher-assignments.module';
 
 @Module({
   imports: [
@@ -23,6 +25,8 @@ import { DonationsModule } from './donations/donations.module';
     EmployeesModule,
     AnnouncementsModule,
     DonationsModule,
+    ReportsModule,
+    PreacherAssignmentsModule,
   ],
   controllers: [],
   providers: [],

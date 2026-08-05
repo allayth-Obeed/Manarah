@@ -3,30 +3,43 @@ import AppLayout from './Pages/MainPage/AppLayout'
 import { ThemeProvider } from './theme/themeProvider'
 import { lazy, Suspense } from 'react'
 import { createBrowserRouter, Navigate, Outlet, RouterProvider } from 'react-router-dom'
+import AuthGuard from './components/common/AuthGuard'
 
 const Preachers = lazy(() => import('./Pages/PreachersPage/Preachers'))
 const Employees = lazy(() => import('./Pages/EmployeesPage/Employees'))
 const Mosque = lazy(() => import('./Pages/MosquesPage/Mosque'))
 const Dashboard = lazy(() => import('./Pages/DashboardPage/Dashboard'))
 const Announcements = lazy(() => import('./Pages/Announcements/Announcements'))
-const Donations =lazy(()=> import('./Pages/DonationsPage/Donations'))
+const Donations = lazy(() => import('./Pages/DonationsPage/Donations'))
+const SignInPage = lazy(() => import('./Pages/AuthPages/SignInPage'))
+const SignUpPage = lazy(() => import('./Pages/AuthPages/SignUpPage'))
 
 const router = createBrowserRouter([
   {
+    path: '/auth/signin',
+    element: <SignInPage />,
+  },
+  {
+    path: '/auth/signup',
+    element: <SignUpPage />,
+  },
+  {
     path: '/',
     element: (
-      <AppLayout>
-        <Outlet />
-      </AppLayout>
+      <AuthGuard>
+        <AppLayout>
+          <Outlet />
+        </AppLayout>
+      </AuthGuard>
     ),
     children: [
       { index: true, element: <Dashboard /> },
       { path: 'preachers', element: <Preachers /> },
       { path: 'employees', element: <Employees /> },
       { path: 'mosques', element: <Mosque /> },
-      { path: '*', element: <Navigate to="/" replace /> },
       { path: 'announcements', element: <Announcements /> },
       { path: 'donations', element: <Donations /> },
+      { path: '*', element: <Navigate to="/" replace /> },
     ],
   },
 ])

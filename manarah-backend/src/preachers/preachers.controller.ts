@@ -7,11 +7,14 @@ import {
   Param,
   Delete,
   ParseIntPipe,
+  UseGuards,
 } from '@nestjs/common';
 import { PreachersService } from './preachers.service';
 import { CreatePreacherDto } from './dto/create-preacher.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('preachers')
+@UseGuards(JwtAuthGuard) // جميع مسارات الخطباء محمية بـ JWT
 export class PreachersController {
   constructor(private readonly preachersService: PreachersService) {}
 

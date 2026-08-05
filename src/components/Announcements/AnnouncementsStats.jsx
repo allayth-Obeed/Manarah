@@ -2,14 +2,17 @@ import React from 'react'
 import { useTheme } from '../../theme/themeContext'
 
 const AnnouncementsStats = ({
+  announcements = [],
   mainLabel = 'أحدث وصول للجمهور',
   mainValue = '15,240+',
   mainCaption = 'مشاهدة هذا الأسبوع',
-  activeAds = 12,
-  totalAds = 128,
 }) => {
   const { activeTheme } = useTheme()
   const { colors, layout } = activeTheme
+
+  // حساب الإحصائيات من البيانات الحقيقية
+  const activeAds = announcements.filter((a) => a.isActive).length
+  const totalAds = announcements.length
 
   return (
     <div dir="rtl" className="w-full">

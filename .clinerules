@@ -1,23 +1,307 @@
-# قواعد العمل (Clinerules)
+# ==========================================
+# Manarah Project Rules & Context (.clinerules)
+# ==========================================
 
-## 1. التخصص (Persona)
-أنت **Senior Backend Developer** يتمتع بخبرة واسعة في تصميم وبناء أنظمة قوية وآمنة وقابلة للصيانة.
+## 1. Project Architecture & Workspace
+- **Project Name:** Manarah
+- **Monorepo Structure:**
+  - Frontend: Located in the root directory (built with Vite + React.js).
+  - Backend: Located in the 'manarah-backend' directory (built with NestJS, Prisma ORM, and PostgreSQL).
 
-## 2. اتباع البنية المعمارية (Architecture)
-يجب أن تلتزم تماماً بالبنية المعمارية الحالية للمشروع، مع مراعاة طبقات التصميم، فصل المسؤوليات (Separation of Concerns)، واستخدام أنماط التصميم المتبعة (Design Patterns).
+## 2. Ports & Environment Configuration
+- **Backend PORT:** 3001
+- **Frontend URL:** http://localhost:5173
+- **Database:** PostgreSQL (Database Name: `manarah_db`)
 
-## 3. جودة الكود (Code Quality)
-- يجب أن يكون الكود واضحاً، مقروءاً، موثقاً بشكل جيد.
-- الكود مصمماً ليكون قابلًا للاختبار والاستخدام المستقبلي.
+## 3. Performance & Thinking Optimization
+- Do NOT spend excessive time or tokens indexing deep `node_modules` or `dist` directories.
+- Always focus primarily on `src` directories for both frontend and backend.
+- Keep thinking steps and responses concise; avoid redundant full-workspace scans.
 
-## 4. الأمان والأداء (Security & Performance)
-- ركز على تنفيذ ممارسات الأمان الصحيحة.
-- تحسين الأداء باستمرار.
+# ==========================================
+# قواعد العمل البرمجية (Engineering Rules)
+# ==========================================
 
-## 5. التوافق مع متطلبات المشروع (Project Compatibility)
-- احرص على أن تكون الحلول المقدمة متوافقة مع متطلبات المشروع.
-- لا تغير المعايير الأساسية إلا إذا كان هناك سبب قوي.
+## 1. الشخصية والدور (Persona)
+- أنت **Senior Backend Developer** تكتب كودًا نظيفًا (Clean Code)، معياريًا (Modular)، وموثقًا ذاتيًا (Self-Documented).
+- تلتزم بأفضل الممارسات في هندسة البرمجيات وتصميم الـ APIs (RESTful API Best Practices)، وتحرص على أمان وسهولة قراءة وصيانة الكود.
 
-## 6. التحديثات والتطوير (Updates & Development)
-- اقترح تحسينات ذكية وحلول مبتكرة مستندة إلى خبرتك.
-- الحفاظ على استقرار النظام.
+## 2. المعمارية ونمط الكود (Backend Architecture Pattern)
+نتبع معايير NestJS الصارمة و مبدأ الفصل بين المهام (Separation of Concerns):
+- **Controllers:** مسؤولة فقط عن استقبال الطلبات (Requests) وتمرير الاستجابات (Responses) والتحقق الأولي.
+- **Services/Business Logic:** يتم استخراج كل المنطق التجاري والتعامل مع البيانات والـ Prisma داخل Services مخصصة.
+- **DTOs & Validation:** استخدام الـ Data Transfer Objects مع `class-validator` و `class-transformer` بشكل إجباري لكل المدخالت لضمان الحماية والـ Whitelisting (التحقق من عدم وجود حقول زائدة).
+- **Error Handling:** استخدام الـ Built-in HTTP Exceptions الخاصة بـ NestJS مع صياغة رسائل خطأ واضحة ومترجمة للعربية عند الحاجة.
+
+## 3. التعامل مع قاعدة البيانات (Prisma & Database)
+- التعامل مع قاعدة البيانات يتم حصرياً عبر **Prisma Client**.
+- قبل إنشاء أي ملف Migration جديد، تأكد من مراجعة الـ `schema.prisma` لعدم تكرار العلاقات أو الجداول.
+- كتابة استعلامات (Queries) محسنة لتجنب مشكلات الأداء مثل الـ (N+1 query problem).
+
+## 4. سير العمل وتجنب التكرار (Workflow & Avoid Duplication)
+- قبل كتابة أي كود أو مسار (Route) جديد، ابحث دائمًا في مساحة العمل داخل مجلد الباك إند عن:
+  - وحدات موجودة (Modules)
+  - خدمات مجهزة مسبقاً (Services)
+  - الـ Guards والـ Interceptor الجاهزة (مثل الـ AuthGuards للـ JWT).
+- الهدف الأساسي هو إعادة استخدام الكود ومنع التكرار تمامًا (DRY Principle).
+
+## 5. أوامر التشغيل (Development Commands Workflow)
+- عند رغبتك في تشغيل أو بناء أي أمر يخص الباك إند من المجلد الرئيسي (Root)، استخدم دائماً الـ flag الخاص بالـ prefix لتجنب التنقل العشوائي:
+  - تشغيل السيرفر: `npm run start:dev --prefix manarah-backend`
+  - الميجريشن: `npx prisma migrate dev --prefix manarah-backend`
+
+# ==========================================
+# 🗺️ خريطة ملفات المشروع (Project File Map)
+# ==========================================
+> تم توثيق كل ملف في الـ Frontend والـ Backend مع وصف مختصر لوظيفته.
+> هذه الخريطة تساعد على توجيه الردود وتجنب مسح الملفات المرار.
+
+## 📁 Frontend (Root / Vite + React)
+
+### ملفات الجذر (Root Files)
+| المسار النسبي | الوظيفة |
+|-------|---------|
+| `index.html` | نقطة الدخول HTML الأساسية |
+| `vite.config.js` | إعدادات Vite (SSR، Aliases، etc.) |
+| `tailwind.config.js` | إعدادات Tailwind CSS |
+| `postcss.config.cjs` | إعدادات PostCSS |
+| `package.json` | الـ dependencies والـ scripts |
+| `eslint.config.js` | إعدادات ESLint |
+| `prettierrc` / `.prettierignore` | إعدادات Prettier |
+| `src/main.jsx` | نقطة تشغيل React — `createRoot` + `StrictMode` |
+| `src/App.jsx` | جذر التطبيق — يعرّف `createBrowserRouter` (react-router-dom v6) |
+| `src/App.css` | أنماط CSS العامة |
+| `src/index.css` | استيراد Tailwind + أنماط عامة |
+
+### جدول التوجيه (Routes) — من `src/App.jsx`
+| المسار | المكوّن | ملاحظات |
+|--------|---------|---------|
+| `/auth/signin` | `SignInPage` | صفحة تسجيل الدخول (خارج AuthGuard) |
+| `/auth/signup` | `SignUpPage` | صفحة إنشاء حساب (خارج AuthGuard) |
+| `/` (index) | `Dashboard` | داخل `AuthGuard` + `AppLayout` |
+| `/preachers` | `Preachers` | داخل Layout |
+| `/employees` | `Employees` | داخل Layout |
+| `/mosques` | `Mosque` | داخل Layout |
+| `/announcements` | `Announcements` | داخل Layout |
+| `/donations` | `Donations` | داخل Layout |
+| `*` | `Navigate to /` | fallback |
+
+### src/assets/
+| المسار النسبي | الوظيفة | ملاحظات |
+|-------|---------|---------|
+| `assets/hero.png` | صورة بانر رئيسية | |
+| `assets/react.svg` | أيقونة React | |
+| `assets/vite.svg` | أيقونة Vite | |
+| `assets/fonts/` | ملفات الخطوط | مجلد |
+| `assets/images/` | صور إضافية | مجلد |
+
+### src/components/
+#### src/components/common/
+| المسار النسبي | الوظيفة | التصدير / ملاحظات |
+|-------|---------|---------|
+| `components/common/AppButton.jsx` | زر MUI مخصص مع دعم الأيقونات، الألوان، والـ hover — يستخدم `useTheme` | `AppButton` (default) |
+| `components/common/AuthBackground.jsx` | خلفية متحركة لصفحات المصادقة (وردية/ذهبية، أشرطة pulse) | `AuthBackground` (default) |
+| `components/common/AuthGuard.jsx` | حارس مسار — يتحقق من `localStorage.accessToken` | `AuthGuard` (default) |
+| `components/common/AuthInput.jsx` | حقل إدخال موحد للمصادقة بتصميم RTL | `AuthInput` (default) |
+
+#### src/components/Announcements/
+| المسار النسبي | الوظيفة | التصدير / ملاحظات |
+|-------|---------|---------|
+| `components/Announcements/AnnouncementCard.jsx` | بطاقة تفصيلية لإعلان واحد | `AnnouncementCard` (default) |
+| `components/Announcements/AnnouncementsStats.jsx` | إحصائيات الإعلانات (عدد، حالة، إلخ) | `AnnouncementsStats` (default) |
+
+#### src/components/Dialogs/
+| المسار النسبي | الوظيفة | ملاحظات |
+|-------|---------|---------|
+| `components/Dialogs/AnnouncementsDialogs.jsx` | نوافذ منبثقة لإدارة الإعلانات (إنشاء/تعديل) | Dialog + Form |
+| `components/Dialogs/DashboardDialogs.jsx` | نوافذ منبثقة للوحة التحكم | غير واضح بعد |
+| `components/Dialogs/DonationsDialogs.jsx` | نوافذ منبثقة لإدارة التبرعات | Dialog + Form |
+| `components/Dialogs/EmployeesDialogs.jsx` | نوافذ منبثقة لإدارة الموظفين | Dialog + Form |
+| `components/Dialogs/MosqueDialogs.jsx` | نوافذ منبثقة لإدارة المساجد | Dialog + Form |
+| `components/Dialogs/PreachersDialogs.jsx` | نوافذ منبثقة لإدارة الخطباء | Dialog + Form |
+
+### src/hooks/
+| المسار النسبي | الوظيفة | التصدير / ملاحظات |
+|-------|---------|---------|
+| `hooks/useAuth.js` | Hook يدير حالة المصادقة (login, logout, token) — يتصل بـ `authService.js` | `useAuth` (default) |
+
+### src/services/
+| المسار النسبي | الوظيفة | التصدير / ملاحظات |
+|-------|---------|---------|
+| `services/authService.js` | دوال الاتصال بـ `/auth/login` و `/auth/register` — إدارة الرموز عبر `localStorage` | `signIn`, `signUp`, `signOut`, `validateToken`, `getStoredToken`, `storeToken`, `removeToken` |
+| `services/employeeService.js` | دوال CRUD للموظفين + تنزيل تقرير CSV (`axios`) | `getAllEmployees`, `getEmployee`, `createEmployee`, `updateEmployee`, `deleteEmployee`, `downloadEmployeesReport` + default export |
+
+### src/theme/
+| المسار النسبي | الوظيفة | التصدير / ملاحظات |
+|-------|---------|---------|
+| `theme/theme.js` | يحتوي `themeTokens` للأوضاع light/dark (ألوان، خطوط، تخطيط) + export default | بيانات فقط |
+| `theme/themeContext.js` | `ThemeContext` + خطاف `useTheme()` | مستخدم عبر `MUI ThemeProvider` |
+| `theme/themeProvider.jsx` | يغلف التطبيق بـ `ThemeProvider` + `MuiThemeProvider` ويُنمّذج إنشاء الثيمة | تصدير `ThemeProvider` فقط |
+
+### src/Pages/
+#### src/Pages/AuthPages/
+| المسار النسبي | الوظيفة | ملاحظات |
+|-------|---------|---------|
+| `Pages/AuthPages/SignInPage.jsx` | صفحة تسجيل الدخول — تستخدم `AuthBackground`, `AuthInput`, `useAuth` | |
+| `Pages/AuthPages/SignUpPage.jsx` | صفحة إنشاء حساب جديد بنفس الأدوات | |
+
+#### src/Pages/MainPage/
+| المسار النسبي | الوظيفة | ملاحظات |
+|-------|---------|---------|
+| `Pages/MainPage/AppLayout.jsx` | التخطيط الرئيسي — Drawer RTL + TopBar + outlet للأطفال | المكون الجذري لحاوية الصفحات المحمية |
+| `Pages/MainPage/TopBar.jsx` | شريط علوي ثابت — بحث، إشعارات، تبديل الثيمة، تسجيل خروج | |
+
+#### src/Pages/DashboardPage/
+| المسار النسبي | الوظيفة | ملاحظات |
+|-------|---------|---------|
+| `Pages/DashboardPage/Dashboard.jsx` | لوحة التحكم الرئيسية | |
+| `Pages/DashboardPage/Statistics.jsx` | مكون الإحصائيات | |
+| `Pages/DashboardPage/MainFun.jsx` | وظائف/مكونات فرعية للوحة التحكم | |
+
+#### src/Pages/MosquesPage/
+| المسار النسبي | الوظيفة | ملاحظات |
+|-------|---------|---------|
+| `Pages/MosquesPage/Mosque.jsx` | صفحة المساجد الرئيسية | |
+| `Pages/MosquesPage/Header1.jsx` | رأس صفحة المساجد | |
+| `Pages/MosquesPage/MyTable.jsx` | جدول بيانات المساجد | |
+| `Pages/MosquesPage/FilterSearch.jsx` | البحث/الفلترة | |
+| `Pages/MosquesPage/ReportsAndValid.jsx` | عناصر التقارير/التحقق | |
+
+#### src/Pages/PreachersPage/
+| المسار النسبي | الوظيفة | ملاحظات |
+|-------|---------|---------|
+| `Pages/PreachersPage/Preachers.jsx` | صفحة الخطباء الرئيسية | |
+| `Pages/PreachersPage/MainAssignment.jsx` | التوزيع الرئيسي للخطباء | |
+| `Pages/PreachersPage/RapidAssignment.jsx` | التوزيع السريع للخطباء | |
+
+#### src/Pages/EmployeesPage/
+| المسار النسبي | الوظيفة | ملاحظات |
+|-------|---------|---------|
+| `Pages/EmployeesPage/Employees.jsx` | صفحة الموظفين الرئيسية | |
+| `Pages/EmployeesPage/EmployeesHeader.jsx` | رأس صفحة الموظفين | |
+
+#### src/Pages/DonationsPage/
+| المسار النسبي | الوظيفة | ملاحظات |
+|-------|---------|---------|
+| `Pages/DonationsPage/Donations.jsx` | صفحة التبرعات الرئيسية | |
+| `Pages/DonationsPage/DonationsHeader.jsx` | رأس صفحة التبرعات | |
+| `Pages/DonationsPage/DonationsOverview.jsx` | نظرة عامة/إحصائيات التبرعات | |
+
+#### src/Pages/Announcements/
+| المسار النسبي | الوظيفة | ملاحظات |
+|-------|---------|---------|
+| `Pages/Announcements/Announcements.jsx` | صفحة الإعلانات الرئيسية | |
+
+## 📁 Backend (manarah-backend / NestJS + Prisma)
+
+### ملفات الجذر (Root)
+| المسار النسبي | الوظيفة | ملاحظات |
+|-------|---------|---------|
+| `manarah-backend/src/main.ts` | bootstrap السيرفر — ValidationPipe + CORS + Global Prefix `/api` + Port من `.env` | |
+| `manarah-backend/src/app.module.ts` | يسجّل كل وحدات المشروع (PrismaModule, Auth, Users, Mosques, Preachers, Employees, Announcements, Donations, Reports) | |
+| `manarah-backend/prisma/schema.prisma` | مخطط قاعدة البيانات — النماذج والعلاقات (انظر أدناه) | |
+| `manarah-backend/.env.example` | متغيرات البيئة المطلوبة: DATABASE_URL, JWT_SECRET, JWT_EXPIRES_IN, PORT, FRONTEND_URL | |
+
+### src/prisma/
+| المسار النسبي | الوظيفة | ملاحظات |
+|-------|---------|---------|
+| `src/prisma/prisma.module.ts` | `PrismaModule` عام (Global) — يصدّر `PrismaService` | مستورد في كل الوحدات |
+| `src/prisma/prisma.service.ts` | `PrismaService` يمدّ `PrismaClient` وينشئ الاتصال في `onModuleInit` | Db access حصري من هنا |
+
+### src/auth/
+| المسار النسبي | الوظيفة | ملاحظات |
+|-------|---------|---------|
+| `src/auth/auth.controller.ts` | `POST /auth/login`, `POST /auth/register` | يستدعي `AuthService` |
+| `src/auth/auth.service.ts` | ينفّذ `validateUser`, `login`, `register` + bcrypt | يعتمد على `UsersService` |
+| `src/auth/auth.module.ts` | يسجّل JWT + Passport + UsersModule + استراتيجية الرمز | |
+| `src/auth/dto/login.dto.ts` | `LoginDto` = email + password (min 6) | |
+| `src/auth/dto/register.dto.ts` | `RegisterDto` = email + password + name + role? | |
+| `src/auth/guards/jwt-auth.guard.ts` | `JwtAuthGuard` — يحمي المسارات عبر Bearer token | |
+| `src/auth/guards/roles.guard.ts` | `RolesGuard` — يتحقق من صلاحيات الدور | يعتمد على `@Roles()` decorator |
+| `src/auth/strategies/jwt.strategy.ts` | `JwtStrategy` — يتحقق من صحة الـ JWT | |
+
+### src/users/
+| المسار النسبي | الوظيفة | ملاحظات |
+|-------|---------|---------|
+| `src/users/users.controller.ts` | `DELETE /users/:id`, `DELETE /users` | محمي بـ `JwtAuthGuard` |
+| `src/users/users.service.ts` | `findByEmail`, `findById`, `create`, `removeUser`, `removeAll` | يعالج الحذف المرتبط (Preacher/Employee) |
+| `src/users/users.module.ts` | يصدّر `UsersService` ويستورد `PrismaModule` | |
+
+### src/mosques/
+| المسار النسبي | الوظيفة | ملاحظات |
+|-------|---------|---------|
+| `src/mosques/mosques.controller.ts` | CRUD كامل: GET `/mosques`, GET `/:id`, POST, PATCH `/:id`, DELETE `/:id` | |
+| `src/mosques/mosques.service.ts` | `findAll`, `findOne`, `create`, `update`, `remove` + include العلاقات | |
+| `src/mosques/dto/create-mosque.dto.ts` | `CreateMosqueDto` = name, address, city, latitude?, longitude?, phone?, capacity? | |
+| `src/mosques/mosques.module.ts` | الوحدة القياسية | |
+
+### src/preachers/
+| المسار النسبي | الوظيفة | ملاحظات |
+|-------|---------|---------|
+| `src/preachers/preachers.controller.ts` | CRUD كامل: GET `/preachers`, GET `/:id`, POST, PATCH `/:id`, DELETE `/:id` | |
+| `src/preachers/preachers.service.ts` | `findAll`, `findOne`, `create`, `update`, `remove` + includeateur + assignments | |
+| `src/preachers/dto/create-preacher.dto.ts` | `CreatePreacherDto` = userId?, firstName, lastName, phone?, email?, specialization? | |
+| `src/preachers/preachers.module.ts` | الوحدة القياسية | |
+
+### src/employees/
+| المسار النسبي | الوظيفة | ملاحظات |
+|-------|---------|---------|
+| `src/employees/employees.controller.ts` | CRUD كامل: GET `/employees`, GET `/:id`, POST, PATCH `/:id`, DELETE `/:id` | |
+| `src/employees/employees.service.ts` | `findAll`, `findOne`, `create`, `update`, `remove` + include user | |
+| `src/employees/dto/create-employee.dto.ts` | `CreateEmployeeDto` = userId?, firstName, lastName, position, department?, phone?, salary?, hireDate? | |
+| `src/employees/employees.module.ts` | الوحدة القياسية | |
+
+### src/announcements/
+| المسار النسبي | الوظيفة | ملاحظات |
+|-------|---------|---------|
+| `src/announcements/announcements.controller.ts` | CRUD كامل: GET `/announcements`, GET `/:id`, POST, PATCH `/:id`, DELETE `/:id` | |
+| `src/announcements/announcements.service.ts` | `findAll`, `findOne`, `create`, `update`, `remove` + include mosque | |
+| `src/announcements/dto/create-announcement.dto.ts` | `CreateAnnouncementDto` = title, content, mosqueId, priority (LOW/MEDIUM/HIGH)?, isActive? | |
+| `src/announcements/announcements.module.ts` | الوحدة القياسية | |
+
+### src/donations/
+| المسار النسبي | الوظيفة | ملاحظات |
+|-------|---------|---------|
+| `src/donations/donations.controller.ts` | CRUD كامل: GET `/donations`, GET `/:id`, POST, PATCH `/:id`, DELETE `/:id` | |
+| `src/donations/donations.service.ts` | `findAll`, `findOne`, `create`, `update`, `remove` + include mosque | |
+| `src/donations/dto/create-donation.dto.ts` | `CreateDonationDto` = donorName, amount, mosqueId, purpose?, notes? | |
+| `src/donations/donations.module.ts` | الوحدة القياسية | |
+
+### src/reports/
+| المسار النسبي | الوظيفة | ملاحظات |
+|-------|---------|---------|
+| `src/reports/reports.controller.ts` | `GET /reports/employees/download` — ينشئ CSV من بيانات الموظفين | يعتمد على `EmployeesService` |
+| `src/reports/reports.module.ts` | يصدورت كـ ReportsModule فقط (بدون providers منفصلة) | |
+
+## 📋 Prisma Schema — النماذج والعلاقات (prisma/schema.prisma)
+
+### Models
+| النموذج | الحقول المهمة | ملاحظات |
+|---------|---------------|---------|
+| `User` | id, email(unique), password, name, role (ADMIN/MANAGER/USER/PREACHER/EMPLOYEE), isActive, timestamps | له علاقات: mosques (كمدير), preacher (واحد), employee (واحد) |
+| `Mosque` | id, name, address, city, latitude?, longitude?, phone?, capacity?, managerId (FK User), timestamps | علاقات: preachers (via PreacherAssignment), announcements, donations |
+| `Preacher` | id, userId?(unique), firstName, lastName, phone?, email?, specialization?, timestamps | علاقات: user (واحد), assignments |
+| `Employee` | id, userId?(unique), firstName, lastName, position, department?, phone?, salary?, hireDate?, timestamps | علاقات: user (واحد) |
+| `PreacherAssignment` | id, preacherId, mosqueId, startDate, endDate?, isActive (default true), timestamps | FK لـ Preacher و Mosque + unique constraint (preacherId, mosqueId) |
+| `Announcement` | id, title, content, mosqueId, priority (LOW/MEDIUM/HIGH default MEDIUM), isActive, startDate, endDate?, timestamps | FK لـ Mosque |
+| `Donation` | id, donorName, amount, mosqueId, donationDate, purpose?, notes?, timestamps | FK لـ Mosque |
+
+### Enums
+| Enum | القيم |
+|------|-------|
+| `Role` | ADMIN, MANAGER, USER, PREACHER, EMPLOYEE |
+| `Priority` | LOW, MEDIUM, HIGH |
+
+## 📌 ملاحظات إضافية
+- العنوان دائماً `RTL` (اتجاه من اليمين لليسار).
+- الباك إند يستخدم NestJS ValidationPipe العام with `whitelist: true` لذلك أي حقل زائد في الـ DTO سيُرفض تلقائياً.
+- كل وحدة (Module) تملك DTO واحد فقط في الوقت الحالي (`create-*.dto.ts`)، لكن المحدّثات تستخدم `Partial` من نفس الـ DTO في الـ Controller.
+- الفرونت إند يستخدم MUI v5 + Tailwind CSS معاً، وغالباً العناوين عبر MUI `Typography` بينما الهياكل عبر Tailwind classes.
+
+</parameter>
+<task_progress>
+- [x] إكمال خريطة الملفات في .clinerules
+- [x] التحقق من اكتمال الأقسام (Frontend + Backend + Prisma)
+- [ ] إنهاء المهمة
+</task_progress>
+</write_to_file>

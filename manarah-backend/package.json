@@ -4,6 +4,7 @@
   "description": "Backend API for Manarah Awqaf project",
   "main": "dist/main.js",
   "scripts": {
+    "dev": "nest start --watch",
     "build": "nest build",
     "start": "nest start",
     "start:dev": "nest start --watch",

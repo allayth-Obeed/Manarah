@@ -7,11 +7,14 @@ import {
   Param,
   Delete,
   ParseIntPipe,
+  UseGuards,
 } from '@nestjs/common';
 import { AnnouncementsService } from './announcements.service';
 import { CreateAnnouncementDto } from './dto/create-announcement.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('announcements')
+@UseGuards(JwtAuthGuard) // جميع مسارات الإعلانات محمية بـ JWT
 export class AnnouncementsController {
   constructor(private readonly announcementsService: AnnouncementsService) {}
 

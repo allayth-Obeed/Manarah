@@ -7,11 +7,14 @@ import {
   Param,
   Delete,
   ParseIntPipe,
+  UseGuards,
 } from '@nestjs/common';
 import { MosquesService } from './mosques.service';
 import { CreateMosqueDto } from './dto/create-mosque.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('mosques')
+@UseGuards(JwtAuthGuard) // جميع مسارات المساجد محمية بـ JWT
 export class MosquesController {
   constructor(private readonly mosquesService: MosquesService) {}
 

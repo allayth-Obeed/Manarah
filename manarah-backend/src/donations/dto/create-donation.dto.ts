@@ -24,4 +24,8 @@ export class CreateDonationDto {
   @IsOptional()
   @IsString()
   notes?: string;
+
+  @IsOptional()
+  @IsDateString({}, { message: 'تاريخ التبرع غير صالح' })
+  donationDate?: string;
 }

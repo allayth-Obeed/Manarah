@@ -7,11 +7,14 @@ import {
   Param,
   Delete,
   ParseIntPipe,
+  UseGuards,
 } from '@nestjs/common';
 import { DonationsService } from './donations.service';
 import { CreateDonationDto } from './dto/create-donation.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('donations')
+@UseGuards(JwtAuthGuard) // جميع مسارات التبرعات محمية بـ JWT
 export class DonationsController {
   constructor(private readonly donationsService: DonationsService) {}
 

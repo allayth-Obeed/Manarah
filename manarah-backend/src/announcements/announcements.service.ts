@@ -39,6 +39,14 @@ export class AnnouncementsService {
     id: number,
     updateAnnouncementDto: Partial<CreateAnnouncementDto>,
   ) {
+    // التحقق من وجود الإعلان قبل التحديث لتجنب أخطاء Prisma غير المعالجة
+    const existing = await this.prisma.announcement.findUnique({
+      where: { id },
+    });
+    if (!existing) {
+      throw new NotFoundException('الإعلان غير موجود');
+    }
+
     return this.prisma.announcement.update({
       where: { id },
       data: updateAnnouncementDto,
@@ -46,6 +54,14 @@ export class AnnouncementsService {
   }
 
   async remove(id: number) {
+    // التحقق من وجود الإعلان قبل الحذف لتجنب أخطاء Prisma غير المعالجة
+    const existing = await this.prisma.announcement.findUnique({
+      where: { id },
+    });
+    if (!existing) {
+      throw new NotFoundException('الإعلان غير موجود');
+    }
+
     return this.prisma.announcement.delete({
       where: { id },
     });

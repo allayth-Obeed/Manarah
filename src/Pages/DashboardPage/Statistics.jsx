@@ -24,66 +24,20 @@ import {
 
 import { useTheme } from '../../theme/themeContext'
 
-const chartData = [
-  { day: 'السبت', value: 400 },
-  { day: 'الأحد', value: 300 },
-  { day: 'الإثنين', value: 500 },
-  { day: 'الثلاثاء', value: 700 },
-  { day: 'الأربعاء', value: 600 },
-  { day: 'الخميس', value: 800 },
-  { day: 'الجمعة', value: 900 },
-]
-
-const speakers = [
-  {
-    mosque: 'جامع القوي',
-    speaker: 'د. محمد السعيد',
-    date: '24 مايو 2024',
-  },
-  {
-    mosque: 'مسجد النور',
-    speaker: 'الشيخ عمر الخالد',
-    date: '23 مايو 2024',
-  },
-  {
-    mosque: 'جامع الروضة',
-    speaker: 'أ. إبراهيم علي',
-    date: '22 مايو 2024',
-  },
-  {
-    mosque: 'مسجد التقوى',
-    speaker: 'الشيخ حسن محمود',
-    date: '21 مايو 2024',
-  },
-]
-
 const tableHeaders = ['اسم المسجد', 'اسم الخطيب', 'التاريخ']
-
-const regionDensity = [
-  { region: 'حي المدينة', count: 45, percentage: 75 },
-  { region: 'الريف الشمالي', count: 32, percentage: 60 },
-  { region: 'المنطقة الوسطى', count: 28, percentage: 50 },
-  { region: 'الجهة الشرقية', count: 21, percentage: 40 },
-]
 
 // Card shell used to keep dashboard sections visually consistent.
 function SectionCard({ cardSx, titleSx, title, action, children }) {
   return (
     <>
-      {/* Card wrapper for the section. */}
       <Card sx={cardSx}>
-        {/* Padding and content area inside the card. */}
         <CardContent>
-          {/* Header row with title on one side and action on the other. */}
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-            {/* Section title text. */}
             <Typography variant="h6" sx={titleSx}>
               {title}
             </Typography>
-            {/* Optional header action element. */}
             {action}
           </Box>
-          {/* Section body content passed from the page. */}
           {children}
         </CardContent>
       </Card>
@@ -92,7 +46,8 @@ function SectionCard({ cardSx, titleSx, title, action, children }) {
 }
 
 // Dashboard statistics view that shows assignments and weekly donations.
-export default function Statistics() {
+// ✅ تم التعديل: يقبل props من Dashboard (mosques, announcements, donations, preachers, employees)
+export default function Statistics({ mosques = [], donations = [], preachers = [], employees = [] }) {
   const { activeTheme } = useTheme()
   const { colors, layout } = activeTheme
 
@@ -110,9 +65,64 @@ export default function Statistics() {
   const tableCellSx = { color: colors.text, borderColor: colors.border }
   const headerCellSx = { color: colors.mutedText, borderColor: colors.border }
 
+  // ============= تحويل بيانات الخطباء والتعيينات إلى تنسيق الجدول =============
+  // نأخذ أحدث 4 تعيينات نشطة من الخطباء
+  const speakers = preachers
+    .flatMap((preacher) =>
+      (preacher.assignments || [])
+        .filter((a) => a.isActive)
+        .map((a) => ({
+          mosque: a.mosque?.name || 'مسجد',
+          speaker: preacher.firstName && preacher.lastName
+            ? `${preacher.firstName} ${preacher.lastName}`
+            : preacher.user?.name || 'خطيب',
+          date: a.startDate
+            ? new Date(a.startDate).toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric' })
+            : 'تاريخ غير محدد',
+        }))
+    )
+    .slice(0, 4) // أحدث 4 فقط
+
+  // ============= إحصائيات سريعة =============
+  const totalMosques = mosques.length
+  const totalPreachers = preachers.length
+  const totalDonations = donations.reduce((sum, d) => sum + (d.amount || 0), 0)
+  const totalEmployees = employees.length
+
+  // ============= بيانات الرسم البياني للتبرعات (من الـ API) =============
+  // نأخذ آخر 7 أيام من التبرعات
+  const daysOfWeek = ['السبت', 'الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة']
+  const chartData = daysOfWeek.map((day, idx) => {
+    // تجميع التبرعات حسب اليوم
+    const dayDonations = donations.filter((d) => {
+      if (!d.donationDate && !d.createdAt) return false
+      const date = new Date(d.donationDate || d.createdAt)
+      return date.getDay() === (idx + 6) % 7 // تحويل الأيام ليبدأ من السبت
+    })
+    const total = dayDonations.reduce((sum, d) => sum + (d.amount || 0), 0)
+    return { day, value: total }
+  })
+
+  // ============= كثافة المساجد في المناطق (من الـ API) =============
+  // تجميع المساجد حسب المدينة
+  const cityCounts = mosques.reduce((acc, mosque) => {
+    const city = mosque.city || 'غير محدد'
+    acc[city] = (acc[city] || 0) + 1
+    return acc
+  }, {})
+
+  const maxCityCount = Math.max(...Object.values(cityCounts), 1)
+  const regionDensity = Object.entries(cityCounts)
+    .map(([region, count]) => ({
+      region,
+      count,
+      percentage: Math.round((count / maxCityCount) * 100),
+    }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 4)
+
   return (
     <>
-      {/* Page wrapper for background, spacing, and full height. */}
       <Box
         sx={{
           p: 3,
@@ -122,7 +132,34 @@ export default function Statistics() {
           width: '100%',
         }}
       >
-        {/* Two-column grid that collapses to one column on small screens. */}
+        {/* ============= بطاقات الإحصائيات السريعة ============= */}
+        <Box
+          sx={{
+            display: 'grid',
+            gap: 2,
+            mb: 3,
+            gridTemplateColumns: { xs: '1fr 1fr', md: 'repeat(4, 1fr)' },
+          }}
+        >
+          <Card sx={{ ...cardSx, p: 2, textAlign: 'center' }}>
+            <Typography variant="h4" sx={{ fontWeight: 'bold', color: colors.primary }}>{totalMosques}</Typography>
+            <Typography variant="body2" sx={{ color: colors.mutedText }}>المساجد</Typography>
+          </Card>
+          <Card sx={{ ...cardSx, p: 2, textAlign: 'center' }}>
+            <Typography variant="h4" sx={{ fontWeight: 'bold', color: colors.primary }}>{totalPreachers}</Typography>
+            <Typography variant="body2" sx={{ color: colors.mutedText }}>الخطباء</Typography>
+          </Card>
+          <Card sx={{ ...cardSx, p: 2, textAlign: 'center' }}>
+            <Typography variant="h4" sx={{ fontWeight: 'bold', color: colors.primary }}>{totalDonations.toLocaleString('ar-SA')} ر.س</Typography>
+            <Typography variant="body2" sx={{ color: colors.mutedText }}>إجمالي التبرعات</Typography>
+          </Card>
+          <Card sx={{ ...cardSx, p: 2, textAlign: 'center' }}>
+            <Typography variant="h4" sx={{ fontWeight: 'bold', color: colors.primary }}>{totalEmployees}</Typography>
+            <Typography variant="body2" sx={{ color: colors.mutedText }}>الموظفون</Typography>
+          </Card>
+        </Box>
+
+        {/* ============= قسمين رئيسيين: التكليفات + الرسم البياني ============= */}
         <Box
           sx={{
             display: 'grid',
@@ -136,29 +173,20 @@ export default function Statistics() {
         >
           {/* Left card: latest speaker assignments table. */}
           <Box sx={{ gridColumn: { md: 'span 1' } }}>
-            {/* Reusable card that wraps the table section. */}
             <SectionCard
               cardSx={cardSx}
               titleSx={titleSx}
               title="أحدث تكليفات الخطباء"
               action={
-                <>
-                  {/* Link-style action for viewing all records. */}
-                  <Typography variant="body2" sx={{ color: colors.secondary, cursor: 'pointer' }}>
-                    عرض الكل
-                  </Typography>
-                </>
+                <Typography variant="body2" sx={{ color: colors.secondary, cursor: 'pointer' }}>
+                  عرض الكل
+                </Typography>
               }
             >
-              {/* Table container for assignment rows. */}
               <TableContainer>
-                {/* Table with mosque, speaker, and date columns. */}
                 <Table sx={{ '& .MuiTableCell-root': { color: colors.text } }}>
-                  {/* Column headers row. */}
                   <TableHead>
-                    {/* Header row for the table. */}
                     <TableRow>
-                      {/* Header cells rendered from a list. */}
                       {tableHeaders.map((header) => (
                         <TableCell key={header} align="right" sx={headerCellSx}>
                           {header}
@@ -166,33 +194,24 @@ export default function Statistics() {
                       ))}
                     </TableRow>
                   </TableHead>
-
-                  {/* Data rows for each speaker assignment. */}
                   <TableBody>
-                    {speakers.map((row) => (
-                      <TableRow key={`${row.mosque}-${row.date}`}>
-                        {/* Mosque name cell. */}
-                        <TableCell align="right" sx={tableCellSx}>
-                          {row.mosque}
-                        </TableCell>
-                        {/* Speaker name cell. */}
-                        <TableCell align="right" sx={tableCellSx}>
-                          {row.speaker}
-                        </TableCell>
-                        {/* Date cell with a compact chip. */}
-                        <TableCell align="right" sx={tableCellSx}>
-                          <Chip
-                            label={row.date}
-                            size="small"
-                            sx={{
-                              bgcolor: colors.accent,
-                              color: colors.primary,
-                              fontWeight: 'bold',
-                            }}
-                          />
+                    {speakers.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={3} align="center" sx={tableCellSx}>
+                          لا توجد تكليفات حالياً
                         </TableCell>
                       </TableRow>
-                    ))}
+                    ) : (
+                      speakers.map((row, idx) => (
+                        <TableRow key={idx}>
+                          <TableCell align="right" sx={tableCellSx}>{row.mosque}</TableCell>
+                          <TableCell align="right" sx={tableCellSx}>{row.speaker}</TableCell>
+                          <TableCell align="right" sx={tableCellSx}>
+                            <Chip label={row.date} size="small" sx={{ bgcolor: colors.accent, color: colors.primary, fontWeight: 'bold' }} />
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
                   </TableBody>
                 </Table>
               </TableContainer>
@@ -201,38 +220,20 @@ export default function Statistics() {
 
           {/* Right card: weekly donation trend chart. */}
           <Box sx={{ gridColumn: { md: 'span 2' } }}>
-            {/* Reusable card that wraps the chart section. */}
             <SectionCard
               cardSx={cardSx}
               titleSx={titleSx}
               title="تحليل التبرعات (أسبوعي)"
               action={
-                <>
-                  {/* Time-range chip for the chart. */}
-                  <Chip
-                    label="آخر 7 أيام"
-                    sx={{ bgcolor: layout.searchBaseBg, color: colors.text }}
-                  />
-                </>
+                <Chip label="آخر 7 أيام" sx={{ bgcolor: layout.searchBaseBg, color: colors.text }} />
               }
             >
-              {/* Fixed chart area that keeps the graph responsive. */}
               <Box sx={{ width: '100%', height: 300 }}>
-                {/* Responsive wrapper around the line chart. */}
                 <ResponsiveContainer width="100%" height="100%">
-                  {/* Line chart using the weekly donation data. */}
                   <LineChart data={chartData}>
-                    {/* Background grid for easier reading. */}
                     <CartesianGrid strokeDasharray="3 3" stroke={colors.border} />
-                    {/* X axis with Arabic day labels. */}
-                    <XAxis
-                      dataKey="day"
-                      stroke={layout.subTitle}
-                      tick={{ fill: layout.subTitle }}
-                    />
-                    {/* Y axis with numeric values. */}
+                    <XAxis dataKey="day" stroke={layout.subTitle} tick={{ fill: layout.subTitle }} />
                     <YAxis stroke={layout.subTitle} tick={{ fill: layout.subTitle }} />
-                    {/* Tooltip for hovered chart values. */}
                     <Tooltip
                       contentStyle={{
                         backgroundColor: colors.surface,
@@ -243,7 +244,6 @@ export default function Statistics() {
                       labelStyle={{ color: colors.text }}
                       itemStyle={{ color: colors.primary }}
                     />
-                    {/* Main donation trend line. */}
                     <Line type="monotone" dataKey="value" stroke={colors.primary} strokeWidth={3} />
                   </LineChart>
                 </ResponsiveContainer>
@@ -259,10 +259,7 @@ export default function Statistics() {
               display: 'grid',
               gap: 3,
               width: '100%',
-              gridTemplateColumns: {
-                xs: '1fr',
-                md: 'repeat(2, minmax(0, 1fr))',
-              },
+              gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))' },
             }}
           >
             <Box sx={{ gridColumn: { md: 'span 2' } }}>
@@ -271,68 +268,24 @@ export default function Statistics() {
                 titleSx={titleSx}
                 title="كثافة المساجد في المناطق"
                 action={
-                  <>
-                    <Typography
-                      variant="caption"
-                      sx={{ color: colors.mutedText, fontSize: '0.8rem' }}
-                    >
-                      التوزيع الجغرافي
-                    </Typography>
-                  </>
+                  <Typography variant="caption" sx={{ color: colors.mutedText, fontSize: '0.8rem' }}>
+                    التوزيع الجغرافي
+                  </Typography>
                 }
               >
                 <Box sx={{ display: 'grid', gap: 2.5 }}>
                   {regionDensity.map((item) => (
-                    <Box
-                      key={item.region}
-                      sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}
-                    >
-                      {/* Region name and count */}
-                      <Box
-                        sx={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                        }}
-                      >
-                        <Typography
-                          sx={{
-                            fontWeight: 600,
-                            color: colors.text,
-                            fontSize: '0.95rem',
-                          }}
-                        >
+                    <Box key={item.region} sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Typography sx={{ fontWeight: 600, color: colors.text, fontSize: '0.95rem' }}>
                           {item.region}
                         </Typography>
-                        <Typography
-                          sx={{
-                            fontWeight: 'bold',
-                            color: colors.primary,
-                            fontSize: '1rem',
-                          }}
-                        >
+                        <Typography sx={{ fontWeight: 'bold', color: colors.primary, fontSize: '1rem' }}>
                           {item.count}
                         </Typography>
                       </Box>
-                      {/* Progress bar */}
-                      <Box
-                        sx={{
-                          width: '100%',
-                          height: 8,
-                          borderRadius: 4,
-                          bgcolor: colors.border,
-                          overflow: 'hidden',
-                        }}
-                      >
-                        <Box
-                          sx={{
-                            height: '100%',
-                            width: `${item.percentage}%`,
-                            bgcolor: colors.primary,
-                            borderRadius: 4,
-                            transition: 'width 0.3s ease',
-                          }}
-                        />
+                      <Box sx={{ width: '100%', height: 8, borderRadius: 4, bgcolor: colors.border, overflow: 'hidden' }}>
+                        <Box sx={{ height: '100%', width: `${item.percentage}%`, bgcolor: colors.primary, borderRadius: 4, transition: 'width 0.3s ease' }} />
                       </Box>
                     </Box>
                   ))}

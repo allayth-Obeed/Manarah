@@ -36,4 +36,56 @@ export class UsersService {
       },
     });
   }
+
+  async removeUser(id: number) {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      include: {
+        preacher: true,
+        employee: true,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundException('المستخدم غير موجود');
+    }
+
+    // حذف البيانات المرتبطة أولاً إن وجدت
+    if (user.preacher) {
+      await this.prisma.preacher.delete({
+        where: { id: user.preacher.id },
+      });
+    }
+
+    if (user.employee) {
+      await this.prisma.employee.delete({
+        where: { id: user.employee.id },
+      });
+    }
+
+    // حذف المستخدم
+    await this.prisma.user.delete({
+      where: { id },
+    });
+
+    return { message: 'تم حذف المستخدم بنجاح' };
+  }
+
+  async removeAll() {
+    // حذف جميع البيانات المرتبطة بأولوية (مراعاة العلاقات)
+    // أولاً: حذف تعيينات الإمام (PreacherAssignments)
+    await this.prisma.preacherAssignment.deleteMany({});
+
+    // ثانيًا: حذف البيانات الفردية
+    await this.prisma.preacher.deleteMany({});
+    await this.prisma.employee.deleteMany({});
+
+    // ثالثًا: حذف المستخدمين
+    const result = await this.prisma.user.deleteMany({});
+
+    return {
+      message: 'تم حذف جميع الحسابات بنجاح',
+      count: result.count,
+    };
+  }
 }

@@ -2,10 +2,12 @@ import {
   IsString,
   IsNotEmpty,
   IsOptional,
+  IsInt,
 } from 'class-validator';
 
 export class CreatePreacherDto {
   @IsOptional()
+  @IsInt({ message: 'معرف المستخدم يجب أن يكون رقماً' })
   userId?: number;
 
   @IsString()

@@ -1,25 +1,67 @@
-import React from 'react'
+import React from 'react' // ADDED: استيراد React لإنشاء مكوّن الواجهة.
+import {
+  Avatar,
+  Box,
+  Card,
+  CardContent,
+  FormControl,
+  MenuItem,
+  Select,
+  Typography,
+} from '@mui/material' // ADDED: استيراد عناصر MUI لبناء بطاقة تكليف تفاعلية.
+import { useTheme } from '../../theme/themeContext' // ADDED: استيراد الثيم الحالي لتناسق الألوان مع بقية التطبيق.
+import {
+  CalendarToday,
+  HomeWorkOutlined,
+  WarningAmber,
+  Settings,
+  Person2Outlined,
+} from '@mui/icons-material' // ADDED: استيراد الأيقونات المستخدمة في الحقول والتنبيه.
+import AppButton from '../../components/common/AppButton' // ADDED: استيراد زر التطبيق الموحد للاستخدام في التثبيت.
 
-import { Avatar, Box, Card, CardContent, Typography } from '@mui/material'
+export default function RapidAssignment({
+  // ADDED: تعريف مكوّن التكليف السريع مع الخصائص القادمة من الصفحة الأب.
+  mosques = [], // ADDED: قائمة المساجد المتاحة للاختيار.
+  preachers = [], // ADDED: قائمة الخطباء المتاحين للاختيار.
+  assignmentDateLabel, // ADDED: نص تاريخ الجمعة القادمة بصيغة جاهزة للعرض.
+  selectedMosqueId, // ADDED: معرف المسجد المختار حاليًا.
+  selectedPreacherId, // ADDED: معرف الخطيب المختار حاليًا.
+  onSelectMosque, // ADDED: دالة تحديث المسجد المختار في الصفحة الأب.
+  onSelectPreacher, // ADDED: دالة تحديث الخطيب المختار في الصفحة الأب.
+  conflictState, // ADDED: كائن حالة فحص التعارض من الـ API.
+  onConfirmAssign, // ADDED: دالة تنفيذ تثبيت التكليف في الخلفية.
+  canSubmit, // ADDED: علم يحدد إمكانية الضغط على زر التثبيت.
+  loading, // ADDED: علم يحدد وجود عملية حفظ جارية.
+}) {
+  const { activeTheme } = useTheme() // ADDED: الحصول على ألوان الثيم النشط.
 
-import { useTheme } from '../../theme/themeContext'
-import { CalendarToday, HomeWorkOutlined, WarningAmber, Settings, Person2Outlined } from '@mui/icons-material'
-import AppButton from '../../components/common/AppButton'
-
-export default function RapidAssignment({ onConfirmAssign }) {
-  const { activeTheme } = useTheme()
+  const selectedMosque = mosques.find((mosque) => mosque.id === Number(selectedMosqueId)) || null // ADDED: استخراج المسجد المختار كاملًا لعرض اسمه.
+  const selectedPreacher =
+    preachers.find((preacher) => preacher.id === Number(selectedPreacherId)) || null // ADDED: استخراج الخطيب المختار كاملًا لعرض اسمه.
+  const preacherName = selectedPreacher
+    ? `${selectedPreacher.firstName} ${selectedPreacher.lastName}`
+    : 'اختر خطيبًا' // ADDED: تجهيز اسم الخطيب المعروض أو نص افتراضي.
+  const preacherAvatar = selectedPreacher?.firstName?.charAt(0) || 'م' // ADDED: تجهيز حرف أولي لعرضه داخل الصورة الرمزية.
 
   return (
     <Box sx={{ direction: 'rtl' }}>
-      {/* Form Card */}
+      {' '}
+      {/* ADDED: ضبط اتجاه البطاقة إلى RTL للغة العربية. */}
       <Card sx={{ borderRadius: 2, p: 2, background: activeTheme.colors.surface }}>
-
-         <Typography variant="h6" fontWeight={700} mb={2} color={activeTheme.colors.text}>
-         الجمعة القادمة
-        </Typography>
+        {' '}
+        {/* ADDED: بطاقة رئيسية للتكليف السريع. */}
+        <Typography variant="h6" fontWeight={700} mb={2} color={activeTheme.colors.text}>
+          {' '}
+          {/* ADDED: عنوان القسم داخل البطاقة. */}
+          الجمعة القادمة {/* ADDED: نص عنوان المهمة. */}
+        </Typography>{' '}
+        {/* ADDED: نهاية عنوان القسم. */}
         <CardContent sx={{ p: 0 }}>
-          {/* Date Box */}
+          {' '}
+          {/* ADDED: حاوية المحتوى التفصيلي داخل البطاقة. */}
           <Box display="flex" justifyContent="flex-end" mb={2}>
+            {' '}
+            {/* ADDED: حاوية تاريخ الجمعة القادمة. */}
             <Box
               sx={{
                 display: 'flex',
@@ -31,45 +73,105 @@ export default function RapidAssignment({ onConfirmAssign }) {
                 borderRadius: 1.5,
               }}
             >
-              <CalendarToday fontSize="small" color="action" />
+              {' '}
+              {/* ADDED: تصميم صندوق التاريخ. */}
+              <CalendarToday fontSize="small" color="action" />{' '}
+              {/* ADDED: أيقونة التاريخ بجانب النص. */}
               <Typography fontWeight={700} fontSize={13}>
-                27 أكتوبر 2023
-              </Typography>
-            </Box>
-          </Box>
-
-          {/* Mosque */}
-          <Box
-            mb={2}
-            sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '4' }}
-          >
-            <HomeWorkOutlined fontSize="small" color="action" sx={{ marginLeft: 1 }} />
+                {' '}
+                {/* ADDED: تنسيق نص التاريخ. */}
+                {assignmentDateLabel} {/* ADDED: عرض تاريخ الجمعة القادمة القادم من الصفحة الأب. */}
+              </Typography>{' '}
+              {/* ADDED: نهاية عنصر النص الخاص بالتاريخ. */}
+            </Box>{' '}
+            {/* ADDED: نهاية صندوق التاريخ. */}
+          </Box>{' '}
+          {/* ADDED: نهاية حاوية التاريخ. */}
+          <Box mb={1} sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+            {' '}
+            {/* ADDED: صف عنوان حقل المسجد. */}
+            <HomeWorkOutlined fontSize="small" color="action" sx={{ marginLeft: 1 }} />{' '}
+            {/* ADDED: أيقونة المسجد. */}
             <Typography variant="body2" color="text.secondary">
-              المسجد المستهدف
-            </Typography>
-          </Box>
-
-          <Box
-            sx={{
-              p: 1.5,
-              background: activeTheme.colors.panelBg,
-              borderRadius: 1.5,
-              mb: 2,
-            }}
-          >
-            <Typography variant="body2" fontWeight={600} color={activeTheme.colors.text}>
-              مسجد الملك عبدالله الأول
-            </Typography>
-          </Box>
-
-          {/* Imam */}
-          <Box sx={{display:"flex", alignItems:"center",flexDirection:"row"}} mb={2}>
-            <Person2Outlined fontSize="small" color="action" sx={{ marginLeft: 1 }} />
+              {' '}
+              {/* ADDED: تنسيق عنوان حقل المسجد. */}
+              المسجد المستهدف {/* ADDED: نص عنوان حقل المسجد. */}
+            </Typography>{' '}
+            {/* ADDED: نهاية نص حقل المسجد. */}
+          </Box>{' '}
+          {/* ADDED: نهاية صف عنوان المسجد. */}
+          <FormControl fullWidth size="small" sx={{ mb: 2 }}>
+            {' '}
+            {/* ADDED: حاوية اختيار المسجد. */}
+            <Select
+              value={selectedMosqueId ? String(selectedMosqueId) : ''}
+              displayEmpty
+              onChange={(event) => onSelectMosque(Number(event.target.value))}
+              sx={{ background: activeTheme.colors.panelBg, borderRadius: 1.5 }}
+            >
+              {' '}
+              {/* ADDED: قائمة منسدلة لاختيار المسجد مع تحديث الحالة في الصفحة الأب. */}
+              <MenuItem value="">اختر مسجدًا</MenuItem>{' '}
+              {/* ADDED: خيار افتراضي قبل تحديد أي مسجد. */}
+              {mosques.map(
+                (
+                  mosque // ADDED: التكرار على المساجد القادمة من الـ API.
+                ) => (
+                  <MenuItem key={mosque.id} value={String(mosque.id)}>
+                    {' '}
+                    {/* ADDED: عنصر قائمة يمثل مسجدًا واحدًا. */}
+                    {mosque.name} {/* ADDED: عرض اسم المسجد داخل القائمة. */}
+                  </MenuItem> // ADDED: نهاية عنصر المسجد في القائمة.
+                )
+              )}{' '}
+              {/* ADDED: نهاية تكرار خيارات المساجد. */}
+            </Select>{' '}
+            {/* ADDED: نهاية قائمة اختيار المسجد. */}
+          </FormControl>{' '}
+          {/* ADDED: نهاية حاوية اختيار المسجد. */}
+          <Box sx={{ display: 'flex', alignItems: 'center', flexDirection: 'row' }} mb={1}>
+            {' '}
+            {/* ADDED: صف عنوان حقل الخطيب. */}
+            <Person2Outlined fontSize="small" color="action" sx={{ marginLeft: 1 }} />{' '}
+            {/* ADDED: أيقونة الخطيب. */}
             <Typography variant="body2" color="text.secondary">
-              الخطيب المختار
-            </Typography>
-          </Box>
-
+              {' '}
+              {/* ADDED: تنسيق عنوان حقل الخطيب. */}
+              الخطيب المختار {/* ADDED: نص عنوان حقل الخطيب. */}
+            </Typography>{' '}
+            {/* ADDED: نهاية نص عنوان الخطيب. */}
+          </Box>{' '}
+          {/* ADDED: نهاية صف عنوان الخطيب. */}
+          <FormControl fullWidth size="small" sx={{ mb: 2 }}>
+            {' '}
+            {/* ADDED: حاوية اختيار الخطيب. */}
+            <Select
+              value={selectedPreacherId ? String(selectedPreacherId) : ''}
+              displayEmpty
+              onChange={(event) => onSelectPreacher(Number(event.target.value))}
+              sx={{ background: activeTheme.colors.panelBg, borderRadius: 1.5 }}
+            >
+              {' '}
+              {/* ADDED: قائمة منسدلة لاختيار الخطيب مع تحديث الحالة في الصفحة الأب. */}
+              <MenuItem value="">اختر خطيبًا</MenuItem>{' '}
+              {/* ADDED: خيار افتراضي قبل تحديد أي خطيب. */}
+              {preachers.map(
+                (
+                  preacher // ADDED: التكرار على الخطباء القادمة من الـ API.
+                ) => (
+                  <MenuItem key={preacher.id} value={String(preacher.id)}>
+                    {' '}
+                    {/* ADDED: عنصر قائمة يمثل خطيبًا واحدًا. */}
+                    {`${preacher.firstName} ${preacher.lastName}`}{' '}
+                    {/* ADDED: عرض الاسم الكامل للخطيب في القائمة. */}
+                  </MenuItem> // ADDED: نهاية عنصر الخطيب في القائمة.
+                )
+              )}{' '}
+              {/* ADDED: نهاية تكرار خيارات الخطباء. */}
+            </Select>{' '}
+            {/* ADDED: نهاية قائمة اختيار الخطيب. */}
+          </FormControl>{' '}
+          {/* ADDED: نهاية حاوية اختيار الخطيب. */}
           <Box
             sx={{
               p: 1.5,
@@ -82,6 +184,8 @@ export default function RapidAssignment({ onConfirmAssign }) {
               alignItems: 'center',
             }}
           >
+            {' '}
+            {/* ADDED: صندوق عرض ملخص الخطيب المختار. */}
             <Avatar
               sx={{
                 width: 32,
@@ -90,34 +194,69 @@ export default function RapidAssignment({ onConfirmAssign }) {
                 fontSize: 12,
               }}
             >
-              م
-            </Avatar>
+              {' '}
+              {/* ADDED: صورة رمزية بالخرف الأول للخطيب. */}
+              {preacherAvatar} {/* ADDED: عرض الحرف الأول داخل الصورة الرمزية. */}
+            </Avatar>{' '}
+            {/* ADDED: نهاية عنصر الصورة الرمزية. */}
             <Typography variant="body2" fontWeight={600} color={activeTheme.colors.text}>
-              د. محمد راتب النابلسي
-            </Typography>
-          </Box>
-
-          {/* Warning Box */}
-          <Box
-            sx={{
-              background: activeTheme.colors.danger100,
-              border: `1px solid ${activeTheme.colors.danger300}`,
-              color: activeTheme.colors.danger700,
-              p: 2,
-              borderRadius: 1.5,
-              mb: 2,
-              display: 'flex',
-              gap: 1,
-              alignItems: 'flex-start',
-            }}
-          >
-            <WarningAmber sx={{ flexShrink: 0, mt: 0.5 }} />
-            <Typography variant="body2" fontSize={12}>
-              تحذير من تدخل الخطيب المختار في تكليف مسبق في مسجد آخر لنفس اليوم.
-            </Typography>
-          </Box>
-
-          {/* Confirm Button */}
+              {' '}
+              {/* ADDED: تنسيق نص اسم الخطيب المختار. */}
+              {preacherName} {/* ADDED: عرض الاسم الكامل للخطيب أو النص الافتراضي. */}
+            </Typography>{' '}
+            {/* ADDED: نهاية نص اسم الخطيب. */}
+          </Box>{' '}
+          {/* ADDED: نهاية صندوق ملخص الخطيب. */}
+          {conflictState?.hasConflict && ( // ADDED: عرض صندوق التنبيه فقط عند وجود تعارض حسب نتيجة الـ API.
+            <Box
+              sx={{
+                background: activeTheme.colors.danger100,
+                border: `1px solid ${activeTheme.colors.danger300}`,
+                color: activeTheme.colors.danger700,
+                p: 2,
+                borderRadius: 1.5,
+                mb: 2,
+                display: 'flex',
+                gap: 1,
+                alignItems: 'flex-start',
+              }}
+            >
+              {' '}
+              {/* ADDED: تصميم صندوق التحذير من التعارض. */}
+              <WarningAmber sx={{ flexShrink: 0, mt: 0.5 }} />{' '}
+              {/* ADDED: أيقونة التحذير داخل الصندوق. */}
+              <Typography variant="body2" fontSize={12}>
+                {' '}
+                {/* ADDED: تنسيق نص رسالة التحذير. */}
+                {`تحذير: الخطيب المختار لديه ${conflictState.conflictCount} تكليف/تكليفات نشطة في نفس التاريخ.`}{' '}
+                {/* ADDED: رسالة تعارض ديناميكية مبنية على نتيجة الفحص. */}
+              </Typography>{' '}
+              {/* ADDED: نهاية نص التحذير. */}
+            </Box> // ADDED: نهاية صندوق التحذير.
+          )}{' '}
+          {/* ADDED: نهاية شرط عرض التحذير. */}
+          {!!conflictState?.error && ( // ADDED: عرض رسالة عند فشل فحص التعارض من الخلفية.
+            <Box
+              sx={{
+                background: activeTheme.colors.danger100,
+                border: `1px solid ${activeTheme.colors.danger300}`,
+                color: activeTheme.colors.danger700,
+                p: 1.5,
+                borderRadius: 1.5,
+                mb: 2,
+              }}
+            >
+              {' '}
+              {/* ADDED: صندوق خطأ خفيف لفحص التعارض. */}
+              <Typography variant="body2" fontSize={12}>
+                {' '}
+                {/* ADDED: تنسيق نص رسالة الخطأ. */}
+                {conflictState.error} {/* ADDED: عرض نص خطأ الفحص القادم من الصفحة الأب. */}
+              </Typography>{' '}
+              {/* ADDED: نهاية نص رسالة الخطأ. */}
+            </Box> // ADDED: نهاية صندوق رسالة الخطأ.
+          )}{' '}
+          {/* ADDED: نهاية شرط عرض رسالة الخطأ. */}
           <AppButton
             variant="contained"
             fullWidth
@@ -131,11 +270,18 @@ export default function RapidAssignment({ onConfirmAssign }) {
             py={1.5}
             borderRadius={2}
             onClick={onConfirmAssign}
+            disabled={!canSubmit || loading}
           >
-            تثبيت التكليف
-          </AppButton>
-        </CardContent>
-      </Card>
-    </Box>
-  )
-}
+            {' '}
+            {/* ADDED: زر تثبيت التكليف مع تعطيل عند نقص البيانات أو أثناء الحفظ. */}
+            {loading ? 'جارٍ التثبيت...' : 'تثبيت التكليف'}{' '}
+            {/* ADDED: نص ديناميكي للزر حسب حالة التنفيذ. */}
+          </AppButton>{' '}
+          {/* ADDED: نهاية زر تثبيت التكليف. */}
+        </CardContent>{' '}
+        {/* ADDED: نهاية محتوى البطاقة. */}
+      </Card>{' '}
+      {/* ADDED: نهاية البطاقة الرئيسية. */}
+    </Box> // ADDED: نهاية حاوية الاتجاه RTL.
+  ) // ADDED: نهاية الإرجاع JSX.
+} // ADDED: نهاية مكوّن التكليف السريع.

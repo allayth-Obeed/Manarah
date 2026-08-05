@@ -39,6 +39,14 @@ export class DonationsService {
     id: number,
     updateDonationDto: Partial<CreateDonationDto>,
   ) {
+    // التحقق من وجود التبرع قبل التحديث لتجنب أخطاء Prisma غير المعالجة
+    const existing = await this.prisma.donation.findUnique({
+      where: { id },
+    });
+    if (!existing) {
+      throw new NotFoundException('التبرع غير موجود');
+    }
+
     return this.prisma.donation.update({
       where: { id },
       data: updateDonationDto,
@@ -46,6 +54,14 @@ export class DonationsService {
   }
 
   async remove(id: number) {
+    // التحقق من وجود التبرع قبل الحذف لتجنب أخطاء Prisma غير المعالجة
+    const existing = await this.prisma.donation.findUnique({
+      where: { id },
+    });
+    if (!existing) {
+      throw new NotFoundException('التبرع غير موجود');
+    }
+
     return this.prisma.donation.delete({
       where: { id },
     });

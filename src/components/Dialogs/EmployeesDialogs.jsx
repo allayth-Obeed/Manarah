@@ -1,4 +1,4 @@
-import React from 'react'
+import React from 'react' // ADDED: React import for JSX rendering
 import {
   Box,
   Dialog,
@@ -10,10 +10,11 @@ import {
   Stack,
   TextField,
   Typography,
-} from '@mui/material'
-import CloseIcon from '@mui/icons-material/Close'
-import AppButton from '../common/AppButton'
-import { useTheme } from '../../theme/themeContext'
+} from '@mui/material' // ADDED: MUI components for dialog layout and form fields
+import CloseIcon from '@mui/icons-material/Close' // ADDED: Close icon for dialog header
+import DeleteIcon from '@mui/icons-material/Delete' // ADDED: Delete icon for delete confirmation dialog
+import AppButton from '../common/AppButton' // ADDED: Reusable custom button component
+import { useTheme } from '../../theme/themeContext' // ADDED: Theme context for dynamic styling
 
 const jobTitles = [
   { value: 'إمام وخطيب', label: 'إمام وخطيب' },
@@ -23,7 +24,11 @@ const jobTitles = [
   { value: 'خطيب جمعة', label: 'خطيب جمعة' },
 ]
 
-export default function EmployeesDialogs({ addOpen, setAddOpen, employeeForm, setEmployeeForm, handleAddSubmit }) {
+// ADDED: New props for delete functionality: deleteOpen, setDeleteOpen, selectedRow, handleConfirmDelete
+export default function EmployeesDialogs({
+  addOpen, setAddOpen, employeeForm, setEmployeeForm, handleAddSubmit,
+  deleteOpen, setDeleteOpen, selectedRow, handleConfirmDelete // ADDED: Destructure new delete props
+}) {
   const { activeTheme } = useTheme()
   const { colors, mode } = activeTheme
   const isDark = mode === 'dark'
@@ -48,93 +53,118 @@ export default function EmployeesDialogs({ addOpen, setAddOpen, employeeForm, se
   }
 
   return (
-    <Dialog
-      open={addOpen}
-      onClose={() => setAddOpen(false)}
-      maxWidth="sm"
-      fullWidth
-      PaperProps={{
-        sx: {
-          borderRadius: 3,
-          bgcolor: colors.surface,
-          color: colors.text,
-          maxWidth: 672,
-          boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
-          border: `1px solid ${colors.border}`,
-        },
-      }}
-    >
-      <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 4, pt: 4, pb: 0, mb: 3 }}>
-        <IconButton onClick={() => setAddOpen(false)} sx={{ color: colors.mutedText, p: 0, '& svg': { fontSize: 22 } }}>
-          <CloseIcon />
-        </IconButton>
-        <Box sx={{ display: 'flex', alignItems: 'center', borderRight: `4px solid ${colors.secondary}`, pr: 1.5 }}>
-          <Typography sx={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 700, fontSize: 20, color: isDark ? colors.secondary : colors.primary, lineHeight: '28px' }}>
-            إضافة كادر جديد
+    <>
+      {/* ============= Dialog إضافة موظف جديد ============= */}
+      <Dialog
+        open={addOpen}
+        onClose={() => setAddOpen(false)}
+        maxWidth="sm"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            bgcolor: colors.surface,
+            color: colors.text,
+            maxWidth: 672,
+            boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)',
+            border: `1px solid ${colors.border}`,
+          },
+        }}
+      >
+        <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 4, pt: 4, pb: 0, mb: 3 }}>
+          <IconButton onClick={() => setAddOpen(false)} sx={{ color: colors.mutedText, p: 0, '& svg': { fontSize: 22 } }}>
+            <CloseIcon />
+          </IconButton>
+          <Box sx={{ display: 'flex', alignItems: 'center', borderRight: `4px solid ${colors.secondary}`, pr: 1.5 }}>
+            <Typography sx={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 700, fontSize: 20, color: isDark ? colors.secondary : colors.primary, lineHeight: '28px' }}>
+              إضافة كادر جديد
+            </Typography>
+          </Box>
+        </DialogTitle>
+
+        <DialogContent sx={{ px: 4, pt: 3, pb: 0, overflow: 'visible' }}>
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 3, direction: 'rtl' }}>
+            <Stack spacing={3}>
+              {/* تم تعديل الحقول لتتوافق مع Backend API (firstName, lastName, position) */}
+              <Stack spacing={0.5}>
+                <Typography sx={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 500, fontSize: 14, color: colors.text, lineHeight: '20px', textAlign: 'right' }}>
+                  الاسم الأول
+                </Typography>
+                <TextField value={employeeForm.firstName} onChange={(e) => setEmployeeForm((prev) => ({ ...prev, firstName: e.target.value }))} placeholder="أدخل الاسم الأول" fullWidth sx={inputSx} />
+              </Stack>
+              <Stack spacing={0.5}>
+                <Typography sx={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 500, fontSize: 14, color: colors.text, lineHeight: '20px', textAlign: 'right' }}>
+                  الاسم الأخير
+                </Typography>
+                <TextField value={employeeForm.lastName} onChange={(e) => setEmployeeForm((prev) => ({ ...prev, lastName: e.target.value }))} placeholder="أدخل الاسم الأخير" fullWidth sx={inputSx} />
+              </Stack>
+            </Stack>
+            <Stack spacing={3}>
+              <Stack spacing={0.5}>
+                <Typography sx={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 500, fontSize: 14, color: colors.text, lineHeight: '20px', textAlign: 'right' }}>
+                  المسمى الوظيفي
+                </Typography>
+                <TextField
+                  select value={employeeForm.position} onChange={(e) => setEmployeeForm((prev) => ({ ...prev, position: e.target.value }))} fullWidth
+                  SelectProps={{ IconComponent: () => <svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginLeft: 8 }}><path d="M1 1.5L6 6.5L11 1.5" stroke={colors.mutedText} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg> }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': { backgroundColor: colors.bgelem, borderRadius: 2, height: 48, '& fieldset': { border: 'none' }, '&:hover fieldset': { border: 'none' }, '&.Mui-focused fieldset': { border: 'none' } },
+                    '& .MuiSelect-select': { textAlign: 'right', fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 400, fontSize: 16, color: colors.text, py: 1.5 },
+                  }}
+                  SelectDisplayProps={{ style: { direction: 'rtl' } }}
+                  MenuProps={{ sx: { '& .MuiMenu-paper': { direction: 'rtl', bgcolor: colors.surface }, '& .MuiMenuItem-root': { justifyContent: 'flex-end', fontFamily: '"IBM Plex Sans Arabic", sans-serif', color: colors.text } } }}
+                >
+                  {jobTitles.map((option) => (<MenuItem key={option.value} value={option.value} sx={{ justifyContent: 'flex-end' }}>{option.label}</MenuItem>))}
+                </TextField>
+              </Stack>
+              <Stack spacing={0.5}>
+                <Typography sx={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 500, fontSize: 14, color: colors.text, lineHeight: '20px', textAlign: 'right' }}>
+                  تاريخ التعيين
+                </Typography>
+                <TextField
+                  type="date" value={employeeForm.hireDate} onChange={(e) => setEmployeeForm((prev) => ({ ...prev, hireDate: e.target.value }))} fullWidth InputLabelProps={{ shrink: true }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': { backgroundColor: colors.bgelem, borderRadius: 2, height: 48, '& fieldset': { border: 'none' }, '&:hover fieldset': { border: 'none' }, '&.Mui-focused fieldset': { border: 'none' } },
+                    '& input': { textAlign: 'right', fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 400, fontSize: 16, color: colors.text, '&::-webkit-calendar-picker-indicator': { marginLeft: 0, marginRight: 'auto', filter: isDark ? 'invert(0.8)' : 'none' } },
+                  }}
+                />
+              </Stack>
+            </Stack>
+          </Box>
+        </DialogContent>
+
+        <DialogActions sx={{ px: 4, pt: 1, pb: 4, gap: 1.5, justifyContent: 'flex-start', flexDirection: 'row-reverse' }}>
+          <AppButton variant="contained" backgroundColor="linear-gradient(135deg, #C5A059 0%, #9E7E43 100%)" textColor="#FFFFFF" borderColor="transparent" onClick={handleAddSubmit}
+            sx={{ background: 'linear-gradient(135deg, #C5A059 0%, #9E7E43 100%) !important', borderRadius: 2, height: 48, px: 4 }}>
+            تأكيد الإضافة
+          </AppButton>
+          <AppButton variant="contained" backgroundColor={colors.btn} textColor={colors.text} borderColor="transparent" onClick={() => setAddOpen(false)}
+            sx={{ borderRadius: 2, height: 48, px: 3, '&:hover': { backgroundColor: colors.border } }}>
+            إلغاء
+          </AppButton>
+        </DialogActions>
+      </Dialog>
+
+      {/* ============= ADDED: Dialog حذف موظف ============= */}
+      {/* ADDED: Delete confirmation dialog that appears when user clicks delete on an employee row */}
+      <Dialog open={deleteOpen} onClose={() => setDeleteOpen(false)} maxWidth="xs" fullWidth
+        PaperProps={{ sx: { borderRadius: 4, bgcolor: colors.surface, color: colors.text, boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' } }}>
+        <DialogContent sx={{ pt: 4, pb: 2, textAlign: 'center' }}>
+          <Box sx={{ width: 64, height: 64, mx: 'auto', mb: 2, borderRadius: 3, display: 'grid', placeItems: 'center', bgcolor: colors.danger100, color: colors.danger500 }}>
+            <DeleteIcon sx={{ fontSize: 32 }} />
+          </Box>
+          <Typography sx={{ fontWeight: 900, fontSize: 22, mb: 1, color: colors.text }}>تأكيد حذف السجل</Typography>
+          <Typography sx={{ color: colors.mutedText, fontSize: 14, lineHeight: 1.8 }}>
+            هل أنت متأكد من رغبتك في حذف ملف {selectedRow?.name || 'هذا الموظف'}؟ هذا الإجراء نهائي ولا يمكن التراجع عنه بعد التنفيذ.
           </Typography>
-        </Box>
-      </DialogTitle>
-
-      <DialogContent sx={{ px: 4, pt: 3, pb: 0, overflow: 'visible' }}>
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 3, direction: 'rtl' }}>
-          <Stack spacing={3}>
-            <Stack spacing={0.5}>
-              <Typography sx={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 500, fontSize: 14, color: colors.text, lineHeight: '20px', textAlign: 'right' }}>
-                الاسم الكامل
-              </Typography>
-              <TextField value={employeeForm.name} onChange={(e) => setEmployeeForm((prev) => ({ ...prev, name: e.target.value }))} placeholder="أدخل اسم الموظف" fullWidth sx={inputSx} />
-            </Stack>
-            <Stack spacing={0.5}>
-              <Typography sx={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 500, fontSize: 14, color: colors.text, lineHeight: '20px', textAlign: 'right' }}>
-                الرقم الوطني
-              </Typography>
-              <TextField value={employeeForm.nationalId} onChange={(e) => setEmployeeForm((prev) => ({ ...prev, nationalId: e.target.value }))} placeholder="0000000000" fullWidth sx={inputSx} />
-            </Stack>
-          </Stack>
-          <Stack spacing={3}>
-            <Stack spacing={0.5}>
-              <Typography sx={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 500, fontSize: 14, color: colors.text, lineHeight: '20px', textAlign: 'right' }}>
-                المسمى الوظيفي
-              </Typography>
-              <TextField
-                select value={employeeForm.jobTitle} onChange={(e) => setEmployeeForm((prev) => ({ ...prev, jobTitle: e.target.value }))} fullWidth
-                SelectProps={{ IconComponent: () => <svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginLeft: 8 }}><path d="M1 1.5L6 6.5L11 1.5" stroke={colors.mutedText} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg> }}
-                sx={{
-                  '& .MuiOutlinedInput-root': { backgroundColor: colors.bgelem, borderRadius: 2, height: 48, '& fieldset': { border: 'none' }, '&:hover fieldset': { border: 'none' }, '&.Mui-focused fieldset': { border: 'none' } },
-                  '& .MuiSelect-select': { textAlign: 'right', fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 400, fontSize: 16, color: colors.text, py: 1.5 },
-                }}
-                SelectDisplayProps={{ style: { direction: 'rtl' } }}
-                MenuProps={{ sx: { '& .MuiMenu-paper': { direction: 'rtl', bgcolor: colors.surface }, '& .MuiMenuItem-root': { justifyContent: 'flex-end', fontFamily: '"IBM Plex Sans Arabic", sans-serif', color: colors.text } } }}
-              >
-                {jobTitles.map((option) => (<MenuItem key={option.value} value={option.value} sx={{ justifyContent: 'flex-end' }}>{option.label}</MenuItem>))}
-              </TextField>
-            </Stack>
-            <Stack spacing={0.5}>
-              <Typography sx={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 500, fontSize: 14, color: colors.text, lineHeight: '20px', textAlign: 'right' }}>
-                تاريخ التعيين
-              </Typography>
-              <TextField
-                type="date" value={employeeForm.hireDate} onChange={(e) => setEmployeeForm((prev) => ({ ...prev, hireDate: e.target.value }))} fullWidth InputLabelProps={{ shrink: true }}
-                sx={{
-                  '& .MuiOutlinedInput-root': { backgroundColor: colors.bgelem, borderRadius: 2, height: 48, '& fieldset': { border: 'none' }, '&:hover fieldset': { border: 'none' }, '&.Mui-focused fieldset': { border: 'none' } },
-                  '& input': { textAlign: 'right', fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 400, fontSize: 16, color: colors.text, '&::-webkit-calendar-picker-indicator': { marginLeft: 0, marginRight: 'auto', filter: isDark ? 'invert(0.8)' : 'none' } },
-                }}
-              />
-            </Stack>
-          </Stack>
-        </Box>
-      </DialogContent>
-
-      <DialogActions sx={{ px: 4, pt: 1, pb: 4, gap: 1.5, justifyContent: 'flex-start', flexDirection: 'row-reverse' }}>
-        <AppButton variant="contained" backgroundColor="linear-gradient(135deg, #C5A059 0%, #9E7E43 100%)" textColor="#FFFFFF" borderColor="transparent" onClick={handleAddSubmit}
-          sx={{ background: 'linear-gradient(135deg, #C5A059 0%, #9E7E43 100%) !important', borderRadius: 2, height: 48, px: 4 }}>
-          تأكيد الإضافة
-        </AppButton>
-        <AppButton variant="contained" backgroundColor={colors.btn} textColor={colors.text} borderColor="transparent" onClick={() => setAddOpen(false)}
-          sx={{ borderRadius: 2, height: 48, px: 3, '&:hover': { backgroundColor: colors.border } }}>
-          إلغاء
-        </AppButton>
-      </DialogActions>
-    </Dialog>
+        </DialogContent>
+        <DialogActions sx={{ px: 2.5, pb: 3, gap: 1, justifyContent: 'center' }}>
+          <AppButton variant="contained" backgroundColor={colors.danger500} textColor="#FFFFFF" borderColor={colors.danger500} onClick={handleConfirmDelete}
+            sx={{ borderRadius: 2, height: 44, px: 3 }}>نعم، حذف السجل</AppButton>
+          <AppButton variant="outlined" backgroundColor="transparent" textColor={colors.text} borderColor={colors.border} onClick={() => setDeleteOpen(false)}
+            sx={{ borderRadius: 2, height: 44, px: 3 }}>تراجع عن الإجراء</AppButton>
+        </DialogActions>
+      </Dialog>
+    </>
   )
 }

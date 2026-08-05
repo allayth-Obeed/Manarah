@@ -9,33 +9,6 @@ const allocationRows = [
   { label: 'الإغاثة المباشرة', value: '25%' },
 ]
 
-const activityRows = [
-  {
-    name: 'أحمد محمود الكردي',
-    initial: 'أ',
-    date: '12-05-2026',
-    type: 'تبرع عام',
-    tone: 'blue',
-    value: '1500 ل.س',
-  },
-  {
-    name: 'فاطمة الزهراء',
-    initial: 'ف',
-    date: '10-05-2026',
-    type: 'وقف',
-    tone: 'green',
-    value: '500 ل.س',
-  },
-  {
-    name: 'يوسف علي',
-    initial: 'ي',
-    date: '08-05-2026',
-    type: 'تبرع مخصص',
-    tone: 'gray',
-    value: '300 ل.س',
-  },
-]
-
 function AllocationBar({ label, value, fill, colors }) {
   return (
     <Box sx={{ mb: 1.25 }}>
@@ -153,9 +126,31 @@ function ActivityRow({ row, colors }) {
   )
 }
 
-export default function DonationsOverview() {
+export default function DonationsOverview({ donations = [], onRowClick, onDeleteClick }) {
   const { activeTheme } = useTheme()
   const { colors } = activeTheme
+
+  // تحويل التبرعات من الـ API إلى صفوف النشاط مع الاحتفاظ بالكائن الأصلي
+  const activityRows = donations.slice(0, 5).map((donation) => {
+    const initial = (donation.donorName || '؟').charAt(0)
+    const date = donation.donationDate || donation.createdAt
+      ? new Date(donation.donationDate || donation.createdAt).toLocaleDateString('ar-SA', { year: 'numeric', month: 'numeric', day: 'numeric' })
+      : 'تاريخ غير محدد'
+    const type = donation.purpose || 'تبرع عام'
+    const tone = donation.purpose === 'وقف' ? 'green' : donation.purpose ? 'blue' : 'gray'
+
+    return {
+      // الكائن الأصلي الكامل من الـ API ليمرر إلى dialogs التفاصيل بشكل صحيح
+      ...donation,
+      name: donation.donorName || 'متبرع',
+      donorName: donation.donorName || 'متبرع',
+      initial,
+      date,
+      type,
+      tone,
+      value: `${donation.amount || 0} ر.س`,
+    }
+  })
 
   return (
     <Box dir="rtl" sx={{ width: '100%', mt: 2.5 }}>
@@ -317,9 +312,30 @@ export default function DonationsOverview() {
           </Box>
 
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.1 }}>
-            {activityRows.map((row) => (
-              <ActivityRow key={row.name} row={row} colors={colors} />
-            ))}
+            {activityRows.length === 0 ? (
+              <Box sx={{ textAlign: 'center', py: 4, color: colors.mutedText }}>
+                لا توجد تبرعات حالياً
+              </Box>
+            ) : (
+              activityRows.map((row) => (
+                <Box key={row.id || row.name} onClick={() => onRowClick?.(row)} sx={{ cursor: 'pointer' }}>
+                  <ActivityRow row={row} colors={colors} />
+                  {onDeleteClick && (
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 0.5 }}>
+                      <Typography
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onDeleteClick(row)
+                        }}
+                        sx={{ fontSize: 12, color: colors.danger500, cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}
+                      >
+                        حذف
+                      </Typography>
+                    </Box>
+                  )}
+                </Box>
+              ))
+            )}
           </Box>
         </Box>
       </Box>

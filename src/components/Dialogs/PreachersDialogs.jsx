@@ -5,14 +5,11 @@ import DeleteIcon from '@mui/icons-material/Delete'
 import AppButton from '../common/AppButton'
 import { useTheme } from '../../theme/themeContext'
 
-const jobTitles = [
-  { value: 'إمام وخطيب', label: 'إمام وخطيب' },
-  { value: 'مؤذن', label: 'مؤذن' },
-  { value: 'خطيب معتمد', label: 'خطيب معتمد' },
-  { value: 'إمام جامع', label: 'إمام جامع' },
-  { value: 'خطيب جمعة', label: 'خطيب جمعة' },
-]
-
+/**
+ * Dialog لإضافة خطيب جديد
+ * ✅ الحقول تتوافق مع CreatePreacherDto في الباك إند: firstName, lastName, phone?, email?, specialization?
+ * ✅ البيانات تأتي من المكون الأب Preachers.jsx إلى preacherForm
+ */
 export default function PreachersDialogs({ addOpen, setAddOpen, preacherForm, setPreacherForm, handleAddSubmit, deleteOpen, setDeleteOpen, selectedRow, handleConfirmDelete }) {
   const { activeTheme } = useTheme()
   const { colors, mode } = activeTheme
@@ -25,6 +22,7 @@ export default function PreachersDialogs({ addOpen, setAddOpen, preacherForm, se
 
   return (
     <>
+      {/* ============= Dialog إضافة خطيب جديد ============= */}
       <Dialog open={addOpen} onClose={() => setAddOpen(false)} maxWidth="sm" fullWidth
         PaperProps={{ sx: { borderRadius: 3, bgcolor: colors.surface, color: colors.text, maxWidth: 672, boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', border: `1px solid ${colors.border}` } }}>
         <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 4, pt: 4, pb: 0, mb: 3 }}>
@@ -36,35 +34,35 @@ export default function PreachersDialogs({ addOpen, setAddOpen, preacherForm, se
         <DialogContent sx={{ px: 4, pt: 3, pb: 0, overflow: 'visible' }}>
           <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 3, direction: 'rtl' }}>
             <Stack spacing={3}>
+              {/* الاسم الأول - يتوافق مع firstName في الباك إند */}
               <Stack spacing={0.5}>
-                <Typography sx={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 500, fontSize: 14, color: colors.text, lineHeight: '20px', textAlign: 'right' }}>الاسم الكامل</Typography>
-                <TextField value={preacherForm.name} onChange={(e) => setPreacherForm((p) => ({ ...p, name: e.target.value }))} placeholder="أدخل اسم الخطيب" fullWidth sx={inputSx} />
+                <Typography sx={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 500, fontSize: 14, color: colors.text, lineHeight: '20px', textAlign: 'right' }}>الاسم الأول</Typography>
+                <TextField value={preacherForm.firstName} onChange={(e) => setPreacherForm((p) => ({ ...p, firstName: e.target.value }))} placeholder="أدخل الاسم الأول" fullWidth sx={inputSx} />
               </Stack>
+              {/* البريد الإلكتروني - اختياري */}
               <Stack spacing={0.5}>
-                <Typography sx={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 500, fontSize: 14, color: colors.text, lineHeight: '20px', textAlign: 'right' }}>الرقم الوطني</Typography>
-                <TextField value={preacherForm.nationalId} onChange={(e) => setPreacherForm((p) => ({ ...p, nationalId: e.target.value }))} placeholder="0000000000" fullWidth sx={inputSx} />
+                <Typography sx={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 500, fontSize: 14, color: colors.text, lineHeight: '20px', textAlign: 'right' }}>البريد الإلكتروني</Typography>
+                <TextField type="email" value={preacherForm.email} onChange={(e) => setPreacherForm((p) => ({ ...p, email: e.target.value }))} placeholder="example@email.com" fullWidth sx={inputSx} />
               </Stack>
             </Stack>
             <Stack spacing={3}>
+              {/* الاسم الأخير - يتوافق مع lastName في الباك إند */}
               <Stack spacing={0.5}>
-                <Typography sx={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 500, fontSize: 14, color: colors.text, lineHeight: '20px', textAlign: 'right' }}>المسمى الوظيفي</Typography>
-                <TextField select value={preacherForm.jobTitle} onChange={(e) => setPreacherForm((p) => ({ ...p, jobTitle: e.target.value }))} fullWidth
-                  SelectProps={{ IconComponent: () => <svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginLeft: 8 }}><path d="M1 1.5L6 6.5L11 1.5" stroke={colors.mutedText} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg> }}
-                  sx={{ '& .MuiOutlinedInput-root': { backgroundColor: colors.bgelem, borderRadius: 2, height: 48, '& fieldset': { border: 'none' }, '&:hover fieldset': { border: 'none' }, '&.Mui-focused fieldset': { border: 'none' } }, '& .MuiSelect-select': { textAlign: 'right', fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 400, fontSize: 16, color: colors.text, py: 1.5 } }}
-                  SelectDisplayProps={{ style: { direction: 'rtl' } }}
-                  MenuProps={{ sx: { '& .MuiMenu-paper': { direction: 'rtl', bgcolor: colors.surface }, '& .MuiMenuItem-root': { justifyContent: 'flex-end', fontFamily: '"IBM Plex Sans Arabic", sans-serif', color: colors.text } } }}>
-                  {jobTitles.map((o) => <MenuItem key={o.value} value={o.value} sx={{ justifyContent: 'flex-end' }}>{o.label}</MenuItem>)}
-                </TextField>
+                <Typography sx={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 500, fontSize: 14, color: colors.text, lineHeight: '20px', textAlign: 'right' }}>الاسم الأخير</Typography>
+                <TextField value={preacherForm.lastName} onChange={(e) => setPreacherForm((p) => ({ ...p, lastName: e.target.value }))} placeholder="أدخل الاسم الأخير" fullWidth sx={inputSx} />
               </Stack>
+              {/* الهاتف - اختياري */}
               <Stack spacing={0.5}>
-                <Typography sx={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 500, fontSize: 14, color: colors.text, lineHeight: '20px', textAlign: 'right' }}>تاريخ التعيين</Typography>
-                <TextField type="date" value={preacherForm.hireDate} onChange={(e) => setPreacherForm((p) => ({ ...p, hireDate: e.target.value }))} fullWidth InputLabelProps={{ shrink: true }}
-                  sx={{ '& .MuiOutlinedInput-root': { backgroundColor: colors.bgelem, borderRadius: 2, height: 48, '& fieldset': { border: 'none' }, '&:hover fieldset': { border: 'none' }, '&.Mui-focused fieldset': { border: 'none' } }, '& input': { textAlign: 'right', fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 400, fontSize: 16, color: colors.text, '&::-webkit-calendar-picker-indicator': { marginLeft: 0, marginRight: 'auto', filter: isDark ? 'invert(0.8)' : 'none' } } }} />
+                <Typography sx={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 500, fontSize: 14, color: colors.text, lineHeight: '20px', textAlign: 'right' }}>رقم الهاتف</Typography>
+                <TextField value={preacherForm.phone} onChange={(e) => setPreacherForm((p) => ({ ...p, phone: e.target.value }))} placeholder="05xxxxxxxx" fullWidth sx={inputSx} />
               </Stack>
-              <Stack spacing={0.5}>
-                <Typography sx={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 500, fontSize: 14, color: colors.text, lineHeight: '20px', textAlign: 'right' }}>سنوات الخبرة</Typography>
-                <TextField value={preacherForm.experience} onChange={(e) => setPreacherForm((p) => ({ ...p, experience: e.target.value }))} placeholder="مثال: 10 سنوات" fullWidth sx={inputSx} />
-              </Stack>
+            </Stack>
+          </Box>
+          {/* التخصص - حقل كامل العرض */}
+          <Box sx={{ mt: 3 }}>
+            <Stack spacing={0.5}>
+              <Typography sx={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 500, fontSize: 14, color: colors.text, lineHeight: '20px', textAlign: 'right' }}>التخصص</Typography>
+              <TextField value={preacherForm.specialization} onChange={(e) => setPreacherForm((p) => ({ ...p, specialization: e.target.value }))} placeholder="مثال: تخصص في الفقه الإسلامي" fullWidth sx={inputSx} />
             </Stack>
           </Box>
         </DialogContent>
@@ -73,6 +71,8 @@ export default function PreachersDialogs({ addOpen, setAddOpen, preacherForm, se
           <AppButton variant="contained" backgroundColor={colors.btn} textColor={colors.text} borderColor="transparent" onClick={() => setAddOpen(false)} sx={{ borderRadius: 2, height: 48, px: 3, '&:hover': { backgroundColor: colors.border } }}>إلغاء</AppButton>
         </DialogActions>
       </Dialog>
+
+      {/* ============= Dialog حذف خطيب ============= */}
 
       <Dialog open={deleteOpen} onClose={() => setDeleteOpen(false)} maxWidth="xs" fullWidth
         PaperProps={{ sx: { borderRadius: 4, bgcolor: colors.surface, color: colors.text, boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' } }}>

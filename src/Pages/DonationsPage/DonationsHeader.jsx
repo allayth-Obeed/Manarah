@@ -193,9 +193,28 @@ function StatCard({ card, colors }) {
   )
 }
 
-export default function DonationsHeader({ onAddClick }) {
+export default function DonationsHeader({ onAddClick, donations = [] }) {
   const { activeTheme } = useTheme()
   const { colors } = activeTheme
+
+  // حساب الإحصائيات من البيانات الحقيقية
+  const totalDonations = donations.reduce((sum, d) => sum + (d.amount || 0), 0)
+  const avgMonthly = donations.length > 0 ? Math.round(totalDonations / Math.max(donations.length, 1)) : 0
+  const uniqueDonors = new Set(donations.map((d) => d.donorName)).size
+
+  // تحديث البطاقات بالبيانات الحقيقية
+  const dynamicCards = summaryCards.map((card) => {
+    if (card.title === 'متوسط التبرع الشهري') {
+      return { ...card, value: avgMonthly.toLocaleString('en-US') }
+    }
+    if (card.title === 'المتبرعون الجدد') {
+      return { ...card, value: String(uniqueDonors) }
+    }
+    if (card.title === 'إجمالي التبرعات السنوي') {
+      return { ...card, value: totalDonations.toLocaleString('en-US') }
+    }
+    return card
+  })
 
   return (
     <Box dir="rtl" sx={{ width: '100%' }}>
@@ -210,7 +229,7 @@ export default function DonationsHeader({ onAddClick }) {
       />
 
       <Box sx={{ display: 'flex', gap: 2, alignItems: 'stretch' }}>
-        {summaryCards.map((card) => (
+        {dynamicCards.map((card) => (
           <StatCard key={card.title} card={card} colors={colors} />
         ))}
       </Box>

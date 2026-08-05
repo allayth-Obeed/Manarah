@@ -9,7 +9,11 @@ export class MosquesService {
   async findAll() {
     return this.prisma.mosque.findMany({
       include: {
-        preachers: true,
+        preachers: {
+          include: {
+            preacher: true,
+          },
+        },
         announcements: true,
         donations: true,
       },
@@ -20,7 +24,11 @@ export class MosquesService {
     const mosque = await this.prisma.mosque.findUnique({
       where: { id },
       include: {
-        preachers: true,
+        preachers: {
+          include: {
+            preacher: true,
+          },
+        },
         announcements: true,
         donations: true,
       },
@@ -40,6 +48,14 @@ export class MosquesService {
   }
 
   async update(id: number, updateMosqueDto: Partial<CreateMosqueDto>) {
+    // التحقق من وجود المسجد قبل التحديث لتجنب أخطاء Prisma غير المعالجة
+    const existing = await this.prisma.mosque.findUnique({
+      where: { id },
+    });
+    if (!existing) {
+      throw new NotFoundException('المسجد غير موجود');
+    }
+
     return this.prisma.mosque.update({
       where: { id },
       data: updateMosqueDto,
@@ -47,6 +63,14 @@ export class MosquesService {
   }
 
   async remove(id: number) {
+    // التحقق من وجود المسجد قبل الحذف لتجنب أخطاء Prisma غير المعالجة
+    const existing = await this.prisma.mosque.findUnique({
+      where: { id },
+    });
+    if (!existing) {
+      throw new NotFoundException('المسجد غير موجود');
+    }
+
     return this.prisma.mosque.delete({
       where: { id },
     });

@@ -1,117 +1,157 @@
-import React, { useEffect, useState } from 'react'
-import MainFun from '../DashboardPage/MainFun'
-import AnnouncementsStats from '../../components/Announcements/AnnouncementsStats'
-import AnnouncementCard from '../../components/Announcements/AnnouncementCard'
-import AnnouncementsDialogs from '../../components/Dialogs/AnnouncementsDialogs'
-import mosqueImg from '../../assets/images/Mosque.png'
+import React, { useState, useEffect } from 'react' // ADDED: React hooks for state and lifecycle management
+import MainFun from '../DashboardPage/MainFun' // ADDED: Reusable header component with action buttons
+import AnnouncementsStats from '../../components/Announcements/AnnouncementsStats' // ADDED: Stats cards for announcements
+import AnnouncementCard from '../../components/Announcements/AnnouncementCard' // ADDED: Individual announcement card component
+import AnnouncementsDialogs from '../../components/Dialogs/AnnouncementsDialogs' // ADDED: Dialog component for add/delete announcement
 
-const MOCK = [
-  {
-    id: 1,
-    image: mosqueImg,
-    title: 'ندوة الفكر الإسلامي المعاصر في ظل التحديات',
-    excerpt:
-      'تتشرف مديرية الأوقاف بدعوتكم لحضور الندوة الكبرى لمناقشة دور المؤسسات الدينية في تعزيز السلم المجتمعي، بحضور نخبة من كبار العلماء والمفكرين في القاعة الرئيسية للمركز الثقافي.',
-    dateLabel: '15 رمضان 1445 هـ',
-    views: '2.4k',
-    comments: '15',
-    status: 'منشور',
-  },
-  {
-    id: 2,
-    image: null,
-    title: 'مسابقة تعيين أئمة وخطباء بمديرية الأوقاف',
-    excerpt:
-      'تعلن المديرية عن فتح باب التقديم للمسابقة السنوية لتعيين الأئمة والخطباء وفقاً للشروط والمعايير المرفقة في دليل التقديم الإلكتروني، الأولوية لخريجي  الدراسات العليا ',
-    dateLabel: '12 رمضان 1445',
-    views: '2.4k',
-    comments: '15',
-    status: 'منشور',
-  },
-]
-
-const initialAnnouncementForm = {
-  title: '',
-  content: '',
-  date: '',
-  status: 'مسودة',
-}
+// ============= استيراد خدمات API =============
+// ✅ تم الربط مع الـ API الحقيقي للإعلانات والمساجد
+import {
+  getAllAnnouncements,
+  createAnnouncement,
+  deleteAnnouncement,
+} from '../../services/announcementService' // ADDED: Announcement CRUD API functions
+import { getAllMosques } from '../../services/mosqueService' // ADDED: Mosque API to fetch mosque list for dropdown
 
 export default function Announcements() {
-  const [loading, setLoading] = useState(true)
-  const [items, setItems] = useState([])
-  const [addOpen, setAddOpen] = useState(false)
-  const [deleteOpen, setDeleteOpen] = useState(false)
-  const [selectedRow, setSelectedRow] = useState(null)
-  const [announcementForm, setAnnouncementForm] = useState(initialAnnouncementForm)
+  // ============= State Management =============
+  const [addOpen, setAddOpen] = useState(false) // ADDED: State for add announcement dialog
+  const [deleteOpen, setDeleteOpen] = useState(false) // ADDED: State for delete confirmation dialog
+  const [selectedRow, setSelectedRow] = useState(null) // ADDED: State for the currently selected announcement row
+  const [announcementForm, setAnnouncementForm] = useState({ // ADDED: State for add announcement form fields
+    title: '',
+    content: '',
+    mosqueId: '',
+    priority: 'MEDIUM',
+  })
 
+  // ✅ حالة البيانات من الـ API
+  const [announcements, setAnnouncements] = useState([]) // ADDED: State for announcements list from API
+  const [mosques, setMosques] = useState([]) // ADDED: State for mosques list from API
+  const [error, setError] = useState(null) // ADDED: State for error messages
+  const [loading, setLoading] = useState(false) // ADDED: State for loading indicator during API calls
+
+  // ============= جلب البيانات من الـ API عند تحميل الصفحة =============
   useEffect(() => {
-    const t = setTimeout(() => {
-      setItems(MOCK)
-      setLoading(false)
-    }, 600)
-    return () => clearTimeout(t)
+    const fetchData = async () => {
+      setLoading(true) // ADDED: Set loading state to true when starting data fetch
+      try {
+        const [announcementsData, mosquesData] = await Promise.all([
+          getAllAnnouncements(),
+          getAllMosques(),
+        ])
+        setAnnouncements(announcementsData) // ADDED: Store announcements data from API
+        setMosques(mosquesData) // ADDED: Store mosques data from API
+        setError(null) // ADDED: Clear any previous errors
+      } catch (err) {
+        console.error('خطأ في جلب البيانات:', err)
+        setError('فشل في جلب البيانات') // ADDED: Set error message for display
+      } finally {
+        setLoading(false) // ADDED: Set loading state to false when data fetch completes
+      }
+    }
+
+    fetchData()
   }, [])
 
-  const handleAddSubmit = (e) => {
+  // ============= إضافة إعلان جديد (API) =============
+  const handleAddSubmit = async (e) => {
     e?.preventDefault()
-    console.log('Announcement form submitted:', announcementForm)
-    setAddOpen(false)
-    setAnnouncementForm(initialAnnouncementForm)
+    try {
+      await createAnnouncement({
+        title: announcementForm.title,
+        content: announcementForm.content,
+        mosqueId: Number(announcementForm.mosqueId),
+        priority: announcementForm.priority || 'MEDIUM',
+      })
+
+      // إعادة جلب القائمة المحدثة
+      const updatedData = await getAllAnnouncements()
+      setAnnouncements(updatedData)
+
+      setAddOpen(false)
+      setAnnouncementForm({ title: '', content: '', mosqueId: '', priority: 'MEDIUM' })
+    } catch (err) {
+      console.error('خطأ في إضافة الإعلان:', err)
+      setError('فشل في إضافة الإعلان')
+    }
   }
 
-  const handleConfirmDelete = () => {
-    console.log('Announcement deleted:', selectedRow?.title)
-    setDeleteOpen(false)
-    setSelectedRow(null)
+  // ============= حذف إعلان (API) =============
+  const handleConfirmDelete = async () => {
+    try {
+      await deleteAnnouncement(selectedRow.id)
+
+      // إعادة جلب القائمة المحدثة
+      const updatedData = await getAllAnnouncements()
+      setAnnouncements(updatedData)
+
+      setDeleteOpen(false)
+      setSelectedRow(null)
+    } catch (err) {
+      console.error('خطأ في حذف الإعلان:', err)
+      setError('فشل في حذف الإعلان')
+    }
   }
 
   return (
-    <div className="space-y-6">
+    <div>
+      {/* إعادة استخدام MainFun بدلاً من Header - يتوافق مع بقية الصفحات */}
       <MainFun
-        title="مركز الإعلانات"
-        description="إدارة وتنسيق التعميمات الرسمية، إعلانات الوظائف، والفعاليات الدينية للمديرية."
-        showAnnouncementButton={false}
-        addButton="إعلان جديد"
+        title="الإعلانات"
+        description="إدارة الإعلانات والتنبيهات للمساجد التابعة للمديرية"
+        announcementButton="إضافة إعلان"
+        addButton="إدارة المساجد"
         onAddClick={() => setAddOpen(true)}
+        onAnnouncementClick={() => setAddOpen(true)}
       />
 
-      <AnnouncementsStats
-        mainNumber="15,240+"
-        mainLabel="أحدث وصول للجمهور"
-        activeAds={12}
-        totalAds={128}
-      />
+      {/* ADDED: عرض حالة التحميل أثناء جلب البيانات من الـ API */}
+      {loading && (
+        <div style={{ padding: '20px', textAlign: 'center', color: '#64748B' }}>
+          جارٍ تحميل الإعلانات...
+        </div>
+      )}
 
-      <section className="mt-4 grid gap-4">
-        {loading
-          ? [1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className="w-full border-2 border-dashed border-blue-200 rounded-lg p-4 flex gap-4 items-start animate-pulse"
-              >
-                <div className="w-24 h-20 bg-gray-200 rounded-md flex-shrink-0" />
-                <div className="flex-1 space-y-3">
-                  <div className="h-5 bg-gray-200 rounded w-1/2" />
-                  <div className="h-3 bg-gray-200 rounded w-3/4" />
-                  <div className="h-3 bg-gray-200 rounded w-1/3" />
-                </div>
+      {/* عرض رسالة الخطأ إن وجدت */}
+      {error && !loading && (
+        <div style={{ color: 'red', padding: '10px', textAlign: 'center' }}>
+          {error}
+        </div>
+      )}
+
+      {/* ADDED: إخفاء المحتوى أثناء التحميل الأولي */}
+      {!loading && (
+        <>
+          <AnnouncementsStats announcements={announcements} />
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', padding: '16px' }}>
+            {announcements.length === 0 ? (
+              <div style={{ textAlign: 'center', color: '#64748B', padding: '40px' }}>
+                لا توجد إعلانات حالياً
               </div>
-            ))
-          : items.map((it) => (
-              <AnnouncementCard
-                key={it.id}
-                image={it.image}
-                title={it.title}
-                excerpt={it.excerpt}
-                dateLabel={it.dateLabel}
-                views={it.views}
-                comments={it.comments}
-                status={it.status}
-                onClick={() => console.log('open', it.id)}
-              />
-            ))}
-      </section>
+            ) : (
+              announcements.map((announcement) => (
+                <AnnouncementCard
+                  key={announcement.id}
+                  title={announcement.title}
+                  excerpt={announcement.content}
+                  dateLabel={announcement.startDate
+                    ? new Date(announcement.startDate).toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric' })
+                    : 'تاريخ غير محدد'}
+                  views={announcement.mosque?.name || '—'}
+                  comments={announcement.priority || 'MEDIUM'}
+                  status={announcement.isActive ? 'نشط' : 'غير نشط'}
+                  onDeleteClick={() => {
+                    setSelectedRow(announcement)
+                    setDeleteOpen(true)
+                  }}
+                />
+              ))
+            )}
+          </div>
+        </>
+      )}
 
       <AnnouncementsDialogs
         addOpen={addOpen}
@@ -123,6 +163,7 @@ export default function Announcements() {
         setDeleteOpen={setDeleteOpen}
         selectedRow={selectedRow}
         handleConfirmDelete={handleConfirmDelete}
+        mosques={mosques}
       />
     </div>
   )

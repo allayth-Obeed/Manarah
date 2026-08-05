@@ -7,11 +7,14 @@ import {
   Param,
   Delete,
   ParseIntPipe,
+  UseGuards,
 } from '@nestjs/common';
 import { EmployeesService } from './employees.service';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('employees')
+@UseGuards(JwtAuthGuard) // جميع مسارات الموظفين محمية بـ JWT
 export class EmployeesController {
   constructor(private readonly employeesService: EmployeesService) {}
 

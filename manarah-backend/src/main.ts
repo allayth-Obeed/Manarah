@@ -17,8 +17,25 @@ async function bootstrap() {
   );
 
   // Enable CORS
+  const frontendUrl = configService.get<string>('FRONTEND_URL') || 'http://localhost:5173';
+  const isProduction = configService.get<string>('NODE_ENV') === 'production';
+
   app.enableCors({
-    origin: configService.get<string>('FRONTEND_URL') || 'http://localhost:5173',
+    origin: (origin, callback) => {
+      // في وضع التطوير، اسمح بجميع الأصول (localhost, 127.0.0.1, etc.)
+      if (!isProduction) {
+        callback(null, true);
+        return;
+      }
+
+      // في وضع الإنتاج، اسمح فقط بالأصول المحددة
+      const allowedOrigins = [frontendUrl, 'http://localhost:5173', 'http://127.0.0.1:5173'];
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error('Not allowed by CORS'));
+      }
+    },
     credentials: true,
   });
 

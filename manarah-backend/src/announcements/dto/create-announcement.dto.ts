@@ -4,6 +4,8 @@ import {
   IsOptional,
   IsEnum,
   IsNumber,
+  IsBoolean,
+  IsDateString,
 } from 'class-validator';
 import { Priority } from '@prisma/client';
 
@@ -24,5 +26,14 @@ export class CreateAnnouncementDto {
   priority?: Priority;
 
   @IsOptional()
+  @IsBoolean({ message: 'حالة الإعلان يجب أن تكون منطقية' })
   isActive?: boolean;
+
+  @IsOptional()
+  @IsDateString({}, { message: 'تاريخ البدء غير صالح' })
+  startDate?: string;
+
+  @IsOptional()
+  @IsDateString({}, { message: 'تاريخ الانتهاء غير صالح' })
+  endDate?: string;
 }

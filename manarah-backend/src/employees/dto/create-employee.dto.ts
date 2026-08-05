@@ -4,10 +4,12 @@ import {
   IsOptional,
   IsNumber,
   IsDateString,
+  IsInt,
 } from 'class-validator';
 
 export class CreateEmployeeDto {
   @IsOptional()
+  @IsInt({ message: 'معرف المستخدم يجب أن يكون رقماً' })
   userId?: number;
 
   @IsString()

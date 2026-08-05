@@ -9,7 +9,10 @@ import AccountCircle from '@mui/icons-material/AccountCircle'
 import NotificationsIcon from '@mui/icons-material/Notifications'
 import LightModeIcon from '@mui/icons-material/LightMode'
 import DarkModeIcon from '@mui/icons-material/DarkMode'
+import LogoutIcon from '@mui/icons-material/Logout'
 import { useTheme } from '../../theme/themeContext'
+import { useNavigate } from 'react-router-dom'
+import useAuth from '../../hooks/useAuth'
 
 const drawerWidth = 240
 
@@ -44,11 +47,19 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
 
 function TopBar() {
   const { activeTheme, themeMode, toggleTheme } = useTheme()
+  const navigate = useNavigate()
+  const { signOut } = useAuth()
   const palette = activeTheme.layout
 
   const user = {
     name: 'أحمد المشرف',
     role: 'مشرف النظام',
+  }
+
+  // معالجة تسجيل الخروج
+  const handleSignOut = async () => {
+    await signOut()
+    navigate('/auth/signin')
   }
 
   return (
@@ -129,6 +140,14 @@ function TopBar() {
                 ) : (
                   <DarkModeIcon fontSize="small" />
                 )}
+              </IconButton>
+              <IconButton
+                onClick={handleSignOut}
+                size="small"
+                sx={{ color: '#D64040' }}
+                title="تسجيل الخروج"
+              >
+                <LogoutIcon fontSize="small" />
               </IconButton>
               <IconButton size="small" sx={{ color: activeTheme.colors.mutedText }}>
                 <AccountCircle fontSize="small" />

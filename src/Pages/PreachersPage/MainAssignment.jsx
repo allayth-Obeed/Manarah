@@ -22,77 +22,76 @@ import AppButton from '../../components/common/AppButton'
 import RapidAssignment from './RapidAssignment'
 import { useTheme } from '../../theme/themeContext'
 
-const DEFAULT_MONTH_LABEL = 'أكتوبر 2023'
+// Weekly stats calculation from real preachers/mosques data
+const computeWeeklyStats = (preachers = [], mosques = []) => {
+  const assignedMosques = new Set(
+    preachers.flatMap((p) => (p.assignments || []).map((a) => a.mosqueId))
+  )
+  const totalAssigned = assignedMosques.size
+  const totalRemaining = Math.max(mosques.length - totalAssigned, 0)
+  const conflicts = preachers.filter((p) => (p.assignments || []).length > 1).length
 
-const STAT_LABELS = {
-  assigned: 'مساجد مكلفة',
-  remaining: 'خطب متبقي',
-  conflict: 'تنبيه تعارض في الخطب',
+  return [
+    { value: String(totalRemaining), label: 'خطب متبقي' },
+    { value: String(totalAssigned), label: 'مساجد مكلفة' },
+    { value: String(conflicts), label: 'تنبيه تعارض في الخطب' },
+  ]
 }
 
-const STATUS_LABELS = {
-  normal: 'منتهية',
-  progress: 'مكتمل جزئياً',
-  conflict: STAT_LABELS.conflict,
+// Build assignment events from real preachers + mosques data
+const buildEventsFromData = (preachers = []) => {
+  const now = new Date()
+
+  return preachers
+    .flatMap((preacher) =>
+      (preacher.assignments || [])
+        .filter((a) => a.isActive)
+        .map((a) => {
+          const start = a.startDate ? new Date(a.startDate) : now
+          return {
+            id: a.id,
+            title: 'تكليف خطيب',
+            date: String(start.getDate()),
+            month: start.toLocaleString('en-US', { month: 'short' }).toUpperCase(),
+            mosque: a.mosque?.name || 'مسجد غير معين',
+            draftMosque: '',
+            imam:
+              preacher.firstName && preacher.lastName
+                ? `${preacher.firstName} ${preacher.lastName}`
+                : preacher.user?.name || 'خطيب',
+            time: start.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' }),
+            city: a.mosque?.city || '',
+            status: 'مكتمل جزئياً',
+            secondaryAction: 'تعديل التكليف',
+            warning: false,
+            disabled: false,
+          }
+        })
+    )
+    .slice(0, 10)
 }
-
-const DEFAULT_EVENTS = [
-  {
-    id: 1,
-    title: 'جمعة الإسراء والمعراج',
-    date: '27',
-    month: 'OCT',
-    mosque: 'مسجد الملك عبدالله الأول',
-    draftMosque: 'مسجد أبو قورة',
-    imam: 'د. محمد راتب النابلسي',
-    time: '12:15 م',
-    city: 'عمان، الأردن',
-    status: STATUS_LABELS.progress,
-    secondaryAction: 'تعيين خطيب',
-    warning: false,
-    disabled: false,
-  },
-  {
-    id: 2,
-    title: 'الجمعة العادية',
-    date: '20',
-    month: 'OCT',
-    mosque: 'المسجد الحسيني الكبير',
-    imam: 'الشيخ عمر الكسواني',
-    city: 'عمان، الأردن',
-    status: STATUS_LABELS.normal,
-    warning: false,
-    disabled: true,
-  },
-  {
-    id: 3,
-    title: 'جمعة الصيانة الدورية',
-    date: '03',
-    month: 'NOV',
-    mosque: 'مسجد الزميلي',
-    imam: 'الخطيب مخصص لمسجدين',
-    status: STATUS_LABELS.conflict,
-    city: 'المدينة القديمة، حمص',
-    secondaryAction: 'حل النزاع',
-    warning: true,
-    disabled: false,
-  },
-]
-
-const DEFAULT_WEEKLY_STATS = [
-  { value: '15', label: STAT_LABELS.remaining },
-  { value: '12', label: STAT_LABELS.assigned },
-  { value: '1', label: STAT_LABELS.conflict },
-]
 
 export default function MainAssignment({
-  events = DEFAULT_EVENTS,
-  monthLabel = DEFAULT_MONTH_LABEL,
+  preachers = [],
+  mosques = [],
+  assignmentDateLabel, // ADDED: تمرير نص تاريخ الجمعة القادمة إلى بطاقة التكليف السريع.
+  selectedMosqueId, // ADDED: تمرير المسجد المختار من الصفحة الأب.
+  selectedPreacherId, // ADDED: تمرير الخطيب المختار من الصفحة الأب.
+  onSelectMosque, // ADDED: تمرير دالة تغيير المسجد المختار.
+  onSelectPreacher, // ADDED: تمرير دالة تغيير الخطيب المختار.
+  conflictState, // ADDED: تمرير حالة فحص التعارض القادمة من الـ API.
+  isSubmittingAssignment, // ADDED: تمرير حالة تنفيذ طلب التثبيت لعرض زر التحميل.
+  canSubmitAssignment, // ADDED: تمرير شرط جاهزية زر تثبيت التكليف.
   onPreviousMonth,
   onNextMonth,
   onConfirmAssign,
 }) {
   const { activeTheme } = useTheme()
+
+  // Use real computed data instead of hardcoded demo data
+  const events = buildEventsFromData(preachers)
+  const weeklyStats = computeWeeklyStats(preachers, mosques)
+  const monthLabel = new Date().toLocaleString('ar-SA', { month: 'long', year: 'numeric' })
 
   const listCard = (
     <Card
@@ -170,10 +169,10 @@ export default function MainAssignment({
           }}
         >
           <Typography fontWeight={700} color={activeTheme.colors.text}>
-            لا توجد بيانات حالياً
+            لا توجد تعيينات حالياً
           </Typography>
           <Typography variant="body2" color={activeTheme.colors.mutedText}>
-            سيتم ربط هذه الشاشة بالـ API لاحقاً.
+            قم بإضافة خطيب وتعيينه في مسجد لرؤية البيانات هنا
           </Typography>
         </Box>
       )}
@@ -188,13 +187,13 @@ export default function MainAssignment({
             نظرة عامة للأسبوع
           </Typography>
           <Typography variant="caption" color={activeTheme.colors.mutedText}>
-            مكتمل 48%
+            مكتمل {weeklyStats[1]?.value || 0}%
           </Typography>
         </Box>
 
         <LinearProgress
           variant="determinate"
-          value={48}
+          value={Number(weeklyStats[1]?.value || 0)}
           sx={{
             height: 8,
             borderRadius: 5,
@@ -205,7 +204,7 @@ export default function MainAssignment({
         />
 
         <Grid container spacing={2}>
-          {DEFAULT_WEEKLY_STATS.map((item) => (
+          {weeklyStats.map((item) => (
             <Grid item xs={6} key={item.label}>
               <Paper
                 elevation={0}
@@ -235,13 +234,25 @@ export default function MainAssignment({
       <Box
         sx={{
           display: 'grid',
-          gridTemplateColumns: '360px minmax(0, 1fr)',
+          gridTemplateColumns: { xs: '1fr', md: '360px minmax(0, 1fr)' },
           gap: 2.5,
           alignItems: 'start',
         }}
       >
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-          <RapidAssignment onConfirmAssign={onConfirmAssign} />
+          <RapidAssignment // ADDED: تمرير بيانات وخيارات التعيين الحقيقية إلى بطاقة الجمعة القادمة.
+            mosques={mosques} // ADDED: قائمة المساجد من الـ API.
+            preachers={preachers} // ADDED: قائمة الخطباء من الـ API.
+            assignmentDateLabel={assignmentDateLabel} // ADDED: تاريخ الجمعة القادمة بصيغة عرض عربية.
+            selectedMosqueId={selectedMosqueId} // ADDED: قيمة المسجد المحدد حاليًا.
+            selectedPreacherId={selectedPreacherId} // ADDED: قيمة الخطيب المحدد حاليًا.
+            onSelectMosque={onSelectMosque} // ADDED: معالج تغيير المسجد المختار.
+            onSelectPreacher={onSelectPreacher} // ADDED: معالج تغيير الخطيب المختار.
+            conflictState={conflictState} // ADDED: نتيجة فحص التعارض لعرض التحذير.
+            loading={isSubmittingAssignment} // ADDED: تمرير حالة التحميل أثناء تثبيت التكليف.
+            canSubmit={canSubmitAssignment} // ADDED: تحديد تفعيل/تعطيل زر التثبيت.
+            onConfirmAssign={onConfirmAssign} // ADDED: تنفيذ التثبيت النهائي عند ضغط الزر.
+          />
           {weeklySummary}
         </Box>
         <Box>{listCard}</Box>
@@ -267,7 +278,7 @@ function EventCard({ event, activeTheme }) {
         overflow: 'hidden',
       }}
     >
-      {/* شريط الحالة - كامل العرض في الأعلى */}
+      {/* حالة البطاقة - كامل العرض */}
       {event.status && (
         <Box
           sx={{
