@@ -239,6 +239,7 @@ export default function Preachers() {
         mosqueId: Number(selectedMosqueId), // ADDED: إرسال معرف المسجد المختار كرقم صحيح
         startDate: assignmentDate.toISOString(), // ADDED: إرسال تاريخ الجمعة القادمة كبداية التكليف
         isActive: true,
+        role: 'KHATIB', // ADDED: هذه البطاقة مخصَّصة لتكليف خطبة الجمعة تحديداً — تعارضها بنفس اليوم غير جائز
       })
 
       // إعادة جلب البيانات المحدثة
@@ -294,6 +295,27 @@ export default function Preachers() {
         <div style={{ color: 'red', padding: '10px', textAlign: 'center' }}>{error}</div>
       )}
 
+      {/* MODIFIED: قائمة الخطباء نُقلت لأعلى الصفحة بناءً على طلب المستخدم — كانت أسفل بطاقة التكليف */}
+      {!loading && (
+        <Box sx={{ p: 2.5, pb: 0 }}>
+          <MyTable
+            rows={transformPreachersToRows(preachers)}
+            columns={preacherColumns}
+            totalRows={preachers.length}
+            totalPages={1}
+            entityLabel="خطيب"
+            onRowDeleteClick={
+              canWrite // ADDED: إخفاء زر الحذف عن المستخدمين ذوي صلاحية القراءة فقط
+                ? (row) => {
+                    setSelectedRow(row)
+                    setDeleteOpen(true)
+                  }
+                : undefined
+            }
+          />
+        </Box>
+      )}
+
       {/* ✅ تمرير البيانات الحقيقية من الـ API إلى MainAssignment */}
       {/* ADDED: إخفاء MainAssignment أثناء التحميل الأولي */}
       {!loading && (
@@ -315,27 +337,6 @@ export default function Preachers() {
           onNextMonth={() => setMonthOffset((o) => o + 1)}
           onEndAssignment={handleEndAssignment} // ADDED: يفعّل زر "إنهاء التكليف" الحقيقي على بطاقات التعارض
         />
-      )}
-
-      {/* ADDED: قائمة الخطباء الفعلية — لم تكن موجودة إطلاقاً، فديالوج الحذف الجاهز لم يكن له أي زر يفتحه */}
-      {!loading && (
-        <Box sx={{ p: 2.5, pt: 0 }}>
-          <MyTable
-            rows={transformPreachersToRows(preachers)}
-            columns={preacherColumns}
-            totalRows={preachers.length}
-            totalPages={1}
-            entityLabel="خطيب"
-            onRowDeleteClick={
-              canWrite // ADDED: إخفاء زر الحذف عن المستخدمين ذوي صلاحية القراءة فقط
-                ? (row) => {
-                    setSelectedRow(row)
-                    setDeleteOpen(true)
-                  }
-                : undefined
-            }
-          />
-        </Box>
       )}
 
       <PreachersDialogs

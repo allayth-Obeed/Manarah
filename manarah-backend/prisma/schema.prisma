@@ -79,6 +79,8 @@ model PreacherAssignment {
   id          Int        @id @default(autoincrement())
   preacherId  Int
   mosqueId    Int
+  // ADDED: نوع التكليف — إمام (تعيين دائم، تعدد المساجد أمر طبيعي) أو خطيب جمعة (لا يجوز تعارضه بنفس اليوم)
+  role        AssignmentRole @default(KHATIB)
   startDate   DateTime   @default(now())
   endDate     DateTime?
   isActive    Boolean    @default(true)
@@ -136,4 +138,10 @@ enum Priority {
 enum MosqueStatus {
   ACTIVE
   MAINTENANCE
+}
+
+// ADDED: نوع تكليف الخطيب — إمام دائم أو خطيب جمعة محدد بيوم
+enum AssignmentRole {
+  IMAM
+  KHATIB
 }

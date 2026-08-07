@@ -25,6 +25,7 @@ export default function MosqueDialogs({
   handleAddSubmit, editOpen, setEditOpen, handleEditSubmit, // ADDED: ديالوج التعديل (بيانات + حالة المسجد)
   assignOpen, setAssignOpen,
   selectedRow, selectedPreacherId, setSelectedPreacherId, filteredPreachers,
+  assignmentRole, setAssignmentRole, // ADDED: نوع التكليف (إمام/خطيب) — يحدد قابلية التعارض
   handleConfirmAssign, deleteOpen, setDeleteOpen, handleConfirmDelete,
   snackbarOpen, snackbarMessage
 }) {
@@ -172,6 +173,22 @@ export default function MosqueDialogs({
             MenuProps={{ sx: { '& .MuiMenu-paper': { direction: 'rtl', bgcolor: colors.surface }, '& .MuiMenuItem-root': { justifyContent: 'flex-end', fontFamily: '"IBM Plex Sans Arabic", sans-serif', color: colors.text } } }}>
             {filteredPreachers.map((preacher) => (<MenuItem key={preacher.id} value={preacher.id} sx={{ justifyContent: 'flex-end' }}>{preacher.name} - {preacher.role}</MenuItem>))}
           </TextField>
+
+          {/* ADDED: نوع التكليف — إمام (تعيين دائم، يجوز تعدد المساجد) أو خطيب جمعة (لا يجوز تعارضه بنفس اليوم) */}
+          <TextField
+            select
+            value={assignmentRole || 'KHATIB'}
+            onChange={(e) => setAssignmentRole?.(e.target.value)}
+            fullWidth
+            SelectProps={{ IconComponent: () => <svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginLeft: 8 }}><path d="M1 1.5L6 6.5L11 1.5" stroke={colors.mutedText} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg> }}
+            sx={{ '& .MuiOutlinedInput-root': { backgroundColor: colors.bgelem, borderRadius: 2, height: 48, '& fieldset': { border: 'none' }, '&:hover fieldset': { border: 'none' }, '&.Mui-focused fieldset': { border: 'none' } }, '& .MuiSelect-select': { textAlign: 'right', fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 400, fontSize: 16, color: colors.text, py: 1.5 } }}
+            SelectDisplayProps={{ style: { direction: 'rtl' } }}
+            MenuProps={{ sx: { '& .MuiMenu-paper': { direction: 'rtl', bgcolor: colors.surface }, '& .MuiMenuItem-root': { justifyContent: 'flex-end', fontFamily: '"IBM Plex Sans Arabic", sans-serif', color: colors.text } } }}
+          >
+            <MenuItem value="KHATIB" sx={{ justifyContent: 'flex-end' }}>خطيب جمعة</MenuItem>
+            <MenuItem value="IMAM" sx={{ justifyContent: 'flex-end' }}>إمام دائم</MenuItem>
+          </TextField>
+
           <Box sx={{ display: 'flex', gap: 1, width: '100%' }}>
             <AppButton variant="contained" backgroundColor="linear-gradient(135deg, #C5A059 0%, #9E7E43 100%)" textColor="#FFFFFF" borderColor="transparent" onClick={handleConfirmAssign} sx={{ background: 'linear-gradient(135deg, #C5A059 0%, #9E7E43 100%) !important', borderRadius: 2, height: 44, px: 3, flex: 1 }}>تأكيد التعيين</AppButton>
             <AppButton variant="outlined" backgroundColor="transparent" textColor={colors.text} borderColor={colors.border} onClick={() => setAssignOpen(false)} sx={{ borderRadius: 2, height: 44, px: 3 }}>تراجع</AppButton>

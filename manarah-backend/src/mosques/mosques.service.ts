@@ -65,8 +65,6 @@ export class MosquesService {
 
   async remove(id: number) {
     // التحقق من وجود المسجد قبل الحذف لتجنب أخطاء Prisma غير المعالجة
-    // نجلب أعداد السجلات المرتبطة أيضاً هنا: بدون onDelete: Cascade في الـ schema، حذف مسجد له
-    // تعيينات خطباء/إعلانات/تبرعات مرتبطة كان يفشل بخطأ قيد مفتاح أجنبي خام (500) غير مفهوم للمستخدم
     const existing = await this.prisma.mosque.findUnique({
       where: { id },
       include: {
@@ -79,25 +77,24 @@ export class MosquesService {
       throw new NotFoundException('المسجد غير موجود');
     }
 
-    const relatedCounts = {
-      assignments: existing.preachers.length,
-      announcements: existing.announcements.length,
-      donations: existing.donations.length,
-    };
-
-    if (relatedCounts.assignments || relatedCounts.announcements || relatedCounts.donations) {
-      // رفض واضح بدل السماح بحذف يمحو صامتاً سجلات تبرعات/إعلانات تاريخية، أو ترك خطأ 500 غامض
+    // MODIFIED: حذف المسجد يحرّر الخطباء منه تلقائياً (يحذف تعيينهم بهذا المسجد فقط) بدل رفض الحذف —
+    // هذا لا يحذف سجل الخطيب نفسه (Preacher) إطلاقاً، فقط رابط تعيينه بهذا المسجد تحديداً
+    // نبقي الرفض للإعلانات والتبرعات لأنها سجلات تاريخية/مالية لا يجوز محوها صامتاً
+    if (existing.announcements.length || existing.donations.length) {
       const parts: string[] = [];
-      if (relatedCounts.assignments) parts.push(`${relatedCounts.assignments} تعيين خطيب`);
-      if (relatedCounts.announcements) parts.push(`${relatedCounts.announcements} إعلان`);
-      if (relatedCounts.donations) parts.push(`${relatedCounts.donations} تبرع`);
+      if (existing.announcements.length) parts.push(`${existing.announcements.length} إعلان`);
+      if (existing.donations.length) parts.push(`${existing.donations.length} تبرع`);
       throw new ConflictException(
         `لا يمكن حذف هذا المسجد لارتباطه بـ ${parts.join(' و')}. يجب حذف أو نقل هذه السجلات أولاً.`,
       );
     }
 
-    return this.prisma.mosque.delete({
-      where: { id },
+    // ADDED: عملية واحدة ذرّية (transaction) — إمّا يتحرر الخطباء ويُحذف المسجد معاً، أو لا يحدث شيء عند أي خطأ
+    return this.prisma.$transaction(async (tx) => {
+      if (existing.preachers.length) {
+        await tx.preacherAssignment.deleteMany({ where: { mosqueId: id } });
+      }
+      return tx.mosque.delete({ where: { id } });
     });
   }
 }

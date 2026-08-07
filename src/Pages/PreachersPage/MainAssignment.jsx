@@ -23,6 +23,11 @@ import AppButton from '../../components/common/AppButton'
 import RapidAssignment from './RapidAssignment'
 import { useTheme } from '../../theme/themeContext'
 
+// MODIFIED: التعارض الحقيقي محصور بتكليفات "خطيب الجمعة" (KHATIB) فقط — دور الإمام تكليف دائم وتعدد
+// مساجده أمر طبيعي، بينما خطبة الجمعة لا يمكن أن تتزامن لنفس الشخص في مسجدين بنفس الوقت
+const countActiveKhatibAssignments = (preacher) =>
+  (preacher.assignments || []).filter((a) => a.isActive && a.role === 'KHATIB').length
+
 // Weekly stats calculation from real preachers/mosques data
 const computeWeeklyStats = (preachers = [], mosques = []) => {
   const assignedMosques = new Set(
@@ -30,7 +35,7 @@ const computeWeeklyStats = (preachers = [], mosques = []) => {
   )
   const totalAssigned = assignedMosques.size
   const totalRemaining = Math.max(mosques.length - totalAssigned, 0)
-  const conflicts = preachers.filter((p) => (p.assignments || []).filter((a) => a.isActive).length > 1).length
+  const conflicts = preachers.filter((p) => countActiveKhatibAssignments(p) > 1).length // MODIFIED: خطباء الجمعة فقط
 
   return [
     { value: String(totalRemaining), label: 'خطب متبقي' },
@@ -40,7 +45,8 @@ const computeWeeklyStats = (preachers = [], mosques = []) => {
 }
 
 // MODIFIED: تصفية حقيقية بحسب الشهر المعروض (viewedMonthDate) بدل عرض آخر 10 تعيينات دائماً بلا علاقة بالتنقل الشهري
-// كذلك warning أصبح محسوباً فعلياً (خطيب له أكثر من تكليف نشط بنفس الوقت) بدل false ثابتة دائماً
+// كذلك warning أصبح محسوباً فعلياً (خطيب جمعة له أكثر من تكليف خطابة نشط) بدل false ثابتة دائماً — تكليفات
+// الإمام الدائم لا تُحتسب تعارضاً إطلاقاً
 const buildEventsFromData = (preachers = [], viewedMonthDate = new Date()) => {
   const now = new Date()
   const viewedMonth = viewedMonthDate.getMonth()
@@ -49,13 +55,17 @@ const buildEventsFromData = (preachers = [], viewedMonthDate = new Date()) => {
   return preachers
     .flatMap((preacher) => {
       const activeAssignments = (preacher.assignments || []).filter((a) => a.isActive)
-      const hasConflict = activeAssignments.length > 1 // ADDED: نفس تعريف التعارض المستخدم بملخص الأسبوع
+      const preacherHasKhatibConflict = countActiveKhatibAssignments(preacher) > 1 // خطباء الجمعة فقط، وليس أي تكليف
 
       return activeAssignments.map((a) => {
         const start = a.startDate ? new Date(a.startDate) : now
+        // MODIFIED: التعارض يُعرض فقط على تكليفات "خطيب الجمعة" نفسها — تكليف الإمام لا يظهر عليه تعارض إطلاقاً
+        // حتى لو كان لنفس الخطيب تعارض بتكليفات خطابته الأخرى
+        const isConflicting = a.role === 'KHATIB' && preacherHasKhatibConflict
         return {
           id: a.id,
           title: 'تكليف خطيب',
+          role: a.role || 'KHATIB', // ADDED: لعرض نوع التكليف (إمام/خطيب) بالبطاقة
           date: String(start.getDate()),
           month: start.toLocaleString('en-US', { month: 'short' }).toUpperCase(),
           monthIndex: start.getMonth(), // ADDED: للتصفية بحسب الشهر المعروض
@@ -67,8 +77,8 @@ const buildEventsFromData = (preachers = [], viewedMonthDate = new Date()) => {
               : preacher.user?.name || 'خطيب',
           time: start.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' }),
           city: a.mosque?.city || '',
-          status: hasConflict ? 'تعارض بالجدول' : 'مكتمل',
-          warning: hasConflict, // MODIFIED: محسوبة فعلياً بدل false ثابتة
+          status: isConflicting ? 'تعارض بالجدول' : a.role === 'IMAM' ? 'إمام دائم' : 'مكتمل',
+          warning: isConflicting, // MODIFIED: محسوبة فعلياً ومحصورة بتكليفات الخطابة المتعارضة فقط
         }
       })
     })

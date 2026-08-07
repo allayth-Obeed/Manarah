@@ -85,6 +85,7 @@ export default function Mosque() {
   const [snackbarMessage, setSnackbarMessage] = useState('') // ADDED: State for toast notification message
   const [selectedRow, setSelectedRow] = useState(null) // ADDED: State for the currently selected mosque row
   const [selectedPreacherId, setSelectedPreacherId] = useState('') // ADDED: State for selected preacher in assignment dropdown
+  const [assignmentRole, setAssignmentRole] = useState('KHATIB') // ADDED: نوع التكليف (إمام/خطيب) عند التعيين من صفحة المساجد
   const [searchTerm, setSearchTerm] = useState('') // ADDED: State for search/filter input
   const [cityFilter, setCityFilter] = useState('') // ADDED: حالة فلتر المدينة الحقيقي في FilterSearch (فارغ = كل المناطق)
   const [mosqueForm, setMosqueForm] = useState({ // ADDED: State for add mosque form fields
@@ -174,6 +175,7 @@ export default function Mosque() {
     setSelectedRow(row)
     setSearchTerm('')
     setSelectedPreacherId(preachers[0]?.id || '')
+    setAssignmentRole('KHATIB') // ADDED: إعادة الضبط الافتراضي في كل مرة يُفتح فيها الديالوج
     setAssignOpen(true)
   }
 
@@ -247,6 +249,7 @@ export default function Mosque() {
         preacherId: Number(selectedPreacherId), // ADDED: Convert selected preacher ID to number for API
         mosqueId: selectedRow.id, // ADDED: Use selected mosque row ID as the mosque for assignment
         isActive: true, // ADDED: Set the assignment as active by default
+        role: assignmentRole, // ADDED: إمام (تعيين دائم) أو خطيب جمعة (لا يجوز تعارضه بنفس اليوم)
       })
 
       // ADDED: إعادة جلب قائمة المساجد المحدثة بعد التعيين الناجح
@@ -260,7 +263,9 @@ export default function Mosque() {
       )
     } catch (err) {
       console.error('خطأ في تعيين الخطيب:', err)
-      openToast('فشل في تعيين الخطيب')
+      // MODIFIED: عرض رسالة الباك اند الفعلية بدل رسالة عامة
+      const msg = err?.response?.data?.message || 'فشل في تعيين الخطيب'
+      openToast(Array.isArray(msg) ? msg.join('، ') : msg)
     }
   }
 
@@ -342,6 +347,8 @@ export default function Mosque() {
         selectedRow={selectedRow}
         selectedPreacherId={selectedPreacherId}
         setSelectedPreacherId={setSelectedPreacherId}
+        assignmentRole={assignmentRole} // ADDED
+        setAssignmentRole={setAssignmentRole} // ADDED
         filteredPreachers={filteredPreachers}
         handleConfirmAssign={handleConfirmAssign}
         deleteOpen={deleteOpen}

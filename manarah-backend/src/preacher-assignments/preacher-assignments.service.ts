@@ -46,10 +46,13 @@ export class PreacherAssignmentsService {
   async checkPreacherConflict(preacherId: number, date?: string) {
     const { startOfDay, endOfDay } = this.buildDayRange(date)
 
+    // MODIFIED: التعارض الحقيقي محصور بتكليفات "خطيب الجمعة" (KHATIB) فقط — دور الإمام تكليف دائم
+    // ويكون طبيعياً أن يخدم أكثر من مسجد، بينما خطبة الجمعة لا يمكن أن تتزامن لنفس الشخص بنفس اليوم
     const conflicts = await this.prisma.preacherAssignment.findMany({
       where: {
         preacherId,
         isActive: true,
+        role: 'KHATIB',
         startDate: {
           lte: endOfDay,
         },
