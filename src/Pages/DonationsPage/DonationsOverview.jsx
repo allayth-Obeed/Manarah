@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react' // ADDED: useMemo لحساب التوزيع وأحدث تبرع بدون إعادة حساب كل رندر
+import React, { useMemo, useState } from 'react' // MODIFIED: أضيف useState لتفعيل زر "عرض الكل"
 import { Box, Typography } from '@mui/material'
 import MosquePhoto from '../../assets/images/Mosque.png'
 import { useTheme } from '../../theme/themeContext'
@@ -125,9 +125,10 @@ function ActivityRow({ row, colors }) {
 export default function DonationsOverview({ donations = [], onRowClick, onDeleteClick }) {
   const { activeTheme } = useTheme()
   const { colors } = activeTheme
+  const [showAllAllocations, setShowAllAllocations] = useState(false) // ADDED: يفعّل رابط "عرض الكل" الذي كان بلا أي وظيفة
 
   // ADDED: توزيع حقيقي محسوب بتجميع مبالغ التبرعات حسب حقل purpose الفعلي بدل النسب الثابتة (45%/30%/25%)
-  const allocationRows = useMemo(() => {
+  const allAllocationRows = useMemo(() => {
     const totalAmount = donations.reduce((sum, d) => sum + (d.amount || 0), 0)
     if (totalAmount === 0) return []
     const grouped = donations.reduce((acc, d) => {
@@ -138,8 +139,10 @@ export default function DonationsOverview({ donations = [], onRowClick, onDelete
     return Object.entries(grouped)
       .map(([label, amount]) => ({ label, pct: Math.round((amount / totalAmount) * 100) }))
       .sort((a, b) => b.pct - a.pct)
-      .slice(0, 5) // أعلى 5 أغراض تبرع فقط للحفاظ على وضوح الواجهة
   }, [donations])
+
+  // MODIFIED: أعلى 5 أغراض فقط افتراضياً، وكل الأغراض عند الضغط على "عرض الكل"
+  const allocationRows = showAllAllocations ? allAllocationRows : allAllocationRows.slice(0, 5)
 
   // ADDED: أحدث تبرع فعلي بدل نص "قصة نجاح" الثابت غير المرتبط بأي بيانات
   const latestDonation = useMemo(() => {
@@ -203,9 +206,15 @@ export default function DonationsOverview({ donations = [], onRowClick, onDelete
               <Typography sx={{ fontSize: 14, fontWeight: 800, color: colors.primary }}>
                 توزيع الأوقاف
               </Typography>
-              <Typography sx={{ fontSize: 14, fontWeight: 800, color: colors.primary }}>
-                عرض الكل
-              </Typography>
+              {/* MODIFIED: كان بلا onClick إطلاقاً — الآن يبدّل بين أعلى 5 أغراض وكل الأغراض، ويختفي لو لا فائدة منه */}
+              {allAllocationRows.length > 5 && (
+                <Typography
+                  onClick={() => setShowAllAllocations((v) => !v)}
+                  sx={{ fontSize: 14, fontWeight: 800, color: colors.primary, cursor: 'pointer' }}
+                >
+                  {showAllAllocations ? 'عرض أقل' : 'عرض الكل'}
+                </Typography>
+              )}
             </Box>
 
             {/* MODIFIED: نسبة row.pct الحقيقية بدل fill الثابت (92%/64%/46%) المرتبط سابقاً بترتيب وهمي */}

@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react' // ADDED: React hooks for state and lifecycle management
+import { Box } from '@mui/material' // ADDED: لتغليف جدول الخطباء الجديد
 import MainFun from './../DashboardPage/MainFun' // ADDED: Reusable header component with action buttons
 import MainAssignment from './MainAssignment' // ADDED: Main assignment display component showing preacher-mosque assignments
+import MyTable from '../MosquesPage/MyTable' // ADDED: قائمة الخطباء الفعلية — كانت غير موجودة إطلاقاً رغم وجود ديالوج حذف جاهز بلا أي زر يفتحه
 import PreachersDialogs from '../../components/Dialogs/PreachersDialogs' // ADDED: Dialog component for add/delete preacher
 import { ConfirmAssignDialog } from '../../components/Dialogs/DashboardDialogs' // ADDED: Confirmation dialog for assignment actions
 
@@ -8,7 +10,27 @@ import { ConfirmAssignDialog } from '../../components/Dialogs/DashboardDialogs' 
 // ✅ تم الربط مع الـ API الحقيقي للخطباء
 import { getAllPreachers, createPreacher, deletePreacher } from '../../services/preacherService' // ADDED: Preacher CRUD API functions
 import { getAllMosques } from '../../services/mosqueService' // ADDED: Mosque API to fetch mosque list for display
-import { createAssignment, checkPreacherConflict } from '../../services/preacherAssignmentService' // ADDED: APIs إنشاء التكليف وفحص تعارض الخطيب لنفس اليوم
+import { createAssignment, checkPreacherConflict, deleteAssignment } from '../../services/preacherAssignmentService' // MODIFIED: أضيف deleteAssignment لتفعيل زر "إنهاء التكليف" الحقيقي
+import { useNavigate } from 'react-router-dom' // ADDED: للانتقال الحقيقي عند الضغط على زر "إعلان تكليف"
+import { useCurrentUser } from '../../context/userContext' // ADDED: لإخفاء أزرار الكتابة عن المستخدمين ذوي صلاحية القراءة فقط
+
+// ============= أعمدة جدول الخطباء (جديد) =============
+const preacherColumns = [
+  { key: 'name', label: 'اسم الخطيب', type: 'avatar' },
+  { key: 'specialization', label: 'التخصص', align: 'right' },
+  { key: 'mosque', label: 'المسجد الحالي', align: 'right' },
+  { key: 'phone', label: 'رقم الهاتف', align: 'center' },
+]
+
+// ============= تحويل بيانات الخطباء من الـ API إلى صفوف جدول =============
+const transformPreachersToRows = (preachers) =>
+  preachers.map((p) => ({
+    id: p.id,
+    name: p.firstName && p.lastName ? `${p.firstName} ${p.lastName}` : p.user?.name || 'خطيب',
+    specialization: p.specialization || 'غير محدد',
+    mosque: p.assignments?.find((a) => a.isActive)?.mosque?.name || 'غير معيَّن',
+    phone: p.phone || '—',
+  }))
 
 // ============= نموذج إضافة خطيب جديد =============
 // ملاحظة: الحقول تتوافق مع CreatePreacherDto في الباك إند
@@ -21,6 +43,9 @@ const initialPreacherForm = {
 }
 
 export default function Preachers() {
+  const navigate = useNavigate() // ADDED: للانتقال الحقيقي عند الضغط على "إعلان تكليف"
+  const { canWrite } = useCurrentUser() // ADDED: ADMIN/MANAGER فقط يقدرون يضيفون/يحذفون/يكلّفون
+
   // ============= State Management =============
   const [addOpen, setAddOpen] = useState(false) // ADDED: State for add preacher dialog
   const [deleteOpen, setDeleteOpen] = useState(false) // ADDED: State for delete confirmation dialog
@@ -42,6 +67,7 @@ export default function Preachers() {
     error: null,
   }) // ADDED: حفظ نتيجة فحص تعارض الخطيب من الخلفية
   const [isSubmittingAssignment, setIsSubmittingAssignment] = useState(false) // ADDED: حالة تحميل زر تثبيت التكليف أثناء طلب الإنشاء
+  const [monthOffset, setMonthOffset] = useState(0) // ADDED: عدد الأشهر بالإضافة/الطرح من الشهر الحالي — لتفعيل زري التنقل الشهري فعلياً
 
   // ============= جلب البيانات من الـ API عند تحميل الصفحة =============
   useEffect(() => {
@@ -178,6 +204,22 @@ export default function Preachers() {
     }
   }
 
+  // ============= إنهاء تكليف قائم (API) =============
+  // ADDED: يفعّل زر "إنهاء التكليف" الحقيقي على بطاقات التعارض بدل زر بلا وظيفة
+  const handleEndAssignment = async (assignmentId) => {
+    try {
+      await deleteAssignment(assignmentId)
+      const [preachersData, mosquesData] = await Promise.all([getAllPreachers(), getAllMosques()])
+      setPreachers(preachersData)
+      setMosques(mosquesData)
+      setError(null)
+    } catch (err) {
+      console.error('خطأ في إنهاء التكليف:', err)
+      const msg = err?.response?.data?.message || err?.message || 'فشل في إنهاء التكليف'
+      setError(`فشل في إنهاء التكليف: ${msg}`)
+    }
+  }
+
   // ============= تأكيد التعيين =============
   // ✅ تم الربط مع الـ API الحقيقي لإنشاء تعيين خطيب لمسجد
   const handleConfirmAssign = async () => {
@@ -234,7 +276,10 @@ export default function Preachers() {
         description="إدارة وتكليف خطباء الجمعة للمساجد التابعة للمديرية"
         announcementButton="إعلان تكليف"
         addButton="إضافة خطيب"
+        // MODIFIED: كان بلا onAnnouncementClick إطلاقاً فيبقى بلا أثر — الآن ينتقل فعلياً لصفحة الإعلانات
+        onAnnouncementClick={() => navigate('/announcements')}
         onAddClick={() => setAddOpen(true)}
+        showAddButton={canWrite} // ADDED: إخفاء زر الإضافة عن المستخدمين ذوي صلاحية القراءة فقط
       />
 
       {/* ADDED: عرض حالة التحميل أثناء جلب البيانات من الـ API */}
@@ -262,9 +307,35 @@ export default function Preachers() {
           onSelectPreacher={setSelectedPreacherId} // ADDED: تمرير دالة تحديث الخطيب المختار
           conflictState={conflictState} // ADDED: تمرير بيانات/نتيجة فحص التعارض لعرض التحذير
           isSubmittingAssignment={isSubmittingAssignment} // ADDED: تمرير حالة التحميل لزر التثبيت
-          canSubmitAssignment={canSubmitAssignment} // ADDED: تمرير حالة تفعيل/تعطيل زر التثبيت
+          canSubmitAssignment={canSubmitAssignment && canWrite} // MODIFIED: لا يمكن تثبيت تكليف بصلاحية قراءة فقط
+          canWrite={canWrite} // ADDED: يحدد ظهور زر "إنهاء التكليف" على بطاقات التعارض
           onConfirmAssign={() => setAssignConfirmOpen(true)}
+          monthOffset={monthOffset} // ADDED: يفعّل التنقّل الشهري الحقيقي بدل زرين بلا أثر
+          onPreviousMonth={() => setMonthOffset((o) => o - 1)}
+          onNextMonth={() => setMonthOffset((o) => o + 1)}
+          onEndAssignment={handleEndAssignment} // ADDED: يفعّل زر "إنهاء التكليف" الحقيقي على بطاقات التعارض
         />
+      )}
+
+      {/* ADDED: قائمة الخطباء الفعلية — لم تكن موجودة إطلاقاً، فديالوج الحذف الجاهز لم يكن له أي زر يفتحه */}
+      {!loading && (
+        <Box sx={{ p: 2.5, pt: 0 }}>
+          <MyTable
+            rows={transformPreachersToRows(preachers)}
+            columns={preacherColumns}
+            totalRows={preachers.length}
+            totalPages={1}
+            entityLabel="خطيب"
+            onRowDeleteClick={
+              canWrite // ADDED: إخفاء زر الحذف عن المستخدمين ذوي صلاحية القراءة فقط
+                ? (row) => {
+                    setSelectedRow(row)
+                    setDeleteOpen(true)
+                  }
+                : undefined
+            }
+          />
+        </Box>
       )}
 
       <PreachersDialogs

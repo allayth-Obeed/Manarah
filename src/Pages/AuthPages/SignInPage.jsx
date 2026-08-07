@@ -14,11 +14,13 @@ import VisibilityIcon from '@mui/icons-material/Visibility'
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff'
 import MosqueRoundedIcon from '@mui/icons-material/MosqueRounded' // ADDED: نفس أيقونة الشعار المستخدمة بالقائمة الجانبية بدل حرف "م"
 import useAuth from '../../hooks/useAuth'
+import { useCurrentUser } from '../../context/userContext' // ADDED: لتحديث بيانات المستخدم المشتركة فور نجاح الدخول
 
 const SignInPage = () => {
   const { activeTheme } = useTheme()
   const navigate = useNavigate()
   const { signIn, loading, error, clearError } = useAuth()
+  const { refreshUser } = useCurrentUser() // ADDED: بدون هذا يبقى الـ Context فارغاً حتى إعادة تحميل الصفحة يدوياً
 
   // حالة النموذج
   const [formData, setFormData] = useState({
@@ -41,6 +43,7 @@ const SignInPage = () => {
 
     const result = await signIn(formData.email, formData.password)
     if (result.success) {
+      await refreshUser() // ADDED: مزامنة Context المستخدم المشترك بالتوكن الجديد قبل الانتقال
       navigate('/')
     }
   }

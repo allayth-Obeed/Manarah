@@ -11,6 +11,7 @@ import MosqueDialogs from '../../components/Dialogs/MosqueDialogs' // ADDED: Dia
 import { getAllMosques, createMosque, updateMosque, deleteMosque } from '../../services/mosqueService' // MODIFIED: أضيف updateMosque لتفعيل تعديل حالة المسجد
 import { getAllPreachers } from '../../services/preacherService' // ADDED: Preacher API to fetch preacher list for assignment dropdown
 import { createAssignment } from '../../services/preacherAssignmentService' // ADDED: Preacher assignment API to assign a preacher to a mosque
+import { useCurrentUser } from '../../context/userContext' // ADDED: لإخفاء أزرار الكتابة عن المستخدمين ذوي صلاحية القراءة فقط
 
 // ============= تعريف أعمدة جدول المساجد =============
 const mosqueColumns = [
@@ -73,6 +74,8 @@ const transformPreachersToOptions = (preachers) => {
 }
 
 export default function Mosque() {
+  const { canWrite } = useCurrentUser() // ADDED: ADMIN/MANAGER فقط يقدرون يضيفون/يعدّلون/يحذفون/يكلّفون
+
   // ============= State Management =============
   const [addOpen, setAddOpen] = useState(false) // ADDED: State for add mosque dialog
   const [editOpen, setEditOpen] = useState(false) // ADDED: حالة فتح ديالوج تعديل بيانات/حالة المسجد
@@ -283,7 +286,7 @@ export default function Mosque() {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-      <Header1 onAddMosque={handleAddMosque} />
+      <Header1 onAddMosque={handleAddMosque} showAddButton={canWrite} />
       {/* تمرير المساجد الحقيقية + حالة فلتر المدينة بدل الأرقام الثابتة والفلاتر المعطّلة سابقاً */}
       <FilterSearch
         mosques={mosques}
@@ -314,13 +317,14 @@ export default function Mosque() {
           totalRows={filteredMosques.length} // MODIFIED: العدد يعكس نتيجة الفلترة الفعلية
           totalPages={1}
           entityLabel="مسجد"
-          onRowMoreClick={handleRowMoreClick}
-          onRowEditClick={handleRowEditClick} // ADDED: زر تعديل جديد يفتح ديالوج تعديل بيانات/حالة المسجد
-          onRowDeleteClick={handleRowDeleteClick}
+          // ADDED: كل أزرار الكتابة (تعيين/تعديل/حذف) تُخفى تلقائياً عن المستخدمين ذوي صلاحية القراءة فقط
+          onRowMoreClick={canWrite ? handleRowMoreClick : undefined}
+          onRowEditClick={canWrite ? handleRowEditClick : undefined}
+          onRowDeleteClick={canWrite ? handleRowDeleteClick : undefined}
         />
       )}
       {/* تمرير المساجد الحقيقية لحساب ملخص فعلي بدل النص التسويقي الثابت */}
-      <ReportsAndValid mosques={mosques} />
+      <ReportsAndValid mosques={mosques} canWrite={canWrite} />
 
       <MosqueDialogs
         addOpen={addOpen}

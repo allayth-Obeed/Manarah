@@ -121,7 +121,8 @@ const MyTable = ({
   entityLabel = 'مسجد',
   rowsPerPage: propRowsPerPage,
   onRowMoreClick,
-  onRowEditClick, // ADDED: اختياري — لو مُرِّر يظهر زر تعديل إضافي (تستخدمه صفحة المساجد فقط حالياً)
+  onRowEditClick, // اختياري — لو مُرِّر يظهر زر تعديل إضافي
+  onRowViewClick, // ADDED: اختياري — لو مُرِّر يظهر رابط "عرض التفاصيل" (كان يظهر دائماً بلا وظيفة لصفوف الموظفين)
   onRowDeleteClick,
 }) => {
   const { activeTheme } = useTheme()
@@ -328,9 +329,11 @@ const MyTable = ({
                       justifyContent="center"
                       alignItems="center"
                     >
-                      {row.avatar ? (
+                      {/* MODIFIED: كان يظهر دائماً بلا onClick لصفوف الموظفين (row.avatar ثابت دائماً) — الآن مشروط بوجود المعالج فعلياً */}
+                      {row.avatar && onRowViewClick ? (
                         <Typography
                           component="a"
+                          onClick={() => onRowViewClick(row)}
                           sx={{
                             color: colors.primary,
                             fontWeight: 700,
@@ -343,7 +346,8 @@ const MyTable = ({
                         </Typography>
                       ) : null}
 
-                      {/* ADDED: زر تعديل اختياري — يظهر فقط للصفحات التي تمرّر onRowEditClick (المساجد حالياً) */}
+                      {/* MODIFIED: كل أزرار الإجراءات أصبحت مشروطة بوجود المعالج — تختفي تلقائياً بدل الظهور كزر ميت
+                          (يُستخدم هذا أيضاً لإخفاء أزرار الكتابة عن المستخدمين ذوي صلاحية القراءة فقط) */}
                       {onRowEditClick ? (
                         <IconButton
                           size="small"
@@ -356,26 +360,30 @@ const MyTable = ({
                           />
                         </IconButton>
                       ) : null}
-                      <IconButton
-                        size="small"
-                        aria-label="more"
-                        onClick={() => onRowMoreClick?.(row)}
-                      >
-                        <MoreVertIcon
-                          fontSize="small"
-                          sx={{ color: isMaintenance ? mutedColor : colors.mutedText }}
-                        />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        aria-label="delete"
-                        onClick={() => onRowDeleteClick?.(row)}
-                      >
-                        <DeleteIcon
-                          fontSize="small"
-                          sx={{ color: isMaintenance ? mutedColor : colors.mutedText }}
-                        />
-                      </IconButton>
+                      {onRowMoreClick ? (
+                        <IconButton
+                          size="small"
+                          aria-label="more"
+                          onClick={() => onRowMoreClick(row)}
+                        >
+                          <MoreVertIcon
+                            fontSize="small"
+                            sx={{ color: isMaintenance ? mutedColor : colors.mutedText }}
+                          />
+                        </IconButton>
+                      ) : null}
+                      {onRowDeleteClick ? (
+                        <IconButton
+                          size="small"
+                          aria-label="delete"
+                          onClick={() => onRowDeleteClick(row)}
+                        >
+                          <DeleteIcon
+                            fontSize="small"
+                            sx={{ color: isMaintenance ? mutedColor : colors.mutedText }}
+                          />
+                        </IconButton>
+                      ) : null}
                     </Stack>
                   </TableCell>
                 </TableRow>

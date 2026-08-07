@@ -23,7 +23,8 @@ export default function AnnouncementCard({
       dir="rtl"
       onClick={onClick}
       // MODIFIED: حُذفت bg-white من الكلاسات، وتُضبط الخلفية والألوان الآن عبر style من رموز الثيم
-      className="w-full border-2 border-dashed border-blue-400 rounded-lg p-4 flex gap-4 items-start hover:shadow-md transition-shadow cursor-pointer"
+      // MODIFIED: كانت hover:shadow-md/cursor-pointer تظهر دائماً حتى لو onClick غير مُمرَّر (الحالة الوحيدة الفعلية حالياً)
+      className={`w-full border-2 border-dashed border-blue-400 rounded-lg p-4 flex gap-4 items-start transition-shadow ${onClick ? 'hover:shadow-md cursor-pointer' : ''}`}
       style={{ backgroundColor: colors.surface, color: colors.text }}
     >
       <img

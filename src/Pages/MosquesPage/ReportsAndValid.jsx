@@ -6,7 +6,8 @@ import { useTheme } from '../../theme/themeContext'
 import { downloadMosquesReport } from '../../services/reportService' // ADDED: استدعاء تنزيل تقرير المساجد الحقيقي
 
 // mosques: القائمة الحقيقية القادمة من الـ API لحساب ملخص فعلي بدل النص التسويقي الثابت
-export default function ReportsAndValid({ mosques = [] }) {
+// canWrite: يحدد ظهور زر التنزيل — الباك اند يرفض هذا التقرير لغير ADMIN/MANAGER أصلاً
+export default function ReportsAndValid({ mosques = [], canWrite = true }) {
   const { activeTheme } = useTheme()
   const [downloading, setDownloading] = useState(false) // ADDED: تعطيل الزر أثناء التنزيل لمنع نقرات متكررة
 
@@ -86,6 +87,8 @@ export default function ReportsAndValid({ mosques = [] }) {
           </Typography>
         </Box>
 
+        {/* ADDED: يُخفى عن المستخدمين ذوي صلاحية القراءة فقط — الباك اند يرفض هذا التقرير لهم أصلاً */}
+        {canWrite && (
         <AppButton
           variant="contained"
           sx={{
@@ -108,6 +111,7 @@ export default function ReportsAndValid({ mosques = [] }) {
         >
           {downloading ? 'جارٍ التنزيل...' : 'تحميل التقرير الكامل'}
         </AppButton>
+        )}
       </Box>
     </Box>
   )

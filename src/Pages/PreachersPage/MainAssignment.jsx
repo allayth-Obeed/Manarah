@@ -1,3 +1,4 @@
+import { useMemo } from 'react' // ADDED: لحساب الشهر المعروض حالياً دون إعادة حسابه كل رندر
 import {
   Avatar,
   Box,
@@ -29,7 +30,7 @@ const computeWeeklyStats = (preachers = [], mosques = []) => {
   )
   const totalAssigned = assignedMosques.size
   const totalRemaining = Math.max(mosques.length - totalAssigned, 0)
-  const conflicts = preachers.filter((p) => (p.assignments || []).length > 1).length
+  const conflicts = preachers.filter((p) => (p.assignments || []).filter((a) => a.isActive).length > 1).length
 
   return [
     { value: String(totalRemaining), label: 'خطب متبقي' },
@@ -38,36 +39,40 @@ const computeWeeklyStats = (preachers = [], mosques = []) => {
   ]
 }
 
-// Build assignment events from real preachers + mosques data
-const buildEventsFromData = (preachers = []) => {
+// MODIFIED: تصفية حقيقية بحسب الشهر المعروض (viewedMonthDate) بدل عرض آخر 10 تعيينات دائماً بلا علاقة بالتنقل الشهري
+// كذلك warning أصبح محسوباً فعلياً (خطيب له أكثر من تكليف نشط بنفس الوقت) بدل false ثابتة دائماً
+const buildEventsFromData = (preachers = [], viewedMonthDate = new Date()) => {
   const now = new Date()
+  const viewedMonth = viewedMonthDate.getMonth()
+  const viewedYear = viewedMonthDate.getFullYear()
 
   return preachers
-    .flatMap((preacher) =>
-      (preacher.assignments || [])
-        .filter((a) => a.isActive)
-        .map((a) => {
-          const start = a.startDate ? new Date(a.startDate) : now
-          return {
-            id: a.id,
-            title: 'تكليف خطيب',
-            date: String(start.getDate()),
-            month: start.toLocaleString('en-US', { month: 'short' }).toUpperCase(),
-            mosque: a.mosque?.name || 'مسجد غير معين',
-            draftMosque: '',
-            imam:
-              preacher.firstName && preacher.lastName
-                ? `${preacher.firstName} ${preacher.lastName}`
-                : preacher.user?.name || 'خطيب',
-            time: start.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' }),
-            city: a.mosque?.city || '',
-            status: 'مكتمل جزئياً',
-            secondaryAction: 'تعديل التكليف',
-            warning: false,
-            disabled: false,
-          }
-        })
-    )
+    .flatMap((preacher) => {
+      const activeAssignments = (preacher.assignments || []).filter((a) => a.isActive)
+      const hasConflict = activeAssignments.length > 1 // ADDED: نفس تعريف التعارض المستخدم بملخص الأسبوع
+
+      return activeAssignments.map((a) => {
+        const start = a.startDate ? new Date(a.startDate) : now
+        return {
+          id: a.id,
+          title: 'تكليف خطيب',
+          date: String(start.getDate()),
+          month: start.toLocaleString('en-US', { month: 'short' }).toUpperCase(),
+          monthIndex: start.getMonth(), // ADDED: للتصفية بحسب الشهر المعروض
+          year: start.getFullYear(), // ADDED: للتصفية بحسب السنة المعروضة
+          mosque: a.mosque?.name || 'مسجد غير معين',
+          imam:
+            preacher.firstName && preacher.lastName
+              ? `${preacher.firstName} ${preacher.lastName}`
+              : preacher.user?.name || 'خطيب',
+          time: start.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' }),
+          city: a.mosque?.city || '',
+          status: hasConflict ? 'تعارض بالجدول' : 'مكتمل',
+          warning: hasConflict, // MODIFIED: محسوبة فعلياً بدل false ثابتة
+        }
+      })
+    })
+    .filter((event) => event.monthIndex === viewedMonth && event.year === viewedYear) // ADDED: تفعيل التنقل الشهري فعلياً
     .slice(0, 10)
 }
 
@@ -82,16 +87,27 @@ export default function MainAssignment({
   conflictState, // ADDED: تمرير حالة فحص التعارض القادمة من الـ API.
   isSubmittingAssignment, // ADDED: تمرير حالة تنفيذ طلب التثبيت لعرض زر التحميل.
   canSubmitAssignment, // ADDED: تمرير شرط جاهزية زر تثبيت التكليف.
+  canWrite = true, // ADDED: يحدد ظهور زر "إنهاء التكليف" على بطاقات التعارض
+  monthOffset = 0, // ADDED: عدد الأشهر بالإضافة/الطرح من الشهر الحالي
   onPreviousMonth,
   onNextMonth,
+  onEndAssignment, // ADDED: يُستدعى لإنهاء تكليف معيّن من بطاقة تعارض
   onConfirmAssign,
 }) {
   const { activeTheme } = useTheme()
 
+  // MODIFIED: الشهر المعروض فعلياً بحسب monthOffset بدل الشهر الحالي دائماً — هذا ما يفعّل زري التنقل
+  const viewedMonthDate = useMemo(() => {
+    const d = new Date()
+    d.setDate(1) // تفادي مشاكل الأيام عند القفز بين أشهر بعدد أيام مختلف
+    d.setMonth(d.getMonth() + monthOffset)
+    return d
+  }, [monthOffset])
+
   // Use real computed data instead of hardcoded demo data
-  const events = buildEventsFromData(preachers)
+  const events = buildEventsFromData(preachers, viewedMonthDate)
   const weeklyStats = computeWeeklyStats(preachers, mosques)
-  const monthLabel = new Date().toLocaleString('ar-SA', { month: 'long', year: 'numeric' })
+  const monthLabel = viewedMonthDate.toLocaleString('ar-SA', { month: 'long', year: 'numeric' })
 
   const listCard = (
     <Card
@@ -158,7 +174,15 @@ export default function MainAssignment({
       </Box>
 
       {events.length > 0 ? (
-        events.map((event) => <EventCard key={event.id} event={event} activeTheme={activeTheme} />)
+        events.map((event) => (
+          <EventCard
+            key={event.id}
+            event={event}
+            activeTheme={activeTheme}
+            canWrite={canWrite}
+            onEndAssignment={onEndAssignment}
+          />
+        ))
       ) : (
         <Box
           sx={{
@@ -240,19 +264,22 @@ export default function MainAssignment({
         }}
       >
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-          <RapidAssignment // ADDED: تمرير بيانات وخيارات التعيين الحقيقية إلى بطاقة الجمعة القادمة.
-            mosques={mosques} // ADDED: قائمة المساجد من الـ API.
-            preachers={preachers} // ADDED: قائمة الخطباء من الـ API.
-            assignmentDateLabel={assignmentDateLabel} // ADDED: تاريخ الجمعة القادمة بصيغة عرض عربية.
-            selectedMosqueId={selectedMosqueId} // ADDED: قيمة المسجد المحدد حاليًا.
-            selectedPreacherId={selectedPreacherId} // ADDED: قيمة الخطيب المحدد حاليًا.
-            onSelectMosque={onSelectMosque} // ADDED: معالج تغيير المسجد المختار.
-            onSelectPreacher={onSelectPreacher} // ADDED: معالج تغيير الخطيب المختار.
-            conflictState={conflictState} // ADDED: نتيجة فحص التعارض لعرض التحذير.
-            loading={isSubmittingAssignment} // ADDED: تمرير حالة التحميل أثناء تثبيت التكليف.
-            canSubmit={canSubmitAssignment} // ADDED: تحديد تفعيل/تعطيل زر التثبيت.
-            onConfirmAssign={onConfirmAssign} // ADDED: تنفيذ التثبيت النهائي عند ضغط الزر.
-          />
+          {/* ADDED: بطاقة التكليف السريع أداة كتابة بالكامل — تُخفى تماماً عن المستخدمين ذوي صلاحية القراءة فقط */}
+          {canWrite && (
+            <RapidAssignment // ADDED: تمرير بيانات وخيارات التعيين الحقيقية إلى بطاقة الجمعة القادمة.
+              mosques={mosques} // ADDED: قائمة المساجد من الـ API.
+              preachers={preachers} // ADDED: قائمة الخطباء من الـ API.
+              assignmentDateLabel={assignmentDateLabel} // ADDED: تاريخ الجمعة القادمة بصيغة عرض عربية.
+              selectedMosqueId={selectedMosqueId} // ADDED: قيمة المسجد المحدد حاليًا.
+              selectedPreacherId={selectedPreacherId} // ADDED: قيمة الخطيب المحدد حاليًا.
+              onSelectMosque={onSelectMosque} // ADDED: معالج تغيير المسجد المختار.
+              onSelectPreacher={onSelectPreacher} // ADDED: معالج تغيير الخطيب المختار.
+              conflictState={conflictState} // ADDED: نتيجة فحص التعارض لعرض التحذير.
+              loading={isSubmittingAssignment} // ADDED: تمرير حالة التحميل أثناء تثبيت التكليف.
+              canSubmit={canSubmitAssignment} // ADDED: تحديد تفعيل/تعطيل زر التثبيت.
+              onConfirmAssign={onConfirmAssign} // ADDED: تنفيذ التثبيت النهائي عند ضغط الزر.
+            />
+          )}
           {weeklySummary}
         </Box>
         <Box>{listCard}</Box>
@@ -261,10 +288,8 @@ export default function MainAssignment({
   )
 }
 
-function EventCard({ event, activeTheme }) {
-  const isWarning = event.warning
-  const isDisabled = event.disabled
-  const isInteractive = !isWarning && !isDisabled
+function EventCard({ event, activeTheme, canWrite, onEndAssignment }) {
+  const isWarning = event.warning // MODIFIED: محسوبة فعلياً الآن (تعدد تكليفات نشطة لنفس الخطيب) وليست false ثابتة
 
   return (
     <Box
@@ -272,7 +297,6 @@ function EventCard({ event, activeTheme }) {
         borderRadius: '18px',
         border: `1px solid ${isWarning ? activeTheme.colors.danger300 : activeTheme.colors.border}`,
         background: isWarning ? activeTheme.colors.danger100 : activeTheme.colors.surface,
-        opacity: isDisabled ? 0.45 : 1,
         direction: 'rtl',
         mb: 1.5,
         overflow: 'hidden',
@@ -373,7 +397,7 @@ function EventCard({ event, activeTheme }) {
                 </Typography>
               </Box>
             )}
-            {event.time && !isDisabled && (
+            {event.time && (
               <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.4 }}>
                 <AccessTime sx={{ color: activeTheme.colors.mutedText, fontSize: 14 }} />
                 <Typography color={activeTheme.colors.mutedText} fontSize={13}>
@@ -397,146 +421,86 @@ function EventCard({ event, activeTheme }) {
       </Box>
 
       {/* صف المسجد والإمام */}
-      {!isDisabled && (
-        <Box
-          sx={{
-            borderRadius: 2,
-            border: isWarning
-              ? `1px solid ${activeTheme.colors.danger300}`
-              : `1px solid ${activeTheme.colors.border}`,
-            p: 1.1,
-            mb: 1,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            background: activeTheme.colors.surface,
-          }}
-        >
-          {/* اليمين: اسم المسجد */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-            <HomeWorkOutlined
-              sx={{
-                color: isWarning ? activeTheme.colors.danger500 : activeTheme.colors.mutedText,
-                fontSize: 16,
-              }}
-            />
-            <Typography
-              fontWeight={700}
-              color={isWarning ? activeTheme.colors.danger700 : activeTheme.colors.text}
-              fontSize={14}
-            >
-              {event.mosque}
-            </Typography>
-          </Box>
-
-          {/* اليسار: الإمام أو زر حل النزاع */}
-          {isWarning ? (
-            <AppButton
-              variant="contained"
-              size="small"
-              backgroundColor={activeTheme.colors.danger500}
-              textColor="#fff"
-              borderColor={activeTheme.colors.danger500}
-              hoverBackgroundColor={activeTheme.colors.danger700}
-              borderRadius={1.7}
-              px={1.8}
-              py={0.7}
-              fontSize={11}
-              minWidth={0}
-            >
-              {event.secondaryAction}
-            </AppButton>
-          ) : (
-            <Box
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 0.8,
-                py: 0.4,
-                px: 1,
-                borderRadius: '999px',
-                background: activeTheme.colors.surface,
-                border: `1px solid ${activeTheme.colors.border}`,
-              }}
-            >
-              <EditOutlined sx={{ color: '#98A2AE', fontSize: 16 }} />
-              <Typography fontSize={12.5} fontWeight={600} color={activeTheme.colors.text}>
-                {event.imam}
-              </Typography>
-              <Avatar
-                sx={{
-                  width: 22,
-                  height: 22,
-                  fontSize: 10,
-                  bgcolor: activeTheme.colors.bgelem,
-                }}
-              >
-                د
-              </Avatar>
-            </Box>
-          )}
+      <Box
+        sx={{
+          borderRadius: 2,
+          border: isWarning
+            ? `1px solid ${activeTheme.colors.danger300}`
+            : `1px solid ${activeTheme.colors.border}`,
+          p: 1.1,
+          mb: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          background: activeTheme.colors.surface,
+        }}
+      >
+        {/* اليمين: اسم المسجد */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+          <HomeWorkOutlined
+            sx={{
+              color: isWarning ? activeTheme.colors.danger500 : activeTheme.colors.mutedText,
+              fontSize: 16,
+            }}
+          />
+          <Typography
+            fontWeight={700}
+            color={isWarning ? activeTheme.colors.danger700 : activeTheme.colors.text}
+            fontSize={14}
+          >
+            {event.mosque}
+          </Typography>
         </Box>
-      )}
 
-      {/* صف المسجد المقترح - للبطاقات التفاعلية */}
-      {isInteractive && (
-        <Box
-          sx={{
-            background: activeTheme.colors.background,
-            borderRadius: 2,
-            border: `1px dashed ${activeTheme.colors.border}`,
-            py: 0.9,
-            px: 1,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-          }}
-        >
-          {/* اليمين: المسجد المقترح */}
-          <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
-            <HomeWorkOutlined sx={{ color: activeTheme.colors.mutedText, fontSize: 14 }} />
-            <Typography color={activeTheme.colors.mutedText} fontSize={14}>
-              {event.draftMosque}
-            </Typography>
-          </Box>
-
-          {/* اليسار: زر تعيين خطيب */}
+        {/* اليسار: الإمام أو زر إنهاء التكليف عند وجود تعارض */}
+        {isWarning && canWrite ? (
+          // MODIFIED: زر حقيقي الآن — كان بلا onClick إطلاقاً؛ ينهي هذا التكليف تحديداً لحل التعارض
           <AppButton
-            variant="outlined"
+            variant="contained"
             size="small"
-            backgroundColor="transparent"
-            textColor={activeTheme.colors.secondary}
-            borderColor={activeTheme.colors.secondary}
-            hoverBackgroundColor={activeTheme.colors.background}
-            borderRadius={1.6}
+            backgroundColor={activeTheme.colors.danger500}
+            textColor="#fff"
+            borderColor={activeTheme.colors.danger500}
+            hoverBackgroundColor={activeTheme.colors.danger700}
+            borderRadius={1.7}
             px={1.8}
             py={0.7}
-            fontSize={12}
+            fontSize={11}
             minWidth={0}
+            onClick={() => onEndAssignment?.(event.id)}
           >
-            {event.secondaryAction}
+            إنهاء التكليف
           </AppButton>
-        </Box>
-      )}
-
-      {/* صف المسجد للبطاقات المعطّلة */}
-      {isDisabled && (
-        <Box
-          sx={{
-            p: 1.1,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'flex-end',
-          }}
-        >
-          <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}>
-            <HomeWorkOutlined sx={{ color: activeTheme.colors.mutedText, fontSize: 14 }} />
-            <Typography color={activeTheme.colors.text} fontSize={14} fontWeight={600}>
-              {event.mosque}
+        ) : (
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 0.8,
+              py: 0.4,
+              px: 1,
+              borderRadius: '999px',
+              background: activeTheme.colors.surface,
+              border: `1px solid ${activeTheme.colors.border}`,
+            }}
+          >
+            <EditOutlined sx={{ color: '#98A2AE', fontSize: 16 }} />
+            <Typography fontSize={12.5} fontWeight={600} color={activeTheme.colors.text}>
+              {event.imam}
             </Typography>
+            <Avatar
+              sx={{
+                width: 22,
+                height: 22,
+                fontSize: 10,
+                bgcolor: activeTheme.colors.bgelem,
+              }}
+            >
+              د
+            </Avatar>
           </Box>
-        </Box>
-      )}
+        )}
+      </Box>
     </Box>
   )
 }

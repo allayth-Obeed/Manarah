@@ -7,8 +7,10 @@ import DonationsDialogs from '../../components/Dialogs/DonationsDialogs' // ADDE
 // ✅ تم الربط مع الـ API الحقيقي للتبرعات والمساجد
 import { getAllDonations, createDonation, deleteDonation } from '../../services/donationService' // ADDED: Donation CRUD API functions
 import { getAllMosques } from '../../services/mosqueService' // ADDED: Mosque API to fetch mosque list for dropdown
+import { useCurrentUser } from '../../context/userContext' // ADDED: لإخفاء زر الحذف عن المستخدمين ذوي صلاحية القراءة فقط
 
 export default function Donations() {
+  const { canWrite } = useCurrentUser() // ADDED
   // ============= State Management =============
   const [addOpen, setAddOpen] = useState(false) // ADDED: State for add donation dialog
   const [detailsOpen, setDetailsOpen] = useState(false) // ADDED: State for donation details dialog
@@ -124,10 +126,14 @@ export default function Donations() {
             setSelectedRow(row)
             setDetailsOpen(true)
           }}
-          onDeleteClick={(row) => {
-            setSelectedRow(row)
-            setDeleteOpen(true)
-          }}
+          onDeleteClick={
+            canWrite // ADDED: إخفاء رابط الحذف عن المستخدمين ذوي صلاحية القراءة فقط
+              ? (row) => {
+                  setSelectedRow(row)
+                  setDeleteOpen(true)
+                }
+              : undefined
+          }
         />
       )}
 

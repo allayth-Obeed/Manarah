@@ -14,7 +14,7 @@ import LogoutIcon from '@mui/icons-material/Logout'
 import { useTheme } from '../../theme/themeContext'
 import { useNavigate } from 'react-router-dom'
 import useAuth from '../../hooks/useAuth'
-import { validateToken } from '../../services/authService' // ADDED: useAuth ليس Context مشترك، فنجلب المستخدم الحقيقي مباشرة عبر /auth/me
+import { useCurrentUser } from '../../context/userContext' // MODIFIED: مصدر مستخدم مشترك بدل جلب /auth/me منفصل بهذا الملف
 import { getAllMosques } from '../../services/mosqueService' // ADDED: لتفعيل البحث الحقيقي عن المساجد
 import { getAllPreachers } from '../../services/preacherService' // ADDED: لتفعيل البحث الحقيقي عن الأئمة
 import { API_ORIGIN } from '../../services/apiClient' // ADDED: لبناء رابط كامل لصورة المستخدم (تُخدَّم من الباك اند مباشرة وليس عبر /api)
@@ -65,32 +65,22 @@ function TopBar() {
   const { signOut } = useAuth()
   const palette = activeTheme.layout
 
-  // MODIFIED: المستخدم الحقيقي بدل الاسم الثابت "أحمد المشرف" — يُحدَّث فور نجاح جلب /auth/me
-  const [user, setUser] = useState({ name: '', role: '', email: '', avatarUrl: '' })
-
-  // ADDED: جلب بيانات المستخدم الحقيقي مرة واحدة عند تحميل الشريط العلوي
-  useEffect(() => {
-    let isMounted = true
-    validateToken().then((result) => {
-      if (isMounted && result.valid && result.user) {
-        setUser({
-          name: result.user.name || '',
-          role: roleLabels[result.user.role] || result.user.role || '',
-          email: result.user.email || '', // ADDED: يُعرض بقائمة معلومات الحساب المنبثقة
-          avatarUrl: result.user.avatarUrl || '', // ADDED: صورة المستخدم الحقيقية إن وُجدت
-        })
-      }
-    })
-    return () => {
-      isMounted = false // ADDED: تفادي تحديث state بعد فك تركيب المكوّن
-    }
-  }, [])
+  // MODIFIED: المستخدم الحقيقي من الـ Context المشترك بدل جلب /auth/me منفصل بكل مكوّن
+  const { user: rawUser } = useCurrentUser()
+  const user = {
+    name: rawUser?.name || '',
+    role: roleLabels[rawUser?.role] || rawUser?.role || '',
+    email: rawUser?.email || '', // ADDED: يُعرض بقائمة معلومات الحساب المنبثقة
+    avatarUrl: rawUser?.avatarUrl || '', // ADDED: صورة المستخدم الحقيقية إن وُجدت
+  }
 
   // ADDED: رابط كامل لصورة المستخدم — avatarUrl المخزَّن نسبي (مثل /uploads/avatars/x.jpg) ويُخدَّم من أصل الباك اند مباشرة
   const avatarSrc = user.avatarUrl ? `${API_ORIGIN}${user.avatarUrl}` : undefined
 
   // ADDED: حالة قائمة معلومات الحساب المنبثقة (تظهر عند الضغط على أيقونة الحساب بالشريط العلوي)
   const [accountAnchor, setAccountAnchor] = useState(null)
+  // ADDED: حالة قائمة الإشعارات المنبثقة — لا يوجد نظام إشعارات حقيقي بالباك اند بعد، فنعرض رسالة صادقة بدل أيقونة ميتة
+  const [notificationsAnchor, setNotificationsAnchor] = useState(null)
 
   // ADDED: حالة البحث الحي بمربع البحث بالشريط العلوي
   const [searchQuery, setSearchQuery] = useState('')
@@ -223,7 +213,13 @@ function TopBar() {
                   <AccountCircle fontSize="small" />
                 )}
               </IconButton>
-              <IconButton size="small" sx={{ color: activeTheme.colors.mutedText }}>
+              {/* MODIFIED: كانت بلا onClick إطلاقاً — الآن تفتح قائمة حقيقية (بدل أيقونة ميتة تماماً) */}
+              <IconButton
+                size="small"
+                onClick={(e) => setNotificationsAnchor(e.currentTarget)}
+                sx={{ color: activeTheme.colors.mutedText }}
+                title="الإشعارات"
+              >
                 <NotificationsIcon fontSize="small" />
               </IconButton>
               <IconButton
@@ -273,6 +269,21 @@ function TopBar() {
               </Typography>
               <Typography sx={{ fontSize: 12, color: activeTheme.colors.primary, fontWeight: 600 }}>
                 {user.role}
+              </Typography>
+            </Box>
+          </Popover>
+
+          {/* ADDED: قائمة الإشعارات — لا يوجد نظام إشعارات حقيقي بالباك اند بعد، فنعرض رسالة صادقة بدل أيقونة ميتة */}
+          <Popover
+            open={Boolean(notificationsAnchor)}
+            anchorEl={notificationsAnchor}
+            onClose={() => setNotificationsAnchor(null)}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+            transformOrigin={{ vertical: 'top', horizontal: 'center' }}
+          >
+            <Box sx={{ p: 2.5, minWidth: 220, textAlign: 'center', bgcolor: activeTheme.colors.surface }} dir="rtl">
+              <Typography sx={{ fontSize: 13, color: activeTheme.colors.mutedText }}>
+                لا توجد إشعارات حالياً
               </Typography>
             </Box>
           </Popover>

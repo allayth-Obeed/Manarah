@@ -9,6 +9,7 @@ import EmployeesDialogs from '../../components/Dialogs/EmployeesDialogs' // ADDE
 // ============= الاستيرادات من ملف الخدمة =============
 // نستورد دوال الاتصال بالـ API من ملف الخدمة التي أنشأناه
 import { getAllEmployees, createEmployee, deleteEmployee } from '../../services/employeeService' // ADDED: Added deleteEmployee import for delete CRUD operation
+import { useCurrentUser } from '../../context/userContext' // ADDED: لإخفاء أزرار الكتابة عن المستخدمين ذوي صلاحية القراءة فقط
 
 // ============= تعريف أعمدة الجدول =============
 // تم غير تعريفها كخارجية لأنها لا تتغير
@@ -80,11 +81,15 @@ const transformEmployeesToRows = (employees) => {
 }
 
 export default function Employees() {
+  const { canWrite } = useCurrentUser() // ADDED: ADMIN/MANAGER فقط يقدرون يضيفون/يحذفون
+
   // ============= State Management =============
   // حالة فتح/إغلاق نافذة إضافة موظف
   const [addOpen, setAddOpen] = useState(false)
   // ADDED: State for delete confirmation dialog
   const [deleteOpen, setDeleteOpen] = useState(false)
+  // ADDED: حالة ديالوج "عرض التفاصيل" — كان الرابط بالجدول بلا أي وظيفة
+  const [detailsOpen, setDetailsOpen] = useState(false)
   // ADDED: State for the selected employee row to delete
   const [selectedRow, setSelectedRow] = useState(null)
 
@@ -192,6 +197,8 @@ export default function Employees() {
         addIcon={<PersonAddAlt1OutlinedIcon />}
         onAddClick={() => setAddOpen(true)}
         onAnnouncementClick={handleReportDownload}
+        showAddButton={canWrite} // ADDED: إخفاء زر الإضافة عن المستخدمين ذوي صلاحية القراءة فقط
+        showAnnouncementButton={canWrite} // ADDED: تقرير الموظفين يحوي الرواتب — الباك اند يرفضه لغير ADMIN/MANAGER أصلاً
       />
 
       <EmployeesHeader employees={employees} />
@@ -218,10 +225,18 @@ export default function Employees() {
           totalRows={employees.length}
           totalPages={1}
           entityLabel="موظف"
-          onRowDeleteClick={(row) => { // ADDED: Wire up delete click handler to open confirmation dialog
+          onRowViewClick={(row) => { // ADDED: يفعّل رابط "عرض التفاصيل" الذي كان يظهر بلا أي وظيفة
             setSelectedRow(row)
-            setDeleteOpen(true)
+            setDetailsOpen(true)
           }}
+          onRowDeleteClick={
+            canWrite // ADDED: إخفاء زر الحذف عن المستخدمين ذوي صلاحية القراءة فقط
+              ? (row) => {
+                  setSelectedRow(row)
+                  setDeleteOpen(true)
+                }
+              : undefined
+          }
         />
       )}
 
@@ -235,6 +250,8 @@ export default function Employees() {
         setDeleteOpen={setDeleteOpen} // ADDED: Pass delete dialog setter to the dialog component
         selectedRow={selectedRow} // ADDED: Pass selected employee row to the dialog component
         handleConfirmDelete={handleConfirmDelete} // ADDED: Pass delete handler to the dialog component
+        detailsOpen={detailsOpen} // ADDED: ديالوج عرض التفاصيل الجديد
+        setDetailsOpen={setDetailsOpen} // ADDED
       />
     </div>
   )

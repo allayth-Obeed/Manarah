@@ -10,11 +10,13 @@ import { getAllAnnouncements, createAnnouncement } from '../../services/announce
 import { getAllDonations } from '../../services/donationService'
 import { getAllPreachers } from '../../services/preacherService'
 import { getAllEmployees } from '../../services/employeeService'
+import { useCurrentUser } from '../../context/userContext' // ADDED: لإخفاء أزرار الكتابة عن المستخدمين ذوي صلاحية القراءة فقط
 
 const initialMosqueForm = { name: '', address: '', city: '', phone: '', capacity: '' }
 const initialAnnouncementForm = { title: '', content: '', mosqueId: '', priority: 'MEDIUM' }
 
 export default function Dashboard() {
+  const { canWrite } = useCurrentUser() // ADDED
   const [mosqueOpen, setMosqueOpen] = useState(false)
   const [announcementOpen, setAnnouncementOpen] = useState(false)
   const [mosqueForm, setMosqueForm] = useState(initialMosqueForm)
@@ -110,6 +112,8 @@ export default function Dashboard() {
       <MainFun
         onAddClick={() => setMosqueOpen(true)}
         onAnnouncementClick={() => setAnnouncementOpen(true)}
+        showAddButton={canWrite} // ADDED: إخفاء أزرار الإضافة عن المستخدمين ذوي صلاحية القراءة فقط
+        showAnnouncementButton={canWrite} // ADDED
       />
 
       {/* ✅ تمرير البيانات الحقيقية من الـ API إلى Statistics */}

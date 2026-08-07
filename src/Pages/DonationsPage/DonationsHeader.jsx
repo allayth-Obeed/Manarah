@@ -1,11 +1,13 @@
-import React from 'react'
+import React, { useState } from 'react' // MODIFIED: أضيف useState لحالة تحميل زر التقرير
 import { Box, Typography } from '@mui/material'
 import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined'
-import FilterAltOutlinedIcon from '@mui/icons-material/FilterAltOutlined'
+import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutlined' // MODIFIED: بدل FilterAltOutlinedIcon — يطابق زر "تسجيل تبرع جديد" الحقيقي الآن
 import VolunteerActivismRoundedIcon from '@mui/icons-material/VolunteerActivismRounded'
 import CurrencyExchangeRoundedIcon from '@mui/icons-material/CurrencyExchangeRounded'
 import { useTheme } from '../../theme/themeContext'
 import MainFun from '../DashboardPage/MainFun.jsx'
+import { downloadDonationsReport } from '../../services/reportService' // ADDED: يفعّل زر التقرير الذي كان يفتح ديالوج إضافة تبرع بالخطأ
+import { useCurrentUser } from '../../context/userContext' // ADDED: لإخفاء أزرار الكتابة عن المستخدمين ذوي صلاحية القراءة فقط
 
 const summaryCards = [
   {
@@ -173,6 +175,20 @@ function StatCard({ card, colors }) {
 export default function DonationsHeader({ onAddClick, donations = [] }) {
   const { activeTheme } = useTheme()
   const { colors } = activeTheme
+  const { canWrite } = useCurrentUser() // ADDED: ADMIN/MANAGER فقط يقدرون يسجّلون تبرعات جديدة
+  const [downloadingReport, setDownloadingReport] = useState(false) // ADDED: تعطيل الزر أثناء التنزيل
+
+  // ADDED: يفعّل زر تنزيل تقرير التبرعات الحقيقي
+  const handleDownloadReport = async () => {
+    setDownloadingReport(true)
+    try {
+      await downloadDonationsReport()
+    } catch {
+      // الخطأ مسجَّل بالفعل داخل reportService
+    } finally {
+      setDownloadingReport(false)
+    }
+  }
 
   // حساب الإحصائيات من البيانات الحقيقية
   const totalDonations = donations.reduce((sum, d) => sum + (d.amount || 0), 0)
@@ -225,14 +241,19 @@ export default function DonationsHeader({ onAddClick, donations = [] }) {
 
   return (
     <Box dir="rtl" sx={{ width: '100%' }}>
+      {/* MODIFIED: كانت التسميات معكوسة عن وظيفتها الفعلية — addButton="إصدار تقرير" لكنه يفتح ديالوج تسجيل تبرع،
+          وannouncementButton="تصفية البيانات" بلا onAnnouncementClick إطلاقاً. أُصلحت التسميات وفُعِّل تنزيل تقرير حقيقي */}
       <MainFun
         title="إدارة التبرعات"
         description="متابعة التبرعات المالية والمساهمات الوقفية الجارية"
-        announcementButton="تصفية البيانات"
-        addButton="إصدار تقرير"
-        announcementIcon={<FilterAltOutlinedIcon />}
-        addIcon={<DescriptionOutlinedIcon />}
+        announcementButton={downloadingReport ? 'جارٍ التنزيل...' : 'تحميل تقرير التبرعات'}
+        addButton="تسجيل تبرع جديد"
+        announcementIcon={<DescriptionOutlinedIcon />}
+        addIcon={<AddCircleOutlineIcon />}
         onAddClick={onAddClick}
+        onAnnouncementClick={handleDownloadReport}
+        showAddButton={canWrite} // ADDED: إخفاء زر تسجيل التبرع عن المستخدمين ذوي صلاحية القراءة فقط
+        showAnnouncementButton={canWrite} // ADDED: تقرير التبرعات بيانات مالية — الباك اند يرفضه لغير ADMIN/MANAGER أصلاً
       />
 
       <Box sx={{ display: 'flex', gap: 2, alignItems: 'stretch' }}>

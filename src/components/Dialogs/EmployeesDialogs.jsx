@@ -27,7 +27,8 @@ const jobTitles = [
 // ADDED: New props for delete functionality: deleteOpen, setDeleteOpen, selectedRow, handleConfirmDelete
 export default function EmployeesDialogs({
   addOpen, setAddOpen, employeeForm, setEmployeeForm, handleAddSubmit,
-  deleteOpen, setDeleteOpen, selectedRow, handleConfirmDelete // ADDED: Destructure new delete props
+  deleteOpen, setDeleteOpen, selectedRow, handleConfirmDelete, // ADDED: Destructure new delete props
+  detailsOpen, setDetailsOpen, // ADDED: ديالوج "عرض التفاصيل" — كان الرابط بالجدول يظهر بلا أي وظيفة
 }) {
   const { activeTheme } = useTheme()
   const { colors, mode } = activeTheme
@@ -142,6 +143,33 @@ export default function EmployeesDialogs({
             sx={{ borderRadius: 2, height: 48, px: 3, '&:hover': { backgroundColor: colors.border } }}>
             إلغاء
           </AppButton>
+        </DialogActions>
+      </Dialog>
+
+      {/* ============= ADDED: Dialog عرض تفاصيل الموظف ============= */}
+      <Dialog open={detailsOpen} onClose={() => setDetailsOpen(false)} maxWidth="sm" fullWidth
+        PaperProps={{ sx: { borderRadius: 3, bgcolor: colors.surface, color: colors.text, maxWidth: 560, boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' } }}>
+        <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', px: 4, pt: 4, pb: 0, mb: 2 }}>
+          <IconButton onClick={() => setDetailsOpen(false)} sx={{ color: colors.mutedText, p: 0, '& svg': { fontSize: 22 } }}><CloseIcon /></IconButton>
+          <Box sx={{ display: 'flex', alignItems: 'center', borderRight: `4px solid ${colors.secondary}`, pr: 1.5 }}>
+            <Typography sx={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 700, fontSize: 20, color: isDark ? colors.secondary : colors.primary, lineHeight: '28px' }}>تفاصيل الموظف</Typography>
+          </Box>
+        </DialogTitle>
+        <DialogContent sx={{ px: 4, pt: 2, pb: 3 }}>
+          {selectedRow ? (
+            <Stack spacing={2.5} sx={{ direction: 'rtl' }}>
+              <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, p: 2.5, borderRadius: 2, bgcolor: colors.bgelem }}>
+                <Box><Typography sx={{ fontSize: 12, color: colors.mutedText, mb: 0.5 }}>الاسم</Typography><Typography sx={{ fontSize: 15, fontWeight: 700, color: colors.text }}>{selectedRow.name || '—'}</Typography></Box>
+                <Box><Typography sx={{ fontSize: 12, color: colors.mutedText, mb: 0.5 }}>الوظيفة</Typography><Typography sx={{ fontSize: 15, fontWeight: 700, color: colors.primary }}>{selectedRow.job || '—'}</Typography></Box>
+                <Box><Typography sx={{ fontSize: 12, color: colors.mutedText, mb: 0.5 }}>المسجد المرتبط</Typography><Typography sx={{ fontSize: 15, fontWeight: 600, color: colors.text }}>{selectedRow.mosque || '—'}</Typography></Box>
+                <Box><Typography sx={{ fontSize: 12, color: colors.mutedText, mb: 0.5 }}>الحالة</Typography><Typography sx={{ fontSize: 15, fontWeight: 600, color: colors.text }}>{selectedRow.status || '—'}</Typography></Box>
+                <Box><Typography sx={{ fontSize: 12, color: colors.mutedText, mb: 0.5 }}>تاريخ التعيين</Typography><Typography sx={{ fontSize: 15, fontWeight: 600, color: colors.text }}>{selectedRow.hiredDate || '—'}</Typography></Box>
+              </Box>
+            </Stack>
+          ) : <Typography sx={{ textAlign: 'center', color: colors.mutedText, py: 4 }}>لا توجد تفاصيل متاحة</Typography>}
+        </DialogContent>
+        <DialogActions sx={{ px: 4, pb: 4, justifyContent: 'center' }}>
+          <AppButton variant="outlined" backgroundColor="transparent" textColor={colors.text} borderColor={colors.border} onClick={() => setDetailsOpen(false)} sx={{ borderRadius: 2, height: 44, px: 4 }}>إغلاق</AppButton>
         </DialogActions>
       </Dialog>
 

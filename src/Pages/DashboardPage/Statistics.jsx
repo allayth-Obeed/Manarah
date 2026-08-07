@@ -23,6 +23,7 @@ import {
 } from 'recharts'
 
 import { useTheme } from '../../theme/themeContext'
+import { useNavigate } from 'react-router-dom' // ADDED: لتفعيل رابط "عرض الكل" الذي كان بلا أي وظيفة
 
 const tableHeaders = ['اسم المسجد', 'اسم الخطيب', 'التاريخ']
 
@@ -50,6 +51,7 @@ function SectionCard({ cardSx, titleSx, title, action, children }) {
 export default function Statistics({ mosques = [], donations = [], preachers = [], employees = [] }) {
   const { activeTheme } = useTheme()
   const { colors, layout } = activeTheme
+  const navigate = useNavigate() // ADDED: لتفعيل رابط "عرض الكل" الذي كان بلا أي وظيفة
 
   const cardSx = {
     borderRadius: 4,
@@ -178,7 +180,12 @@ export default function Statistics({ mosques = [], donations = [], preachers = [
               titleSx={titleSx}
               title="أحدث تكليفات الخطباء"
               action={
-                <Typography variant="body2" sx={{ color: colors.secondary, cursor: 'pointer' }}>
+                // MODIFIED: كان بلا onClick إطلاقاً — الآن ينتقل فعلياً لصفحة توزيع الخطباء الكاملة
+                <Typography
+                  variant="body2"
+                  onClick={() => navigate('/preachers')}
+                  sx={{ color: colors.secondary, cursor: 'pointer' }}
+                >
                   عرض الكل
                 </Typography>
               }

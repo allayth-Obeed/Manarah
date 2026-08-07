@@ -12,8 +12,12 @@ import {
   deleteAnnouncement,
 } from '../../services/announcementService' // ADDED: Announcement CRUD API functions
 import { getAllMosques } from '../../services/mosqueService' // ADDED: Mosque API to fetch mosque list for dropdown
+import { useNavigate } from 'react-router-dom' // ADDED: للانتقال الفعلي عند الضغط على "إدارة المساجد"
+import { useCurrentUser } from '../../context/userContext' // ADDED: لإخفاء أزرار الكتابة عن المستخدمين ذوي صلاحية القراءة فقط
 
 export default function Announcements() {
+  const navigate = useNavigate() // ADDED
+  const { canWrite } = useCurrentUser() // ADDED: ADMIN/MANAGER فقط يقدرون يضيفون/يحذفون إعلانات
   // ============= State Management =============
   const [addOpen, setAddOpen] = useState(false) // ADDED: State for add announcement dialog
   const [deleteOpen, setDeleteOpen] = useState(false) // ADDED: State for delete confirmation dialog
@@ -96,14 +100,16 @@ export default function Announcements() {
 
   return (
     <div>
-      {/* إعادة استخدام MainFun بدلاً من Header - يتوافق مع بقية الصفحات */}
+      {/* MODIFIED: كانت التسميات معكوسة — "إدارة المساجد" بخانة addButton لكنه كان يفتح ديالوج إضافة إعلان (كلا الزرين
+          كانا ينفذان نفس onAddClick). أُصلحت التسميات وأصبح "إدارة المساجد" ينتقل فعلياً لصفحة المساجد */}
       <MainFun
         title="الإعلانات"
         description="إدارة الإعلانات والتنبيهات للمساجد التابعة للمديرية"
-        announcementButton="إضافة إعلان"
-        addButton="إدارة المساجد"
+        announcementButton="إدارة المساجد"
+        addButton="إضافة إعلان"
         onAddClick={() => setAddOpen(true)}
-        onAnnouncementClick={() => setAddOpen(true)}
+        onAnnouncementClick={() => navigate('/mosques')}
+        showAddButton={canWrite} // ADDED: إخفاء زر الإضافة عن المستخدمين ذوي صلاحية القراءة فقط
       />
 
       {/* ADDED: عرض حالة التحميل أثناء جلب البيانات من الـ API */}
@@ -142,10 +148,14 @@ export default function Announcements() {
                   views={announcement.mosque?.name || '—'}
                   comments={announcement.priority || 'MEDIUM'}
                   status={announcement.isActive ? 'نشط' : 'غير نشط'}
-                  onDeleteClick={() => {
-                    setSelectedRow(announcement)
-                    setDeleteOpen(true)
-                  }}
+                  onDeleteClick={
+                    canWrite // ADDED: إخفاء زر الحذف عن المستخدمين ذوي صلاحية القراءة فقط
+                      ? () => {
+                          setSelectedRow(announcement)
+                          setDeleteOpen(true)
+                        }
+                      : undefined
+                  }
                 />
               ))
             )}

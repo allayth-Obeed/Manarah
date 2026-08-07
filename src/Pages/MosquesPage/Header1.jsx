@@ -3,31 +3,36 @@ import AddIcon from '@mui/icons-material/Add'
 import { useTheme } from '../../theme/themeContext'
 import AppButton from '../../components/common/AppButton'
 
-export default function Header1({ onAddMosque }) {
+export default function Header1({ onAddMosque, showAddButton = true }) {
   const { activeTheme } = useTheme()
   return (
     <Box style={{ display: 'flex', justifyContent: 'space-between'}}>
-      <AppButton
-        variant="contained"
-        dir="ltr"
-        icon={<AddIcon sx={{ border: '2px solid', borderRadius: '50%', fontSize: 14 }} />}
-        iconPosition="end"
-        backgroundColor={activeTheme.colors.primary}
-        textColor={activeTheme.colors.onPrimary}
-        borderColor={activeTheme.colors.primary}
-        hoverBackgroundColor={activeTheme.colors.primary}
-        width={198.28}
-        height={48}
-        minWidth={198.28}
-        borderRadius={1.5}
-        fontSize={16}
-        sx={{ justifyContent: 'flex-end', boxShadow: '2px 2px 7px rgba(0,0,0,0.7)' }}
-        onClick={onAddMosque}
-      >
-        <Box component="span" dir="rtl">
-          إضافة مسجد جديد
-        </Box>
-      </AppButton>
+      {/* ADDED: يُخفى عن المستخدمين ذوي صلاحية القراءة فقط */}
+      {showAddButton ? (
+        <AppButton
+          variant="contained"
+          dir="ltr"
+          icon={<AddIcon sx={{ border: '2px solid', borderRadius: '50%', fontSize: 14 }} />}
+          iconPosition="end"
+          backgroundColor={activeTheme.colors.primary}
+          textColor={activeTheme.colors.onPrimary}
+          borderColor={activeTheme.colors.primary}
+          hoverBackgroundColor={activeTheme.colors.primary}
+          width={198.28}
+          height={48}
+          minWidth={198.28}
+          borderRadius={1.5}
+          fontSize={16}
+          sx={{ justifyContent: 'flex-end', boxShadow: '2px 2px 7px rgba(0,0,0,0.7)' }}
+          onClick={onAddMosque}
+        >
+          <Box component="span" dir="rtl">
+            إضافة مسجد جديد
+          </Box>
+        </AppButton>
+      ) : (
+        <Box /> // ADDED: عنصر فارغ للحفاظ على justify-content: space-between
+      )}
       <Box dir="rtl">
         <Typography
           variant="h5"

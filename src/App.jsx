@@ -1,6 +1,7 @@
 import './App.css'
 import AppLayout from './Pages/MainPage/AppLayout'
 import { ThemeProvider } from './theme/themeProvider'
+import { UserProvider } from './context/UserProvider' // ADDED: مصدر واحد لبيانات المستخدم/الدور لكل التطبيق بدل جلب منفصل بكل صفحة
 import { lazy, Suspense } from 'react'
 import { createBrowserRouter, Navigate, Outlet, RouterProvider } from 'react-router-dom'
 import AuthGuard from './components/common/AuthGuard'
@@ -47,9 +48,12 @@ const router = createBrowserRouter([
 function App() {
   return (
     <ThemeProvider>
-      <Suspense fallback={null}>
-        <RouterProvider router={router} />
-      </Suspense>
+      {/* ADDED: يلف كل المسارات (حتى صفحات الدخول) لأن validateToken يتعامل بأمان مع عدم وجود توكن */}
+      <UserProvider>
+        <Suspense fallback={null}>
+          <RouterProvider router={router} />
+        </Suspense>
+      </UserProvider>
     </ThemeProvider>
   )
 }
