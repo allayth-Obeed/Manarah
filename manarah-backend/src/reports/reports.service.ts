@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { EmployeesService } from '../employees/employees.service';
 import { MosquesService } from '../mosques/mosques.service';
+import { DonationsService } from '../donations/donations.service'; // ADDED: لتقرير التبرعات الجديد
 
 const BOM = '﻿'; // BOM لدعم عرض الحروف العربية بشكل صحيح داخل Excel
 
@@ -19,6 +20,7 @@ export class ReportsService {
   constructor(
     private readonly employeesService: EmployeesService,
     private readonly mosquesService: MosquesService,
+    private readonly donationsService: DonationsService, // ADDED: لتقرير التبرعات الجديد
   ) {}
 
   async generateEmployeesCsv(): Promise<string> {
@@ -49,6 +51,25 @@ export class ReportsService {
     const csvRows = mosques
       .map((mosque: any) =>
         [mosque.name, mosque.address, mosque.city, mosque.phone, mosque.capacity]
+          .map(escapeCsvField)
+          .join(','),
+      )
+      .join('\n');
+
+    return BOM + csvHeader + '\n' + csvRows;
+  }
+
+  // ADDED: تقرير تبرعات جديد بنفس نمط تقريري المساجد والموظفين
+  async generateDonationsCsv(): Promise<string> {
+    const donations = await this.donationsService.findAll();
+
+    const csvHeader = ['اسم المتبرع', 'المبلغ', 'المسجد المستفيد', 'الغرض', 'تاريخ التبرع']
+      .map(escapeCsvField)
+      .join(',');
+
+    const csvRows = donations
+      .map((donation: any) =>
+        [donation.donorName, donation.amount, donation.mosque?.name, donation.purpose, donation.donationDate]
           .map(escapeCsvField)
           .join(','),
       )

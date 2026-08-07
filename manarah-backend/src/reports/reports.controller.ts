@@ -35,4 +35,16 @@ export class ReportsController {
 
     return res.send(csvContent);
   }
+
+  // ADDED: تقرير تبرعات جديد — يفعّل زر "تحميل تقرير التبرعات" الذي كان مربوطاً بالخطأ بديالوج إضافة تبرع
+  @Get('donations/download')
+  async downloadDonationsReport(@Res() res: Response) {
+    const csvContent = await this.reportsService.generateDonationsCsv();
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', 'attachment; filename=donations_report.csv');
+    res.setHeader('Content-Length', Buffer.byteLength(csvContent));
+
+    return res.send(csvContent);
+  }
 }
