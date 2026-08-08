@@ -10,6 +10,7 @@ import { AnnouncementsModule } from './announcements/announcements.module';
 import { DonationsModule } from './donations/donations.module';
 import { ReportsModule } from './reports/reports.module';
 import { PreacherAssignmentsModule } from './preacher-assignments/preacher-assignments.module';
+import { RegionsModule } from './regions/regions.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { PreacherAssignmentsModule } from './preacher-assignments/preacher-assig
     DonationsModule,
     ReportsModule,
     PreacherAssignmentsModule,
+    RegionsModule,
   ],
   controllers: [],
   providers: [],

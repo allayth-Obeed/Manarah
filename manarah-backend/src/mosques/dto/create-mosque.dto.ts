@@ -3,6 +3,7 @@ import {
   IsNotEmpty,
   IsOptional,
   IsNumber,
+  IsInt,
   IsEnum,
 } from 'class-validator';
 import { MosqueStatus } from '@prisma/client';
@@ -19,6 +20,10 @@ export class CreateMosqueDto {
   @IsString()
   @IsNotEmpty({ message: 'المدينة مطلوبة' })
   city: string;
+
+  // ADDED: ربط إلزامي بالتراتبية الجغرافية (منطقة/منطقة فرعية/موقع) — كل مسجد جديد يجب أن يندرج تحت منطقة
+  @IsInt({ message: 'الموقع الجغرافي مطلوب' })
+  locationId: number;
 
   @IsOptional()
   @IsNumber({}, { message: 'خطوط العرض يجب أن تكون رقماً' })

@@ -41,6 +41,46 @@ model Mosque {
   preachers   PreacherAssignment[]
   announcements Announcement[]
   donations   Donation[]
+  // ADDED: ربط اختياري بالتراتبية الجغرافية (محافظة/منطقة/منطقة فرعية/موقع) — اختياري للحفاظ على بيانات المساجد القديمة
+  locationId  Int?
+  location    Location?  @relation(fields: [locationId], references: [id])
+}
+
+// ADDED: التقسيم الإداري السوري — محافظة → منطقة → منطقة فرعية → موقع (بلدة/حي)
+model Province {
+  id      Int      @id @default(autoincrement())
+  code    String   @unique // مثال: "SY-HM"
+  name    String
+  regions Region[]
+}
+
+model Region {
+  id         Int         @id @default(autoincrement())
+  code       String      @unique // مثال: "HM-01"
+  name       String
+  provinceId Int
+  province   Province    @relation(fields: [provinceId], references: [id])
+  subRegions SubRegion[]
+}
+
+model SubRegion {
+  id        Int        @id @default(autoincrement())
+  code      String     @unique // مثال: "SR-0101"
+  name      String
+  regionId  Int
+  region    Region     @relation(fields: [regionId], references: [id])
+  locations Location[]
+}
+
+model Location {
+  id          Int       @id @default(autoincrement())
+  name        String
+  subRegionId Int
+  subRegion   SubRegion @relation(fields: [subRegionId], references: [id])
+  mosques     Mosque[]
+
+  // نفس اسم الموقع يمكن أن يتكرر بمناطق فرعية مختلفة (مثال: "الغنطو" و"جندار" بالبيانات)
+  @@unique([subRegionId, name])
 }
 
 // Preacher model

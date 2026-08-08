@@ -10,9 +10,12 @@ import { getAllAnnouncements, createAnnouncement } from '../../services/announce
 import { getAllDonations } from '../../services/donationService'
 import { getAllPreachers } from '../../services/preacherService'
 import { getAllEmployees } from '../../services/employeeService'
+import { getRegionsTree } from '../../services/regionService' // ADDED: شجرة التقسيم الجغرافي لمنتقي الموقع بنموذج الإضافة السريع
+import { findSelectedLocationName } from '../../utils/regionUtils' // ADDED
 import { useCurrentUser } from '../../context/userContext' // ADDED: لإخفاء أزرار الكتابة عن المستخدمين ذوي صلاحية القراءة فقط
 
-const initialMosqueForm = { name: '', address: '', city: '', phone: '', capacity: '' }
+// MODIFIED: أُضيفت حقول التصنيف الجغرافي الأربعة لنموذج الإضافة السريع
+const initialMosqueForm = { name: '', address: '', city: '', phone: '', capacity: '', provinceId: '', regionId: '', subRegionId: '', locationId: '' }
 const initialAnnouncementForm = { title: '', content: '', mosqueId: '', priority: 'MEDIUM' }
 
 export default function Dashboard() {
@@ -28,19 +31,21 @@ export default function Dashboard() {
   const [donations, setDonations] = useState([])
   const [preachers, setPreachers] = useState([])
   const [employees, setEmployees] = useState([])
+  const [regionsTree, setRegionsTree] = useState([]) // ADDED: شجرة التقسيم الجغرافي
   const [error, setError] = useState(null)
 
   // ============= جلب جميع البيانات عند تحميل الصفحة =============
   useEffect(() => {
     const fetchAllData = async () => {
       try {
-        const [mosquesData, announcementsData, donationsData, preachersData, employeesData] =
+        const [mosquesData, announcementsData, donationsData, preachersData, employeesData, regionsTreeData] =
           await Promise.all([
             getAllMosques(),
             getAllAnnouncements(),
             getAllDonations(),
             getAllPreachers(),
             getAllEmployees(),
+            getRegionsTree(),
           ])
 
         setMosques(mosquesData)
@@ -48,6 +53,7 @@ export default function Dashboard() {
         setDonations(donationsData)
         setPreachers(preachersData)
         setEmployees(employeesData)
+        setRegionsTree(regionsTreeData) // ADDED
         setError(null)
       } catch (err) {
         console.error('خطأ في جلب البيانات:', err)
@@ -59,12 +65,15 @@ export default function Dashboard() {
   }, [])
 
   // ============= إضافة مسجد جديد (API) =============
+  // ملاحظة: التحقق من وجود locationId يتم داخل AddMosqueDialog نفسه قبل استدعاء onSubmit
   const handleAddMosque = async (form) => {
     try {
+      const locationName = findSelectedLocationName(regionsTree, form) // ADDED: اسم الموقع المختار يُستخدم كـ "المدينة" تلقائياً
       await createMosque({
         name: form.name,
-        address: form.address || form.city || form.location,
-        city: form.city || form.location || '',
+        address: form.address || locationName,
+        city: locationName,
+        locationId: Number(form.locationId), // ADDED: ربط المسجد بالتراتبية الجغرافية
         capacity: form.capacity ? Number(form.capacity) : undefined,
       })
 
@@ -73,9 +82,12 @@ export default function Dashboard() {
       setMosques(updatedData)
 
       setMosqueForm(initialMosqueForm)
+      setMosqueOpen(false) // MODIFIED: الإغلاق يتم هنا عند النجاح فقط بدل الإغلاق الفوري بالديالوج (كان يُخفي رسالة التحقق)
+      setError(null)
     } catch (err) {
       console.error('خطأ في إضافة المسجد:', err)
-      setError('فشل في إضافة المسجد')
+      const msg = err?.response?.data?.message // MODIFIED: عرض رسالة الباك اند الفعلية بدل رسالة عامة دائماً
+      setError(Array.isArray(msg) ? msg.join('، ') : (msg || 'فشل في إضافة المسجد'))
     }
   }
 
@@ -131,6 +143,7 @@ export default function Dashboard() {
         form={mosqueForm}
         setForm={setMosqueForm}
         onSubmit={handleAddMosque}
+        regionsTree={regionsTree} // ADDED
       />
       <AddAnnouncementDialog
         open={announcementOpen}

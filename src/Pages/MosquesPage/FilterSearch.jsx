@@ -1,18 +1,24 @@
-import { useMemo } from 'react' // ADDED: لحساب المدن المميزة بدون إعادة حساب كل رندر
-import { Box, Typography, Card, MenuItem, Select } from '@mui/material' // ADDED: Select/MenuItem لفلتر المدينة الحقيقي
+import { useMemo } from 'react' // ADDED: لحساب المناطق المميزة بدون إعادة حساب كل رندر
+import { Box, Typography, Card, MenuItem, Select } from '@mui/material' // ADDED: Select/MenuItem لفلتر المنطقة الحقيقي
 import AppButton from '../../components/common/AppButton'
 import { useTheme } from '../../theme/themeContext'
 
-// mosques: القائمة الحقيقية القادمة من الـ API (بدل الأرقام الثابتة السابقة)
-// cityFilter/onCityFilterChange: تحكّم بالمدينة المختارة من الصفحة الأم لتفعيل الفلتر فعلياً
-export default function FilterSearch({ mosques = [], cityFilter, onCityFilterChange, onApplyFilter }) {
+// mosques: القائمة الحقيقية القادمة من الـ API (بعد التحويل بـ transformMosquesToRows، تحمل regionId/regionName)
+// regionFilter/onRegionFilterChange: تحكّم بالمنطقة المختارة من الصفحة الأم لتفعيل الفلتر فعلياً
+// MODIFIED: الفلترة أصبحت حسب المنطقة (Region) الحقيقية من التراتبية الجغرافية بدل نص "المدينة" الحر — يمنع تفتّت الإحصائيات بفروقات الكتابة
+export default function FilterSearch({ mosques = [], regionFilter, onRegionFilterChange, onApplyFilter }) {
   const { activeTheme } = useTheme()
 
-  // قائمة المدن الفريدة المستخرجة من بيانات المساجد الحقيقية (لا يوجد حقل "حالة/صيانة" بالـ schema أصلاً)
-  const cities = useMemo(
-    () => Array.from(new Set(mosques.map((m) => m.city).filter(Boolean))),
-    [mosques],
-  )
+  // قائمة المناطق الفريدة (id + name) المستخرجة من بيانات المساجد الحقيقية المصنَّفة جغرافياً
+  const regions = useMemo(() => {
+    const map = new Map()
+    mosques.forEach((m) => {
+      if (m.regionId != null && !map.has(m.regionId)) {
+        map.set(m.regionId, m.regionName)
+      }
+    })
+    return Array.from(map, ([id, name]) => ({ id, name }))
+  }, [mosques])
 
   return (
     <Box dir="rtl" sx={{ display: 'flex', flexDirection: 'column', gap: 2, py: 2 }}>
@@ -30,11 +36,11 @@ export default function FilterSearch({ mosques = [], cityFilter, onCityFilterCha
             borderRadius: 1.5,
           }}
         >
-          {/* فلتر المدينة الحقيقي: قيمة "" تعني كل المناطق، وإلا يُطبَّق فعلياً على الجدول بالصفحة الأم */}
+          {/* فلتر المنطقة الحقيقي: قيمة "" تعني كل المناطق، وإلا يُطبَّق فعلياً على الجدول بالصفحة الأم عبر معرّف المنطقة */}
           <Select
             size="small"
-            value={cityFilter || ''}
-            onChange={(event) => onCityFilterChange?.(event.target.value)}
+            value={regionFilter || ''}
+            onChange={(event) => onRegionFilterChange?.(event.target.value)}
             displayEmpty
             sx={{
               minWidth: 140,
@@ -45,9 +51,9 @@ export default function FilterSearch({ mosques = [], cityFilter, onCityFilterCha
             }}
           >
             <MenuItem value="">كل المناطق</MenuItem>
-            {cities.map((city) => (
-              <MenuItem key={city} value={city}>
-                {city}
+            {regions.map((region) => (
+              <MenuItem key={region.id} value={region.id}>
+                {region.name}
               </MenuItem>
             ))}
           </Select>
@@ -106,8 +112,8 @@ export default function FilterSearch({ mosques = [], cityFilter, onCityFilterCha
             variant="h6"
             sx={{ fontWeight: 800, fontSize: 18, color: activeTheme.colors.danger700 }}
           >
-            {/* استبدال "قيد الصيانة" (حقل غير موجود بالباك اند) بعدد المدن المغطاة الحقيقي */}
-            {cities.length.toLocaleString('en-US')}
+            {/* استبدال "قيد الصيانة" (حقل غير موجود بالباك اند) بعدد المناطق المغطاة الحقيقي */}
+            {regions.length.toLocaleString('en-US')}
           </Typography>
           <Typography
             sx={{
@@ -115,7 +121,7 @@ export default function FilterSearch({ mosques = [], cityFilter, onCityFilterCha
               fontSize: 11,
             }}
           >
-            مدينة مغطاة
+            منطقة مغطاة
           </Typography>
         </Card>
       </Box>

@@ -3,6 +3,23 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateMosqueDto } from './dto/create-mosque.dto';
 import { UpdateMosqueDto } from './dto/update-mosque.dto';
 
+// ADDED: سلسلة العلاقات الجغرافية الكاملة (موقع → منطقة فرعية → منطقة → محافظة) تُرفق مع كل مسجد
+const locationInclude = {
+  location: {
+    include: {
+      subRegion: {
+        include: {
+          region: {
+            include: {
+              province: true,
+            },
+          },
+        },
+      },
+    },
+  },
+} as const;
+
 @Injectable()
 export class MosquesService {
   constructor(private prisma: PrismaService) {}
@@ -17,6 +34,7 @@ export class MosquesService {
         },
         announcements: true,
         donations: true,
+        ...locationInclude,
       },
     });
   }
@@ -32,6 +50,7 @@ export class MosquesService {
         },
         announcements: true,
         donations: true,
+        ...locationInclude,
       },
     });
 
@@ -42,7 +61,17 @@ export class MosquesService {
     return mosque;
   }
 
+  // ADDED: يتحقق من وجود الموقع الجغرافي فعلياً قبل ربط المسجد به
+  private async assertLocationExists(locationId?: number) {
+    if (locationId == null) return;
+    const location = await this.prisma.location.findUnique({ where: { id: locationId } });
+    if (!location) {
+      throw new NotFoundException('الموقع الجغرافي المحدد غير موجود');
+    }
+  }
+
   async create(createMosqueDto: CreateMosqueDto) {
+    await this.assertLocationExists(createMosqueDto.locationId);
     return this.prisma.mosque.create({
       data: createMosqueDto,
     });
@@ -56,6 +85,8 @@ export class MosquesService {
     if (!existing) {
       throw new NotFoundException('المسجد غير موجود');
     }
+
+    await this.assertLocationExists(updateMosqueDto.locationId);
 
     return this.prisma.mosque.update({
       where: { id },

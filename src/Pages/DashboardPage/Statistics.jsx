@@ -106,22 +106,23 @@ export default function Statistics({ mosques = [], donations = [], preachers = [
   })
 
   // ============= كثافة المساجد في المناطق (من الـ API) =============
-  // تجميع المساجد حسب المدينة
-  const cityCounts = mosques.reduce((acc, mosque) => {
-    const city = mosque.city || 'غير محدد'
-    acc[city] = (acc[city] || 0) + 1
+  // MODIFIED: تجميع المساجد حسب المنطقة (Region) الحقيقية من التراتبية الجغرافية بدل نص "المدينة" الحر —
+  // نص حر كان يفتّت العدّ بفروقات كتابة، أما الآن فكل مسجد مصنَّف مربوط بمنطقة موحّدة عبر location → subRegion → region
+  const regionCounts = mosques.reduce((acc, mosque) => {
+    const region = mosque.location?.subRegion?.region?.name || 'غير مصنف'
+    acc[region] = (acc[region] || 0) + 1
     return acc
   }, {})
 
-  const maxCityCount = Math.max(...Object.values(cityCounts), 1)
-  const regionDensity = Object.entries(cityCounts)
+  const maxRegionCount = Math.max(...Object.values(regionCounts), 1)
+  // MODIFIED: عرض كل المناطق الفعلية بدل أعلى 4 فقط — عددها محدود وحقيقي الآن (7 مناطق لحمص) وليس نصاً حراً غير محدود
+  const regionDensity = Object.entries(regionCounts)
     .map(([region, count]) => ({
       region,
       count,
-      percentage: Math.round((count / maxCityCount) * 100),
+      percentage: Math.round((count / maxRegionCount) * 100),
     }))
     .sort((a, b) => b.count - a.count)
-    .slice(0, 4)
 
   return (
     <>

@@ -13,6 +13,7 @@ import {
 } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close'
 import AppButton from '../common/AppButton'
+import LocationPicker from '../common/LocationPicker' // ADDED: منتقي الموقع الجغرافي المتتالي بدل حقل "المدينة" النصي
 import { useTheme } from '../../theme/themeContext'
 
 /**
@@ -27,11 +28,21 @@ export default function MosqueDialogs({
   selectedRow, selectedPreacherId, setSelectedPreacherId, filteredPreachers,
   assignmentRole, setAssignmentRole, // ADDED: نوع التكليف (إمام/خطيب) — يحدد قابلية التعارض
   handleConfirmAssign, deleteOpen, setDeleteOpen, handleConfirmDelete,
-  snackbarOpen, snackbarMessage
+  snackbarOpen, snackbarMessage,
+  regionsTree, // ADDED: شجرة التقسيم الجغرافي (محافظة/منطقة/منطقة فرعية/موقع) لتغذية LocationPicker
 }) {
   const { activeTheme } = useTheme()
   const { colors, mode } = activeTheme
   const isDark = mode === 'dark'
+
+  // ADDED: منتقي الموقع الجغرافي — قيمته الحالية مشتقة من mosqueForm، وتغييره يدمج الحقول الأربعة بالنموذج
+  const locationValue = {
+    provinceId: mosqueForm.provinceId,
+    regionId: mosqueForm.regionId,
+    subRegionId: mosqueForm.subRegionId,
+    locationId: mosqueForm.locationId,
+  }
+  const handleLocationChange = (patch) => setMosqueForm((p) => ({ ...p, ...patch }))
 
   const inputSx = {
     '& .MuiOutlinedInput-root': { backgroundColor: colors.bgelem, borderRadius: 2, height: 48, '& fieldset': { border: 'none' }, '&:hover fieldset': { border: 'none' }, '&.Mui-focused fieldset': { border: 'none' } },
@@ -85,15 +96,11 @@ export default function MosqueDialogs({
                 <TextField value={mosqueForm.name} onChange={(e) => setMosqueForm((p) => ({ ...p, name: e.target.value }))} placeholder="أدخل اسم المسجد" fullWidth sx={inputSx} />
               </Stack>
               <Stack spacing={0.5}>
-                <Typography sx={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 500, fontSize: 14, color: colors.text, lineHeight: '20px', textAlign: 'right' }}>المدينة</Typography>
-                <TextField value={mosqueForm.city} onChange={(e) => setMosqueForm((p) => ({ ...p, city: e.target.value }))} placeholder="مثال: الرياض" fullWidth sx={inputSx} />
-              </Stack>
-            </Stack>
-            <Stack spacing={3}>
-              <Stack spacing={0.5}>
                 <Typography sx={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 500, fontSize: 14, color: colors.text, lineHeight: '20px', textAlign: 'right' }}>العنوان</Typography>
                 <TextField value={mosqueForm.address} onChange={(e) => setMosqueForm((p) => ({ ...p, address: e.target.value }))} placeholder="الحي / الشارع" fullWidth sx={inputSx} />
               </Stack>
+            </Stack>
+            <Stack spacing={3}>
               <Stack spacing={0.5}>
                 <Typography sx={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 500, fontSize: 14, color: colors.text, lineHeight: '20px', textAlign: 'right' }}>رقم الهاتف</Typography>
                 <TextField value={mosqueForm.phone} onChange={(e) => setMosqueForm((p) => ({ ...p, phone: e.target.value }))} placeholder="05xxxxxxxx" fullWidth sx={inputSx} />
@@ -101,10 +108,18 @@ export default function MosqueDialogs({
               {/* ADDED: حالة المسجد عند الإنشاء (نشط افتراضياً) */}
               <StatusField />
             </Stack>
+            {/* ADDED: منتقي الموقع الجغرافي (منطقة/منطقة فرعية/موقع) — إلزامي، يمتد على عرض الديالوج كاملاً */}
+            <Box sx={{ gridColumn: '1 / -1' }}>
+              <Stack spacing={0.5}>
+                <Typography sx={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 500, fontSize: 14, color: colors.text, lineHeight: '20px', textAlign: 'right' }}>الموقع الجغرافي</Typography>
+                <LocationPicker tree={regionsTree} value={locationValue} onChange={handleLocationChange} />
+              </Stack>
+            </Box>
           </Box>
         </DialogContent>
         <DialogActions sx={{ px: 4, pt: 1, pb: 4, gap: 1.5, justifyContent: 'flex-start', flexDirection: 'row-reverse' }}>
-          <AppButton variant="contained" backgroundColor="linear-gradient(135deg, #C5A059 0%, #9E7E43 100%)" textColor="#FFFFFF" borderColor="transparent" onClick={(e) => { e?.preventDefault(); handleAddSubmit?.(e); setAddOpen(false); }} sx={{ background: 'linear-gradient(135deg, #C5A059 0%, #9E7E43 100%) !important', borderRadius: 2, height: 48, px: 4 }}>حفظ البيانات</AppButton>
+          {/* MODIFIED: أُزيل الإغلاق الفوري المصاحب — كان يُغلق الديالوج قبل انتهاء handleAddSubmit غير المتزامن، فيُخفي رسالة التحقق (مثل نقص الموقع الجغرافي). الإغلاق يتم الآن من داخل handleAddSubmit عند النجاح فقط، كما بديالوج التعديل تماماً */}
+          <AppButton variant="contained" backgroundColor="linear-gradient(135deg, #C5A059 0%, #9E7E43 100%)" textColor="#FFFFFF" borderColor="transparent" onClick={(e) => { e?.preventDefault(); handleAddSubmit?.(e); }} sx={{ background: 'linear-gradient(135deg, #C5A059 0%, #9E7E43 100%) !important', borderRadius: 2, height: 48, px: 4 }}>حفظ البيانات</AppButton>
           <AppButton variant="contained" backgroundColor={colors.btn} textColor={colors.text} borderColor="transparent" onClick={() => setAddOpen(false)} sx={{ borderRadius: 2, height: 48, px: 3, '&:hover': { backgroundColor: colors.border } }}>إلغاء</AppButton>
         </DialogActions>
       </Dialog>
@@ -127,10 +142,6 @@ export default function MosqueDialogs({
                 <TextField value={mosqueForm.name} onChange={(e) => setMosqueForm((p) => ({ ...p, name: e.target.value }))} placeholder="أدخل اسم المسجد" fullWidth sx={inputSx} />
               </Stack>
               <Stack spacing={0.5}>
-                <Typography sx={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 500, fontSize: 14, color: colors.text, lineHeight: '20px', textAlign: 'right' }}>المدينة</Typography>
-                <TextField value={mosqueForm.city} onChange={(e) => setMosqueForm((p) => ({ ...p, city: e.target.value }))} placeholder="مثال: الرياض" fullWidth sx={inputSx} />
-              </Stack>
-              <Stack spacing={0.5}>
                 <Typography sx={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 500, fontSize: 14, color: colors.text, lineHeight: '20px', textAlign: 'right' }}>السعة</Typography>
                 <TextField type="number" value={mosqueForm.capacity} onChange={(e) => setMosqueForm((p) => ({ ...p, capacity: e.target.value }))} placeholder="عدد المصلّين" fullWidth sx={inputSx} />
               </Stack>
@@ -147,6 +158,13 @@ export default function MosqueDialogs({
               {/* ADDED: تعديل الحالة الحقيقية للمسجد — هذا هو المطلوب أساساً */}
               <StatusField />
             </Stack>
+            {/* ADDED: منتقي الموقع الجغرافي — يظهر معبَّأً إن كان للمسجد موقع مسبق، ويبقى اختيارياً للمساجد القديمة دون إجبار */}
+            <Box sx={{ gridColumn: '1 / -1' }}>
+              <Stack spacing={0.5}>
+                <Typography sx={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 500, fontSize: 14, color: colors.text, lineHeight: '20px', textAlign: 'right' }}>الموقع الجغرافي</Typography>
+                <LocationPicker tree={regionsTree} value={locationValue} onChange={handleLocationChange} />
+              </Stack>
+            </Box>
           </Box>
         </DialogContent>
         <DialogActions sx={{ px: 4, pt: 1, pb: 4, gap: 1.5, justifyContent: 'flex-start', flexDirection: 'row-reverse' }}>

@@ -11,6 +11,8 @@ import MosqueDialogs from '../../components/Dialogs/MosqueDialogs' // ADDED: Dia
 import { getAllMosques, createMosque, updateMosque, deleteMosque } from '../../services/mosqueService' // MODIFIED: أضيف updateMosque لتفعيل تعديل حالة المسجد
 import { getAllPreachers } from '../../services/preacherService' // ADDED: Preacher API to fetch preacher list for assignment dropdown
 import { createAssignment } from '../../services/preacherAssignmentService' // ADDED: Preacher assignment API to assign a preacher to a mosque
+import { getRegionsTree } from '../../services/regionService' // ADDED: شجرة التقسيم الجغرافي (منطقة/منطقة فرعية/موقع) لمنتقي الموقع
+import { findSelectedLocationName } from '../../utils/regionUtils' // ADDED: اشتقاق اسم الموقع المختار من الشجرة
 import { useCurrentUser } from '../../context/userContext' // ADDED: لإخفاء أزرار الكتابة عن المستخدمين ذوي صلاحية القراءة فقط
 
 // ============= تعريف أعمدة جدول المساجد =============
@@ -24,37 +26,47 @@ const mosqueColumns = [
 
 // ============= دالة تحويل بيانات المساجد من Backend إلى تنسيق الجدول =============
 const transformMosquesToRows = (mosques) => {
-  return mosques.map((mosque) => ({
-    id: mosque.id,
-    // اسم المسجد
-    name: mosque.name,
-    // الإمام: نأخذ أول خطيب مرتبط بالمسجد من التعيينات النشطة
-    imam: mosque.preachers?.length > 0
-      ? mosque.preachers
-          .filter(a => a.isActive)
-          .map(a => a.preacher?.firstName && a.preacher?.lastName
-            ? `${a.preacher.firstName} ${a.preacher.lastName}`
-            : '')
-          .filter(Boolean)
-          .join(', ') || 'غير معين'
-      : 'غير معين',
-    // الموقع: city + address
-    location: mosque.city ? `${mosque.city} - ${mosque.address || ''}` : mosque.address || '',
-    // السعة (نص للعرض بالجدول)
-    capacity: mosque.capacity ? `${mosque.capacity} مصلٍ` : 'غير محدد',
-    // ADDED: القيمة الرقمية الخام لتعبئة نموذج التعديل (capacity أعلاه نص عرض وليس رقماً)
-    capacityRaw: mosque.capacity ?? '',
-    // MODIFIED: الحالة الحقيقية القادمة من الباك اند بدل "نشط" الثابتة دائماً
-    status: mosque.status === 'MAINTENANCE' ? 'قيد الصيانة' : 'نشط',
-    // ADDED: القيمة الخام (ACTIVE/MAINTENANCE) لتعبئة نموذج التعديل بشكل صحيح
-    statusRaw: mosque.status || 'ACTIVE',
-    // بيانات إضافية للـ Dialogs
-    address: mosque.address,
-    city: mosque.city,
-    phone: mosque.phone,
-    latitude: mosque.latitude,
-    longitude: mosque.longitude,
-  }))
+  return mosques.map((mosque) => {
+    // ADDED: سلسلة العلاقات الجغرافية القادمة من الباك اند (location → subRegion → region → province) إن وُجدت
+    const region = mosque.location?.subRegion?.region
+    return {
+      id: mosque.id,
+      // اسم المسجد
+      name: mosque.name,
+      // الإمام: نأخذ أول خطيب مرتبط بالمسجد من التعيينات النشطة
+      imam: mosque.preachers?.length > 0
+        ? mosque.preachers
+            .filter(a => a.isActive)
+            .map(a => a.preacher?.firstName && a.preacher?.lastName
+              ? `${a.preacher.firstName} ${a.preacher.lastName}`
+              : '')
+            .filter(Boolean)
+            .join(', ') || 'غير معين'
+        : 'غير معين',
+      // MODIFIED: الموقع — يعرض "الموقع — المنطقة" الحقيقيين إن وُجدت التصنيف الجغرافي، ويسقط لعرض city/address القديم للمساجد السابقة للميزة
+      location: mosque.location
+        ? `${mosque.location.name} — ${region?.name || ''}`
+        : (mosque.city ? `${mosque.city} - ${mosque.address || ''}` : mosque.address || ''),
+      // السعة (نص للعرض بالجدول)
+      capacity: mosque.capacity ? `${mosque.capacity} مصلٍ` : 'غير محدد',
+      // ADDED: القيمة الرقمية الخام لتعبئة نموذج التعديل (capacity أعلاه نص عرض وليس رقماً)
+      capacityRaw: mosque.capacity ?? '',
+      // MODIFIED: الحالة الحقيقية القادمة من الباك اند بدل "نشط" الثابتة دائماً
+      status: mosque.status === 'MAINTENANCE' ? 'قيد الصيانة' : 'نشط',
+      // ADDED: القيمة الخام (ACTIVE/MAINTENANCE) لتعبئة نموذج التعديل بشكل صحيح
+      statusRaw: mosque.status || 'ACTIVE',
+      // بيانات إضافية للـ Dialogs
+      address: mosque.address,
+      city: mosque.city,
+      phone: mosque.phone,
+      latitude: mosque.latitude,
+      longitude: mosque.longitude,
+      // ADDED: بيانات التصنيف الجغرافي الخام (لتعبئة LocationPicker عند التعديل وللفلترة حسب المنطقة)
+      locationData: mosque.location || null,
+      regionId: region?.id ?? null,
+      regionName: region?.name ?? null,
+    }
+  })
 }
 
 // ============= دالة تحويل بيانات الخطباء من Backend إلى تنسيق القائمة المنسدلة =============
@@ -87,19 +99,26 @@ export default function Mosque() {
   const [selectedPreacherId, setSelectedPreacherId] = useState('') // ADDED: State for selected preacher in assignment dropdown
   const [assignmentRole, setAssignmentRole] = useState('KHATIB') // ADDED: نوع التكليف (إمام/خطيب) عند التعيين من صفحة المساجد
   const [searchTerm, setSearchTerm] = useState('') // ADDED: State for search/filter input
-  const [cityFilter, setCityFilter] = useState('') // ADDED: حالة فلتر المدينة الحقيقي في FilterSearch (فارغ = كل المناطق)
-  const [mosqueForm, setMosqueForm] = useState({ // ADDED: State for add mosque form fields
+  // MODIFIED: فلتر المنطقة الحقيقي (بمعرّف Region) بدل نص المدينة الحر — يمنع تفتّت النتائج بسبب اختلاف الكتابة
+  const [regionFilter, setRegionFilter] = useState('')
+  const emptyMosqueForm = { // ADDED: نموذج فارغ موحّد يشمل حقول الموقع الجغرافي الأربعة
     name: '',
     address: '',
     city: '',
     phone: '',
     capacity: '',
     status: 'ACTIVE', // ADDED: حالة افتراضية عند الإضافة
-  })
+    provinceId: '',
+    regionId: '',
+    subRegionId: '',
+    locationId: '',
+  }
+  const [mosqueForm, setMosqueForm] = useState(emptyMosqueForm) // ADDED: State for add mosque form fields
 
   // ✅ حالة البيانات من الـ API
   const [mosques, setMosques] = useState([]) // ADDED: State for mosques list from API
   const [preachers, setPreachers] = useState([]) // ADDED: State for preachers list from API
+  const [regionsTree, setRegionsTree] = useState([]) // ADDED: شجرة التقسيم الجغرافي لتغذية LocationPicker
   const [error, setError] = useState(null) // ADDED: State for error messages
   const [loading, setLoading] = useState(false) // ADDED: State for loading indicator during API calls
 
@@ -108,13 +127,15 @@ export default function Mosque() {
     const fetchData = async () => {
       setLoading(true) // ADDED: Set loading state to true when starting data fetch
       try {
-        // جلب المساجد والخطباء معاً
-        const [mosquesData, preachersData] = await Promise.all([
+        // جلب المساجد والخطباء وشجرة المناطق معاً
+        const [mosquesData, preachersData, regionsTreeData] = await Promise.all([
           getAllMosques(),
           getAllPreachers(),
+          getRegionsTree(),
         ])
         setMosques(transformMosquesToRows(mosquesData)) // ADDED: Transform and store mosques data
         setPreachers(transformPreachersToOptions(preachersData)) // ADDED: Transform and store preachers data
+        setRegionsTree(regionsTreeData) // ADDED: Store the geographic hierarchy tree
         setError(null) // ADDED: Clear any previous errors
       } catch (err) {
         console.error('خطأ في جلب البيانات:', err)
@@ -127,9 +148,9 @@ export default function Mosque() {
     fetchData()
   }, []) // المصفوفة الفارغة تعني تنفيذها مرة واحدة عند التحميل
 
-  // ============= تطبيق فلتر المدينة على قائمة المساجد المعروضة =============
-  const filteredMosques = cityFilter // ADDED: تصفية فعلية بدل زر "تطبيق الفلترة" الذي كان بلا أثر
-    ? mosques.filter((row) => row.city === cityFilter)
+  // ============= تطبيق فلتر المنطقة على قائمة المساجد المعروضة =============
+  const filteredMosques = regionFilter // MODIFIED: تصفية حسب معرّف المنطقة الحقيقي بدل نص المدينة الحر
+    ? mosques.filter((row) => row.regionId === regionFilter)
     : mosques
 
   // ============= تصفية الخطباء حسب البحث =============
@@ -148,13 +169,14 @@ export default function Mosque() {
   }
 
   const handleAddMosque = () => {
-    setMosqueForm({ name: '', address: '', city: '', phone: '', capacity: '', status: 'ACTIVE' })
+    setMosqueForm(emptyMosqueForm)
     setAddOpen(true)
   }
 
-  // ADDED: فتح ديالوج التعديل مع تعبئة النموذج ببيانات المسجد المختار (بما فيها الحالة الحقيقية)
+  // ADDED: فتح ديالوج التعديل مع تعبئة النموذج ببيانات المسجد المختار (بما فيها الحالة الحقيقية والتصنيف الجغرافي)
   const handleRowEditClick = (row) => {
     setSelectedRow(row)
+    const loc = row.locationData
     setMosqueForm({
       name: row.name || '',
       address: row.address || '',
@@ -162,13 +184,19 @@ export default function Mosque() {
       phone: row.phone || '',
       capacity: row.capacityRaw !== '' && row.capacityRaw != null ? String(row.capacityRaw) : '',
       status: row.statusRaw || 'ACTIVE',
+      // ADDED: تعبئة سلسلة الموقع الجغرافي الكاملة من العلاقات القادمة مع المسجد (فارغة إن كان مسجداً قديماً بلا تصنيف)
+      provinceId: loc?.subRegion?.region?.province?.id || '',
+      regionId: loc?.subRegion?.region?.id || '',
+      subRegionId: loc?.subRegion?.id || '',
+      locationId: loc?.id || '',
     })
     setEditOpen(true)
   }
 
   const handleApplyFilter = () => {
     // الفلترة نفسها فورية عبر filteredMosques أعلاه؛ هذا الزر يبقى فقط لتأكيد بصري للمستخدم
-    openToast(cityFilter ? `تم عرض مساجد ${cityFilter} فقط` : 'تم عرض كل المساجد')
+    const regionName = mosques.find((m) => m.regionId === regionFilter)?.regionName
+    openToast(regionFilter ? `تم عرض مساجد ${regionName || 'المنطقة المختارة'} فقط` : 'تم عرض كل المساجد')
   }
 
   const handleRowMoreClick = (row) => {
@@ -187,12 +215,20 @@ export default function Mosque() {
   // ============= إضافة مسجد جديد (API) =============
   const handleAddSubmit = async (event) => {
     event.preventDefault()
+    // ADDED: كل مسجد جديد يجب أن يندرج تحت منطقة — نمنع الإرسال بلا موقع جغرافي كامل
+    if (!mosqueForm.locationId) {
+      openToast('الرجاء اختيار الموقع الجغرافي الكامل (المنطقة / المنطقة الفرعية / الموقع)')
+      return
+    }
     try {
+      // ADDED: اسم الموقع المختار يُشتق تلقائياً من الشجرة لاستخدامه كـ "المدينة" بدل الكتابة اليدوية
+      const locationName = findSelectedLocationName(regionsTree, mosqueForm)
       // إرسال البيانات للـ API
       await createMosque({
         name: mosqueForm.name,
-        address: mosqueForm.address || mosqueForm.city,
-        city: mosqueForm.city,
+        address: mosqueForm.address || locationName,
+        city: locationName,
+        locationId: Number(mosqueForm.locationId), // ADDED: ربط المسجد بالتراتبية الجغرافية
         phone: mosqueForm.phone || undefined,
         capacity: mosqueForm.capacity ? Number(mosqueForm.capacity) : undefined,
         status: mosqueForm.status || 'ACTIVE', // ADDED: إرسال حالة المسجد الحقيقية عند الإنشاء
@@ -217,10 +253,13 @@ export default function Mosque() {
   const handleEditSubmit = async (event) => {
     event.preventDefault()
     try {
+      // ADDED: إن اختار المستخدم موقعاً جديداً نشتق منه المدينة، وإلا نُبقي city كما كانت (مساجد قديمة بلا تصنيف تبقى دون إجبار)
+      const locationName = findSelectedLocationName(regionsTree, mosqueForm)
       await updateMosque(selectedRow.id, {
         name: mosqueForm.name,
-        address: mosqueForm.address || mosqueForm.city,
-        city: mosqueForm.city,
+        address: mosqueForm.address || locationName || mosqueForm.city,
+        city: locationName || mosqueForm.city,
+        locationId: mosqueForm.locationId ? Number(mosqueForm.locationId) : undefined, // ADDED
         phone: mosqueForm.phone || undefined,
         capacity: mosqueForm.capacity ? Number(mosqueForm.capacity) : undefined,
         status: mosqueForm.status || 'ACTIVE',
@@ -292,11 +331,11 @@ export default function Mosque() {
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
       <Header1 onAddMosque={handleAddMosque} showAddButton={canWrite} />
-      {/* تمرير المساجد الحقيقية + حالة فلتر المدينة بدل الأرقام الثابتة والفلاتر المعطّلة سابقاً */}
+      {/* تمرير المساجد الحقيقية + حالة فلتر المنطقة بدل الأرقام الثابتة والفلاتر المعطّلة سابقاً */}
       <FilterSearch
         mosques={mosques}
-        cityFilter={cityFilter}
-        onCityFilterChange={setCityFilter}
+        regionFilter={regionFilter}
+        onRegionFilterChange={setRegionFilter}
         onApplyFilter={handleApplyFilter}
       />
 
@@ -357,6 +396,7 @@ export default function Mosque() {
         snackbarOpen={snackbarOpen}
         setSnackbarOpen={setSnackbarOpen}
         snackbarMessage={snackbarMessage}
+        regionsTree={regionsTree} // ADDED: لتغذية LocationPicker بديالوجي الإضافة والتعديل
       />
     </Box>
   )

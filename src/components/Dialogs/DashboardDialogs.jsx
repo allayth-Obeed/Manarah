@@ -1,7 +1,8 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { Box, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, MenuItem, Stack, TextField, Typography } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close'
 import AppButton from '../common/AppButton'
+import LocationPicker from '../common/LocationPicker' // ADDED: منتقي الموقع الجغرافي المتتالي بدل حقل "الحي / المنطقة" النصي
 import { useTheme } from '../../theme/themeContext'
 
 const mosqueStatusOptions = [
@@ -9,7 +10,7 @@ const mosqueStatusOptions = [
   { value: 'تحت الصيانة', label: 'تحت الصيانة' },
 ]
 
-export function AddMosqueDialog({ open, setOpen, form, setForm, onSubmit }) {
+export function AddMosqueDialog({ open, setOpen, form, setForm, onSubmit, regionsTree }) {
   const { activeTheme } = useTheme()
   const { colors, mode } = activeTheme
   const isDark = mode === 'dark'
@@ -17,6 +18,27 @@ export function AddMosqueDialog({ open, setOpen, form, setForm, onSubmit }) {
   const inputSx = {
     '& .MuiOutlinedInput-root': { backgroundColor: colors.bgelem, borderRadius: 2, height: 48, '& fieldset': { border: 'none' }, '&:hover fieldset': { border: 'none' }, '&.Mui-focused fieldset': { border: 'none' } },
     '& input': { textAlign: 'right', fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 400, fontSize: 16, color: colors.text, '&::placeholder': { color: colors.mutedText, opacity: 1 } },
+  }
+
+  // ADDED: منتقي الموقع الجغرافي — قيمته مشتقة من form، وتغييره يدمج الحقول الأربعة بالنموذج
+  const locationValue = {
+    provinceId: form.provinceId,
+    regionId: form.regionId,
+    subRegionId: form.subRegionId,
+    locationId: form.locationId,
+  }
+  const handleLocationChange = (patch) => setForm((p) => ({ ...p, ...patch }))
+
+  // ADDED: تحقق محلي داخل الديالوج نفسه — رسالة الصفحة الأم تختفي خلف الـ backdrop أثناء فتح الديالوج
+  const [locationError, setLocationError] = useState(false)
+  const handleSaveClick = (e) => {
+    e?.preventDefault()
+    if (!form.locationId) {
+      setLocationError(true)
+      return
+    }
+    setLocationError(false)
+    onSubmit?.(form)
   }
 
   return (
@@ -35,10 +57,6 @@ export function AddMosqueDialog({ open, setOpen, form, setForm, onSubmit }) {
               <Typography sx={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 500, fontSize: 14, color: colors.text, lineHeight: '20px', textAlign: 'right' }}>اسم المسجد</Typography>
               <TextField value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} placeholder="أدخل اسم المسجد" fullWidth sx={inputSx} />
             </Stack>
-            <Stack spacing={0.5}>
-              <Typography sx={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 500, fontSize: 14, color: colors.text, lineHeight: '20px', textAlign: 'right' }}>الحي / المنطقة</Typography>
-              <TextField value={form.location} onChange={(e) => setForm((p) => ({ ...p, location: e.target.value }))} placeholder="مثال: حي النور" fullWidth sx={inputSx} />
-            </Stack>
           </Stack>
           <Stack spacing={3}>
             <Stack spacing={0.5}>
@@ -56,10 +74,24 @@ export function AddMosqueDialog({ open, setOpen, form, setForm, onSubmit }) {
               </TextField>
             </Stack>
           </Stack>
+          {/* ADDED: منتقي الموقع الجغرافي — نفس المنتقي المستخدم بصفحة المساجد الكاملة */}
+          <Box sx={{ gridColumn: '1 / -1' }}>
+            <Stack spacing={0.5}>
+              <Typography sx={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 500, fontSize: 14, color: colors.text, lineHeight: '20px', textAlign: 'right' }}>الموقع الجغرافي</Typography>
+              <LocationPicker tree={regionsTree} value={locationValue} onChange={handleLocationChange} />
+              {/* ADDED: رسالة تحقق مرئية داخل الديالوج نفسه (وليست بالصفحة الأم المخفية خلف الـ backdrop) */}
+              {locationError && (
+                <Typography sx={{ color: '#DC2626', fontSize: 13, textAlign: 'right' }}>
+                  الرجاء اختيار الموقع الجغرافي الكامل (المنطقة / المنطقة الفرعية / الموقع)
+                </Typography>
+              )}
+            </Stack>
+          </Box>
         </Box>
       </DialogContent>
       <DialogActions sx={{ px: 4, pt: 1, pb: 4, gap: 1.5, justifyContent: 'flex-start', flexDirection: 'row-reverse' }}>
-        <AppButton variant="contained" backgroundColor="linear-gradient(135deg, #C5A059 0%, #9E7E43 100%)" textColor="#FFFFFF" borderColor="transparent" onClick={(e) => { e?.preventDefault(); onSubmit?.(form); setOpen(false); }} sx={{ background: 'linear-gradient(135deg, #C5A059 0%, #9E7E43 100%) !important', borderRadius: 2, height: 48, px: 4 }}>حفظ البيانات</AppButton>
+        {/* MODIFIED: أُزيل الإغلاق الفوري — onSubmit غير متزامن (يستدعي API)، والإغلاق يتم الآن من داخله عند النجاح فقط، والتحقق من الموقع يتم محلياً قبل الاستدعاء أصلاً */}
+        <AppButton variant="contained" backgroundColor="linear-gradient(135deg, #C5A059 0%, #9E7E43 100%)" textColor="#FFFFFF" borderColor="transparent" onClick={handleSaveClick} sx={{ background: 'linear-gradient(135deg, #C5A059 0%, #9E7E43 100%) !important', borderRadius: 2, height: 48, px: 4 }}>حفظ البيانات</AppButton>
         <AppButton variant="contained" backgroundColor={colors.btn} textColor={colors.text} borderColor="transparent" onClick={() => setOpen(false)} sx={{ borderRadius: 2, height: 48, px: 3, '&:hover': { backgroundColor: colors.border } }}>إلغاء</AppButton>
       </DialogActions>
     </Dialog>
