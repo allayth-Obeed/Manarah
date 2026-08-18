@@ -2,6 +2,17 @@ import React, { useState, useEffect } from 'react' // ADDED: React hooks for sta
 import DonationsHeader from './DonationsHeader' // ADDED: Header component with action buttons for donations page
 import DonationsOverview from './DonationsOverview' // ADDED: Overview component showing donation list/table
 import DonationsDialogs from '../../components/Dialogs/DonationsDialogs' // ADDED: Dialog component for add/details/delete donation
+import ExportMenu from '../../components/common/ExportMenu' // ADDED: تصدير Excel/PDF حقيقي من البيانات المعروضة فعلياً
+import { Box } from '@mui/material'
+
+// ADDED: أعمدة تصدير التبرعات (تُبنى من نفس بيانات صفوف التبرع الخام)
+const donationExportColumns = [
+  { key: 'donorName', label: 'اسم المتبرع' },
+  { key: 'amountLabel', label: 'المبلغ' },
+  { key: 'mosqueName', label: 'المسجد' },
+  { key: 'purposeLabel', label: 'الغرض' },
+  { key: 'dateLabel', label: 'التاريخ' },
+]
 
 // ============= استيراد خدمات API =============
 // ✅ تم الربط مع الـ API الحقيقي للتبرعات والمساجد
@@ -96,6 +107,18 @@ export default function Donations() {
     }
   }
 
+  // ADDED: صفوف تصدير جاهزة للعرض (نص) مبنية من بيانات التبرعات الخام القادمة من الـ API
+  const donationExportRows = donations.map((d) => ({
+    donorName: d.donorName || 'متبرع',
+    amountLabel: `${d.amount || 0} ر.س`,
+    mosqueName: d.mosque?.name || '—',
+    purposeLabel: d.purpose || 'تبرع عام',
+    dateLabel:
+      d.donationDate || d.createdAt
+        ? new Date(d.donationDate || d.createdAt).toLocaleDateString('ar-SA', { year: 'numeric', month: 'long', day: 'numeric' })
+        : '—',
+  }))
+
   return (
     <div>
       <DonationsHeader
@@ -103,6 +126,11 @@ export default function Donations() {
         donations={donations}
         mosques={mosques}
       />
+
+      {/* ADDED: تصدير Excel/PDF حقيقي بجانب زر تصدير CSV الموجود بالتقارير */}
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', px: 4, mb: 1 }}>
+        <ExportMenu rows={donationExportRows} columns={donationExportColumns} title="تقرير التبرعات" filename="donations_report" />
+      </Box>
 
       {/* ADDED: عرض حالة التحميل أثناء جلب البيانات من الـ API */}
       {loading && (

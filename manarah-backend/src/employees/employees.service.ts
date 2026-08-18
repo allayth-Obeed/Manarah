@@ -23,6 +23,7 @@ export class EmployeesService {
     return this.prisma.employee.findMany({
       include: {
         user: { select: SAFE_USER_SELECT }, // select بدل include: true لمنع تسريب password المشفّرة
+        mosque: true, // ADDED: بيانات المسجد الذي يعمل به الموظف
       },
     });
   }
@@ -32,6 +33,7 @@ export class EmployeesService {
       where: { id },
       include: {
         user: { select: SAFE_USER_SELECT }, // select بدل include: true لمنع تسريب password المشفّرة
+        mosque: true, // ADDED
       },
     });
 
@@ -42,10 +44,21 @@ export class EmployeesService {
     return employee;
   }
 
+  // ADDED: يتحقق من وجود المسجد فعلياً قبل ربط الموظف به
+  private async assertMosqueExists(mosqueId?: number) {
+    if (mosqueId == null) return;
+    const mosque = await this.prisma.mosque.findUnique({ where: { id: mosqueId } });
+    if (!mosque) {
+      throw new NotFoundException('المسجد غير موجود');
+    }
+  }
+
   async create(createEmployeeDto: CreateEmployeeDto) {
+    await this.assertMosqueExists(createEmployeeDto.mosqueId); // ADDED
     try {
       return await this.prisma.employee.create({
         data: createEmployeeDto,
+        include: { mosque: true }, // ADDED: يعيد اسم المسجد فوراً بدل انتظار إعادة جلب القائمة
       });
     } catch (error) {
       // كانت هذه الدالة بدون try/catch — أي خطأ Prisma خام كان يتسرب كـ 500 عام
@@ -70,9 +83,12 @@ export class EmployeesService {
       throw new NotFoundException('الموظف غير موجود');
     }
 
+    await this.assertMosqueExists(updateEmployeeDto.mosqueId); // ADDED
+
     return this.prisma.employee.update({
       where: { id },
       data: updateEmployeeDto,
+      include: { mosque: true }, // ADDED
     });
   }
 

@@ -69,7 +69,7 @@ const getStatusStyle = (status, colors) => {
     }
   }
 
-  if (status === 'قيد الصيانة') {
+  if (status === 'قيد الصيانة' || status === 'قيد المعالجة') {
     return {
       iconBg: alpha(colors.secondary, 0.14),
       icon: <BuildIcon sx={{ color: colors.secondary, fontSize: 20 }} />,
@@ -77,6 +77,43 @@ const getStatusStyle = (status, colors) => {
         color: colors.secondary,
         bgcolor: alpha(colors.secondary, 0.14),
         border: `1px solid ${alpha(colors.secondary, 0.25)}`,
+      },
+    }
+  }
+
+  // ADDED: أنماط حالات وأولويات تذاكر الصيانة/الشكاوى
+  if (status === 'مفتوحة' || status === 'عالية') {
+    return {
+      iconBg: colors.danger100,
+      icon: <BuildIcon sx={{ color: colors.danger500, fontSize: 20 }} />,
+      chipSx: {
+        color: colors.danger500,
+        bgcolor: colors.danger100,
+        border: `1px solid ${alpha(colors.danger500, 0.25)}`,
+      },
+    }
+  }
+
+  if (status === 'تم الحل') {
+    return {
+      iconBg: alpha(colors.primary, 0.12),
+      icon: <BuildIcon sx={{ color: colors.primary, fontSize: 20 }} />,
+      chipSx: {
+        color: colors.primary,
+        bgcolor: alpha(colors.primary, 0.12),
+        border: `1px solid ${alpha(colors.primary, 0.2)}`,
+      },
+    }
+  }
+
+  if (status === 'مغلقة' || status === 'منخفضة') {
+    return {
+      iconBg: colors.bgelem,
+      icon: <BuildIcon sx={{ color: colors.mutedText, fontSize: 20 }} />,
+      chipSx: {
+        color: colors.mutedText,
+        bgcolor: colors.bgelem,
+        border: `1px solid ${colors.border}`,
       },
     }
   }
@@ -329,8 +366,9 @@ const MyTable = ({
                       justifyContent="center"
                       alignItems="center"
                     >
-                      {/* MODIFIED: كان يظهر دائماً بلا onClick لصفوف الموظفين (row.avatar ثابت دائماً) — الآن مشروط بوجود المعالج فعلياً */}
-                      {row.avatar && onRowViewClick ? (
+                      {/* MODIFIED: كان يظهر دائماً بلا onClick لصفوف الموظفين (row.avatar ثابت دائماً) — الآن مشروط بوجود المعالج فعلياً
+                          (شرط row.avatar أُزيل لأنه كان قيداً تابعاً لصفحة الموظفين تحديداً، لا علاقة له بوجود معالج فعلي) */}
+                      {onRowViewClick ? (
                         <Typography
                           component="a"
                           onClick={() => onRowViewClick(row)}

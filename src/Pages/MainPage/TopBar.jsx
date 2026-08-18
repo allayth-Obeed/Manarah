@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react' // MODIFIED: useMemo لحساب نتائج البحث الحية
 import AppBar from '@mui/material/AppBar'
 import Toolbar from '@mui/material/Toolbar'
-import { Avatar, Box, Divider, IconButton, ClickAwayListener, Popover } from '@mui/material' // MODIFIED: Popover لعرض معلومات المستخدم عند الضغط على أيقونة الحساب
+import { Avatar, Badge, Box, Divider, IconButton, ClickAwayListener, Popover } from '@mui/material' // MODIFIED: Popover لعرض معلومات المستخدم عند الضغط على أيقونة الحساب، Badge لعدّاد الإشعارات غير المقروءة
 import Typography from '@mui/material/Typography'
 import { styled } from '@mui/material/styles'
 import InputBase from '@mui/material/InputBase'
@@ -15,6 +15,7 @@ import { useTheme } from '../../theme/themeContext'
 import { useNavigate } from 'react-router-dom'
 import useAuth from '../../hooks/useAuth'
 import { useCurrentUser } from '../../context/userContext' // MODIFIED: مصدر مستخدم مشترك بدل جلب /auth/me منفصل بهذا الملف
+import { useNotifications } from '../../context/NotificationsProvider' // ADDED: قائمة الإشعارات اللحظية الحقيقية بدل رسالة ثابتة
 import { getAllMosques } from '../../services/mosqueService' // ADDED: لتفعيل البحث الحقيقي عن المساجد
 import { getAllPreachers } from '../../services/preacherService' // ADDED: لتفعيل البحث الحقيقي عن الأئمة
 import { API_ORIGIN } from '../../services/apiClient' // ADDED: لبناء رابط كامل لصورة المستخدم (تُخدَّم من الباك اند مباشرة وليس عبر /api)
@@ -79,8 +80,9 @@ function TopBar() {
 
   // ADDED: حالة قائمة معلومات الحساب المنبثقة (تظهر عند الضغط على أيقونة الحساب بالشريط العلوي)
   const [accountAnchor, setAccountAnchor] = useState(null)
-  // ADDED: حالة قائمة الإشعارات المنبثقة — لا يوجد نظام إشعارات حقيقي بالباك اند بعد، فنعرض رسالة صادقة بدل أيقونة ميتة
+  // MODIFIED: قائمة الإشعارات المنبثقة أصبحت مرتبطة بإشعارات لحظية حقيقية عبر Socket.IO
   const [notificationsAnchor, setNotificationsAnchor] = useState(null)
+  const { notifications, unreadCount, markAllRead } = useNotifications()
 
   // ADDED: حالة البحث الحي بمربع البحث بالشريط العلوي
   const [searchQuery, setSearchQuery] = useState('')
@@ -213,14 +215,19 @@ function TopBar() {
                   <AccountCircle fontSize="small" />
                 )}
               </IconButton>
-              {/* MODIFIED: كانت بلا onClick إطلاقاً — الآن تفتح قائمة حقيقية (بدل أيقونة ميتة تماماً) */}
+              {/* MODIFIED: كانت بلا onClick إطلاقاً — الآن تفتح قائمة إشعارات لحظية حقيقية (Socket.IO) بدل أيقونة ميتة */}
               <IconButton
                 size="small"
-                onClick={(e) => setNotificationsAnchor(e.currentTarget)}
+                onClick={(e) => {
+                  setNotificationsAnchor(e.currentTarget)
+                  markAllRead()
+                }}
                 sx={{ color: activeTheme.colors.mutedText }}
                 title="الإشعارات"
               >
-                <NotificationsIcon fontSize="small" />
+                <Badge badgeContent={unreadCount} color="error" max={9}>
+                  <NotificationsIcon fontSize="small" />
+                </Badge>
               </IconButton>
               <IconButton
                 onClick={toggleTheme}
@@ -273,7 +280,7 @@ function TopBar() {
             </Box>
           </Popover>
 
-          {/* ADDED: قائمة الإشعارات — لا يوجد نظام إشعارات حقيقي بالباك اند بعد، فنعرض رسالة صادقة بدل أيقونة ميتة */}
+          {/* MODIFIED: قائمة إشعارات لحظية حقيقية (تبرعات/تذاكر صيانة/تكليفات) بدل رسالة ثابتة */}
           <Popover
             open={Boolean(notificationsAnchor)}
             anchorEl={notificationsAnchor}
@@ -281,10 +288,32 @@ function TopBar() {
             anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
             transformOrigin={{ vertical: 'top', horizontal: 'center' }}
           >
-            <Box sx={{ p: 2.5, minWidth: 220, textAlign: 'center', bgcolor: activeTheme.colors.surface }} dir="rtl">
-              <Typography sx={{ fontSize: 13, color: activeTheme.colors.mutedText }}>
-                لا توجد إشعارات حالياً
-              </Typography>
+            <Box sx={{ p: 1.5, width: 320, maxHeight: 360, overflowY: 'auto', bgcolor: activeTheme.colors.surface }} dir="rtl">
+              {notifications.length === 0 ? (
+                <Typography sx={{ fontSize: 13, color: activeTheme.colors.mutedText, textAlign: 'center', py: 2 }}>
+                  لا توجد إشعارات حالياً
+                </Typography>
+              ) : (
+                notifications.map((n) => (
+                  <Box
+                    key={n.id}
+                    sx={{
+                      px: 1.5,
+                      py: 1.25,
+                      borderRadius: 1.5,
+                      mb: 0.5,
+                      bgcolor: activeTheme.layout.searchBaseBg,
+                    }}
+                  >
+                    <Typography sx={{ fontSize: 13, color: activeTheme.colors.text, fontWeight: 600 }}>
+                      {n.message}
+                    </Typography>
+                    <Typography sx={{ fontSize: 11, color: activeTheme.colors.mutedText, mt: 0.25 }}>
+                      {n.createdAt.toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })}
+                    </Typography>
+                  </Box>
+                ))
+              )}
             </Box>
           </Popover>
           <Box sx={{ flexGrow: 1, display: 'flex', justifyContent: 'center' }}>

@@ -29,6 +29,7 @@ export default function EmployeesDialogs({
   addOpen, setAddOpen, employeeForm, setEmployeeForm, handleAddSubmit,
   deleteOpen, setDeleteOpen, selectedRow, handleConfirmDelete, // ADDED: Destructure new delete props
   detailsOpen, setDetailsOpen, // ADDED: ديالوج "عرض التفاصيل" — كان الرابط بالجدول يظهر بلا أي وظيفة
+  mosques = [], // ADDED: قائمة المساجد لاختيار المسجد الذي يعمل به الموظف
 }) {
   const { activeTheme } = useTheme()
   const { colors, mode } = activeTheme
@@ -116,6 +117,25 @@ export default function EmployeesDialogs({
                   MenuProps={{ sx: { '& .MuiMenu-paper': { direction: 'rtl', bgcolor: colors.surface }, '& .MuiMenuItem-root': { justifyContent: 'flex-end', fontFamily: '"IBM Plex Sans Arabic", sans-serif', color: colors.text } } }}
                 >
                   {jobTitles.map((option) => (<MenuItem key={option.value} value={option.value} sx={{ justifyContent: 'flex-end' }}>{option.label}</MenuItem>))}
+                </TextField>
+              </Stack>
+              {/* ADDED: المسجد الذي يعمل به الموظف — تُستخدم لتوجيه إشعارات المسجد (إعلانات/صيانة) لموظفيه */}
+              <Stack spacing={0.5}>
+                <Typography sx={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 500, fontSize: 14, color: colors.text, lineHeight: '20px', textAlign: 'right' }}>
+                  المسجد
+                </Typography>
+                <TextField
+                  select value={employeeForm.mosqueId} onChange={(e) => setEmployeeForm((prev) => ({ ...prev, mosqueId: e.target.value }))} fullWidth
+                  SelectProps={{ IconComponent: () => <svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginLeft: 8 }}><path d="M1 1.5L6 6.5L11 1.5" stroke={colors.mutedText} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg> }}
+                  sx={{
+                    '& .MuiOutlinedInput-root': { backgroundColor: colors.bgelem, borderRadius: 2, height: 48, '& fieldset': { border: 'none' }, '&:hover fieldset': { border: 'none' }, '&.Mui-focused fieldset': { border: 'none' } },
+                    '& .MuiSelect-select': { textAlign: 'right', fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 400, fontSize: 16, color: colors.text, py: 1.5 },
+                  }}
+                  SelectDisplayProps={{ style: { direction: 'rtl' } }}
+                  MenuProps={{ sx: { '& .MuiMenu-paper': { direction: 'rtl', bgcolor: colors.surface }, '& .MuiMenuItem-root': { justifyContent: 'flex-end', fontFamily: '"IBM Plex Sans Arabic", sans-serif', color: colors.text } } }}
+                >
+                  <MenuItem value="" sx={{ justifyContent: 'flex-end' }}>بدون مسجد</MenuItem>
+                  {mosques.map((mosque) => (<MenuItem key={mosque.id} value={mosque.id} sx={{ justifyContent: 'flex-end' }}>{mosque.name}</MenuItem>))}
                 </TextField>
               </Stack>
               <Stack spacing={0.5}>

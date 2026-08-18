@@ -1,11 +1,15 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { NotificationsGateway } from '../notifications/notifications.gateway';
 import { CreateDonationDto } from './dto/create-donation.dto';
 import { UpdateDonationDto } from './dto/update-donation.dto';
 
 @Injectable()
 export class DonationsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notifications: NotificationsGateway,
+  ) {}
 
   async findAll() {
     return this.prisma.donation.findMany({
@@ -39,9 +43,21 @@ export class DonationsService {
       throw new NotFoundException('المسجد غير موجود');
     }
 
-    return this.prisma.donation.create({
+    const donation = await this.prisma.donation.create({
       data: createDonationDto,
+      include: { mosque: true },
     });
+
+    // ADDED: بث لحظي لظهور التبرع فوراً بجرس الإشعارات لدى كل المستخدمين المتصلين
+    this.notifications.emitEvent('donation.created', {
+      id: donation.id,
+      donorName: donation.donorName,
+      amount: donation.amount,
+      mosqueName: donation.mosque?.name || null,
+      createdAt: donation.createdAt,
+    });
+
+    return donation;
   }
 
   async update(id: number, updateDonationDto: UpdateDonationDto) {

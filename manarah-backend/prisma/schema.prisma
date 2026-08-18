@@ -44,6 +44,10 @@ model Mosque {
   // ADDED: ربط اختياري بالتراتبية الجغرافية (محافظة/منطقة/منطقة فرعية/موقع) — اختياري للحفاظ على بيانات المساجد القديمة
   locationId  Int?
   location    Location?  @relation(fields: [locationId], references: [id])
+  // ADDED: تذاكر الصيانة والشكاوى المرتبطة بهذا المسجد
+  maintenanceTickets MaintenanceTicket[]
+  // ADDED: الموظفون العاملون بهذا المسجد (إمام/خطيب/مؤذن/إداري...) — تُستخدم لتوجيه الإشعارات الخاصة بالمسجد لهم
+  employees   Employee[]
 }
 
 // ADDED: التقسيم الإداري السوري — محافظة → منطقة → منطقة فرعية → موقع (بلدة/حي)
@@ -112,6 +116,11 @@ model Employee {
   hireDate    DateTime?
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
+  // ADDED: تذاكر الصيانة المسندة لهذا الموظف
+  assignedTickets MaintenanceTicket[]
+  // ADDED: المسجد الذي يعمل به الموظف (إمام/خطيب/مؤذن/إداري...) — اختياري للحفاظ على سجلات الموظفين السابقة للميزة
+  mosqueId    Int?
+  mosque      Mosque?    @relation(fields: [mosqueId], references: [id])
 }
 
 // Preacher Assignment to Mosque
@@ -160,6 +169,23 @@ model Donation {
   mosque      Mosque     @relation(fields: [mosqueId], references: [id])
 }
 
+// ADDED: تذاكر الصيانة والشكاوى — تتبع الأعطال/المشاكل المُبلَّغ عنها بكل مسجد حتى إغلاقها
+model MaintenanceTicket {
+  id           Int               @id @default(autoincrement())
+  title        String
+  description  String?
+  mosqueId     Int
+  mosque       Mosque            @relation(fields: [mosqueId], references: [id])
+  priority     Priority          @default(MEDIUM)
+  status       MaintenanceStatus @default(OPEN)
+  reportedBy   String?
+  assignedToId Int?
+  assignedTo   Employee?         @relation(fields: [assignedToId], references: [id])
+  resolvedAt   DateTime?
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+}
+
 // Enums
 enum Role {
   ADMIN
@@ -184,4 +210,12 @@ enum MosqueStatus {
 enum AssignmentRole {
   IMAM
   KHATIB
+}
+
+// ADDED: حالة تذكرة الصيانة/الشكوى
+enum MaintenanceStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
 }

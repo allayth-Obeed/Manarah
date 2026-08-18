@@ -5,10 +5,13 @@ import PersonAddAlt1OutlinedIcon from '@mui/icons-material/PersonAddAlt1Outlined
 import EmployeesHeader from './EmployeesHeader' // ADDED: Header stats cards component
 import MyTable from '../MosquesPage/MyTable' // ADDED: Reusable table component for displaying employee data
 import EmployeesDialogs from '../../components/Dialogs/EmployeesDialogs' // ADDED: Dialog component for add/edit/delete employee
+import ExportMenu from '../../components/common/ExportMenu' // ADDED: تصدير Excel/PDF حقيقي من البيانات المعروضة فعلياً
+import { Box } from '@mui/material'
 
 // ============= الاستيرادات من ملف الخدمة =============
 // نستورد دوال الاتصال بالـ API من ملف الخدمة التي أنشأناه
 import { getAllEmployees, createEmployee, deleteEmployee } from '../../services/employeeService' // ADDED: Added deleteEmployee import for delete CRUD operation
+import { getAllMosques } from '../../services/mosqueService' // ADDED: لإسناد الموظف لمسجد يعمل به (تُستخدم لتوجيه إشعارات المسجد لموظفيه)
 import { useCurrentUser } from '../../context/userContext' // ADDED: لإخفاء أزرار الكتابة عن المستخدمين ذوي صلاحية القراءة فقط
 
 // ============= تعريف أعمدة الجدول =============
@@ -52,6 +55,7 @@ const initialEmployeeForm = {
   phone: '',
   salary: '',
   hireDate: '',
+  mosqueId: '', // ADDED: المسجد الذي يعمل به الموظف
 }
 
 // ============= دالة تحويل البيانات من Backend إلى تنسيق الجدول =============
@@ -71,8 +75,9 @@ const transformEmployeesToRows = (employees) => {
     subtitle: emp.subtitle || '',
     // الصورة الشخصية (يمكن استخدام avatar افتراضي إذا لم تُرسل من الخادم)
     avatar: emp.avatar || `https://i.pravatar.cc/40?img=${emp.id}`,
-    // المسجد (من العلاقة user إذا كان موجودًا، أو من mosque)
-    mosque: emp.user?.mosque?.name || emp.mosque || '',
+    // MODIFIED: المسجد من علاقة emp.mosque الحقيقية بالباك اند بدل emp.user?.mosque?.name غير الموجودة أصلاً بالسكيما
+    mosque: emp.mosque?.name || 'غير مرتبط',
+    mosqueId: emp.mosqueId ?? '', // ADDED: القيمة الخام لتعبئة نموذج التعديل مستقبلاً
     // تاريخ التوظيع
     hiredDate: emp.hireDate || emp.hiredDate || '',
     // الحالة
@@ -98,6 +103,7 @@ export default function Employees() {
 
   // حالة الموظفين (ستُخزن البيانات الحقيقية من الـ API هنا)
   const [employees, setEmployees] = useState([])
+  const [mosques, setMosques] = useState([]) // ADDED: لقائمة اختيار المسجد بنموذج إضافة/تعديل الموظف
 
   // حالة الخطأ (error state)
   const [error, setError] = useState(null)
@@ -111,8 +117,9 @@ export default function Employees() {
     const fetchEmployees = async () => {
       setLoading(true) // ADDED: Set loading state to true when starting data fetch
       try {
-        const data = await getAllEmployees() // استدعاء الـ API
+        const [data, mosquesData] = await Promise.all([getAllEmployees(), getAllMosques()]) // ADDED: جلب المساجد بالتوازي
         setEmployees(transformEmployeesToRows(data)) // تحويل وتخزين البيانات
+        setMosques(mosquesData) // ADDED
         setError(null) // إعادة تعيين الخطأ
       } catch (err) {
         console.error('خطأ في جلب الموظفين:', err)
@@ -137,7 +144,10 @@ export default function Employees() {
 
     try {
       // إرسال البيانات للـ API
-      await createEmployee(employeeForm)
+      await createEmployee({
+        ...employeeForm,
+        mosqueId: employeeForm.mosqueId ? Number(employeeForm.mosqueId) : undefined, // ADDED
+      })
 
       // إعادة جلب القائمة المحدثة
       const updatedData = await getAllEmployees()
@@ -203,6 +213,11 @@ export default function Employees() {
 
       <EmployeesHeader employees={employees} />
 
+      {/* ADDED: تصدير Excel/PDF حقيقي بجانب زر تصدير CSV الموجود */}
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', px: 4, mb: 1 }}>
+        <ExportMenu rows={employees} columns={employeeColumns} title="تقرير الموظفين" filename="employees_report" />
+      </Box>
+
       {/* ADDED: عرض حالة التحميل أثناء جلب البيانات من الـ API */}
       {loading && (
         <div style={{ padding: '20px', textAlign: 'center', color: '#64748B' }}>
@@ -252,6 +267,7 @@ export default function Employees() {
         handleConfirmDelete={handleConfirmDelete} // ADDED: Pass delete handler to the dialog component
         detailsOpen={detailsOpen} // ADDED: ديالوج عرض التفاصيل الجديد
         setDetailsOpen={setDetailsOpen} // ADDED
+        mosques={mosques} // ADDED: لاختيار المسجد الذي يعمل به الموظف
       />
     </div>
   )

@@ -1,12 +1,16 @@
 import { Injectable, NotFoundException, ConflictException } from '@nestjs/common'
 import { PrismaService } from '../prisma/prisma.service'
 import { Prisma } from '@prisma/client'
+import { NotificationsGateway } from '../notifications/notifications.gateway'
 import { CreatePreacherAssignmentDto } from './dto/create-preacher-assignment.dto'
 import { UpdatePreacherAssignmentDto } from './dto/update-preacher-assignment.dto'
 
 @Injectable()
 export class PreacherAssignmentsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notifications: NotificationsGateway,
+  ) {}
 
   private buildDayRange(dateInput?: string) {
     const base = dateInput ? new Date(dateInput) : new Date()
@@ -108,6 +112,15 @@ export class PreacherAssignmentsService {
           mosque: true,
         },
       })
+
+      // ADDED: بث لحظي عند تثبيت تكليف خطيب جديد
+      this.notifications.emitEvent('assignment.created', {
+        id: assignment.id,
+        preacherName: `${assignment.preacher.firstName} ${assignment.preacher.lastName}`,
+        mosqueName: assignment.mosque.name,
+        role: assignment.role,
+      })
+
       return assignment
     } catch (error) {
       // التحقق من تكرار التعيين (unique constraint على preacherId + mosqueId)

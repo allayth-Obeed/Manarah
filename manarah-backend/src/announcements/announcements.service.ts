@@ -1,11 +1,15 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { MosqueNotificationsService } from '../notifications/mosque-notifications.service';
 import { CreateAnnouncementDto } from './dto/create-announcement.dto';
 import { UpdateAnnouncementDto } from './dto/update-announcement.dto';
 
 @Injectable()
 export class AnnouncementsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private mosqueNotifications: MosqueNotificationsService,
+  ) {}
 
   async findAll() {
     return this.prisma.announcement.findMany({
@@ -39,9 +43,18 @@ export class AnnouncementsService {
       throw new NotFoundException('المسجد غير موجود');
     }
 
-    return this.prisma.announcement.create({
+    const announcement = await this.prisma.announcement.create({
       data: createAnnouncementDto,
     });
+
+    // ADDED: إشعار موجَّه لكل من يعمل بهذا المسجد (إمام/خطيب/مؤذن/إداري) بالإعلان الجديد
+    this.mosqueNotifications.notifyMosqueStaff(announcement.mosqueId, 'announcement.created', {
+      id: announcement.id,
+      title: announcement.title,
+      mosqueName: mosque.name,
+    });
+
+    return announcement;
   }
 
   async update(id: number, updateAnnouncementDto: UpdateAnnouncementDto) {

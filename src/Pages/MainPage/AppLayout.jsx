@@ -18,6 +18,7 @@ import EventNoteOutlinedIcon from '@mui/icons-material/EventNoteOutlined'
 import PaymentsOutlinedIcon from '@mui/icons-material/PaymentsOutlined'
 import CampaignOutlinedIcon from '@mui/icons-material/CampaignOutlined'
 import MapOutlinedIcon from '@mui/icons-material/MapOutlined'
+import BuildOutlinedIcon from '@mui/icons-material/BuildOutlined'
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined'
 import LogoutOutlinedIcon from '@mui/icons-material/LogoutOutlined'
 import MosqueRoundedIcon from '@mui/icons-material/MosqueRounded'
@@ -34,6 +35,7 @@ const navItems = [
   { label: 'توزيع الخطباء', icon: EventNoteOutlinedIcon, path: '/preachers' },
   { label: 'الموظفين', icon: BadgeOutlinedIcon, path: '/employees' },
   { label: 'التبرعات', icon: PaymentsOutlinedIcon, path: '/donations' },
+  { label: 'الصيانة والشكاوى', icon: BuildOutlinedIcon, path: '/maintenance' },
   { label: 'الإعلانات', icon: CampaignOutlinedIcon, path: '/announcements' },
 ]
 

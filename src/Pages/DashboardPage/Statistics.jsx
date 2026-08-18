@@ -48,7 +48,7 @@ function SectionCard({ cardSx, titleSx, title, action, children }) {
 
 // Dashboard statistics view that shows assignments and weekly donations.
 // ✅ تم التعديل: يقبل props من Dashboard (mosques, announcements, donations, preachers, employees)
-export default function Statistics({ mosques = [], donations = [], preachers = [], employees = [] }) {
+export default function Statistics({ mosques = [], donations = [], preachers = [], employees = [], maintenanceTickets = [] }) {
   const { activeTheme } = useTheme()
   const { colors, layout } = activeTheme
   const navigate = useNavigate() // ADDED: لتفعيل رابط "عرض الكل" الذي كان بلا أي وظيفة
@@ -91,18 +91,37 @@ export default function Statistics({ mosques = [], donations = [], preachers = [
   const totalDonations = donations.reduce((sum, d) => sum + (d.amount || 0), 0)
   const totalEmployees = employees.length
 
-  // ============= بيانات الرسم البياني للتبرعات (من الـ API) =============
-  // نأخذ آخر 7 أيام من التبرعات
-  const daysOfWeek = ['السبت', 'الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة']
-  const chartData = daysOfWeek.map((day, idx) => {
-    // تجميع التبرعات حسب اليوم
+  // ADDED: تذاكر الصيانة المفتوحة/قيد المعالجة كمؤشر اهتمام فوري بلوحة التحكم
+  const openMaintenanceTickets = maintenanceTickets.filter(
+    (t) => t.status === 'OPEN' || t.status === 'IN_PROGRESS',
+  )
+  const latestOpenTickets = [...openMaintenanceTickets]
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    .slice(0, 4)
+
+  // ============= بيانات الرسم البياني للتبرعات (نافذة متحركة حقيقية لآخر 7 أيام تقويمية) =============
+  // FIXED: الصيغة السابقة كانت تجمع كل التبرعات عبر كامل تاريخ القاعدة حسب اسم يوم الأسبوع فقط
+  // (بلا أي فلترة زمنية فعلية)، رغم أن الشارة المعروضة "آخر 7 أيام" تدّعي نافذة زمنية متحركة.
+  // الصيغة الحالية: لكل يوم تقويمي dᵢ = اليوم − i (i = 6..0)، تُحسب Y(dᵢ) = Σ amount
+  // لكل تبرع يقع تاريخه ضمن [dᵢ , dᵢ + 1 يوم)، بحيث يطابق المخطط تسميته فعلياً.
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const last7Days = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(today)
+    d.setDate(d.getDate() - (6 - i)) // من قبل 6 أيام وحتى اليوم، تصاعدياً
+    return d
+  })
+  const dayLabelFormatter = new Intl.DateTimeFormat('ar-SA', { weekday: 'short', day: 'numeric', month: 'numeric' })
+  const chartData = last7Days.map((dayStart) => {
+    const dayEnd = new Date(dayStart)
+    dayEnd.setDate(dayEnd.getDate() + 1)
     const dayDonations = donations.filter((d) => {
       if (!d.donationDate && !d.createdAt) return false
       const date = new Date(d.donationDate || d.createdAt)
-      return date.getDay() === (idx + 6) % 7 // تحويل الأيام ليبدأ من السبت
+      return date >= dayStart && date < dayEnd
     })
     const total = dayDonations.reduce((sum, d) => sum + (d.amount || 0), 0)
-    return { day, value: total }
+    return { day: dayLabelFormatter.format(dayStart), value: total }
   })
 
   // ============= كثافة المساجد في المناطق (من الـ API) =============
@@ -141,7 +160,7 @@ export default function Statistics({ mosques = [], donations = [], preachers = [
             display: 'grid',
             gap: 2,
             mb: 3,
-            gridTemplateColumns: { xs: '1fr 1fr', md: 'repeat(4, 1fr)' },
+            gridTemplateColumns: { xs: '1fr 1fr', md: 'repeat(5, 1fr)' },
           }}
         >
           <Card sx={{ ...cardSx, p: 2, textAlign: 'center' }}>
@@ -159,6 +178,13 @@ export default function Statistics({ mosques = [], donations = [], preachers = [
           <Card sx={{ ...cardSx, p: 2, textAlign: 'center' }}>
             <Typography variant="h4" sx={{ fontWeight: 'bold', color: colors.primary }}>{totalEmployees}</Typography>
             <Typography variant="body2" sx={{ color: colors.mutedText }}>الموظفون</Typography>
+          </Card>
+          {/* ADDED: مؤشر تذاكر الصيانة المفتوحة/قيد المعالجة */}
+          <Card sx={{ ...cardSx, p: 2, textAlign: 'center' }}>
+            <Typography variant="h4" sx={{ fontWeight: 'bold', color: openMaintenanceTickets.length > 0 ? colors.danger500 : colors.primary }}>
+              {openMaintenanceTickets.length}
+            </Typography>
+            <Typography variant="body2" sx={{ color: colors.mutedText }}>تذاكر صيانة مفتوحة</Typography>
           </Card>
         </Box>
 
@@ -270,7 +296,7 @@ export default function Statistics({ mosques = [], donations = [], preachers = [
               gridTemplateColumns: { xs: '1fr', md: 'repeat(2, minmax(0, 1fr))' },
             }}
           >
-            <Box sx={{ gridColumn: { md: 'span 2' } }}>
+            <Box>
               <SectionCard
                 cardSx={cardSx}
                 titleSx={titleSx}
@@ -298,6 +324,64 @@ export default function Statistics({ mosques = [], donations = [], preachers = [
                     </Box>
                   ))}
                 </Box>
+              </SectionCard>
+            </Box>
+
+            {/* ADDED: أحدث تذاكر الصيانة المفتوحة/قيد المعالجة */}
+            <Box>
+              <SectionCard
+                cardSx={cardSx}
+                titleSx={titleSx}
+                title="أحدث تذاكر الصيانة"
+                action={
+                  <Typography
+                    variant="body2"
+                    onClick={() => navigate('/maintenance')}
+                    sx={{ color: colors.secondary, cursor: 'pointer' }}
+                  >
+                    عرض الكل
+                  </Typography>
+                }
+              >
+                {latestOpenTickets.length === 0 ? (
+                  <Typography sx={{ color: colors.mutedText, textAlign: 'center', py: 2 }}>
+                    لا توجد تذاكر صيانة مفتوحة حالياً
+                  </Typography>
+                ) : (
+                  <Box sx={{ display: 'grid', gap: 1.5 }}>
+                    {latestOpenTickets.map((ticket) => (
+                      <Box
+                        key={ticket.id}
+                        sx={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          p: 1.5,
+                          borderRadius: 2,
+                          bgcolor: layout.searchBaseBg,
+                        }}
+                      >
+                        <Box>
+                          <Typography sx={{ fontWeight: 700, color: colors.text, fontSize: '0.9rem' }}>
+                            {ticket.title}
+                          </Typography>
+                          <Typography sx={{ color: colors.mutedText, fontSize: '0.78rem' }}>
+                            {ticket.mosque?.name || 'مسجد'}
+                          </Typography>
+                        </Box>
+                        <Chip
+                          label={ticket.priority === 'HIGH' ? 'عالية' : ticket.priority === 'LOW' ? 'منخفضة' : 'متوسطة'}
+                          size="small"
+                          sx={{
+                            bgcolor: ticket.priority === 'HIGH' ? colors.danger100 : colors.accent,
+                            color: ticket.priority === 'HIGH' ? colors.danger500 : colors.primary,
+                            fontWeight: 'bold',
+                          }}
+                        />
+                      </Box>
+                    ))}
+                  </Box>
+                )}
               </SectionCard>
             </Box>
           </Box>

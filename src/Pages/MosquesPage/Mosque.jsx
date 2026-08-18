@@ -5,6 +5,7 @@ import FilterSearch from './FilterSearch' // ADDED: Filter and search component
 import MyTable from './MyTable' // ADDED: Reusable table component
 import ReportsAndValid from './ReportsAndValid' // ADDED: Reports and validation section
 import MosqueDialogs from '../../components/Dialogs/MosqueDialogs' // ADDED: Dialogs for add/edit/assign/delete
+import ExportMenu from '../../components/common/ExportMenu' // ADDED: تصدير Excel/PDF حقيقي من البيانات المعروضة فعلياً
 
 // ============= استيراد خدمات API =============
 // ✅ تم الربط مع الـ API الحقيقي للمساجد والخطباء
@@ -17,8 +18,8 @@ import { useCurrentUser } from '../../context/userContext' // ADDED: لإخفا�
 
 // ============= تعريف أعمدة جدول المساجد =============
 const mosqueColumns = [
-  { key: 'name', label: 'اسم المسجد', type: 'avatar' },
-  { key: 'imam', label: 'الإمام', align: 'right' },
+  { key: 'name', label: 'اسم المسجد', align: 'right' },
+  { key: 'imam', label: 'الإمام', type: 'avatar', align: 'right' },
   { key: 'location', label: 'الموقع', align: 'right' },
   { key: 'capacity', label: 'السعة', align: 'center' },
   { key: 'status', label: 'الحالة', type: 'chip', align: 'center' },
@@ -351,6 +352,13 @@ export default function Mosque() {
         <div style={{ color: 'red', padding: '10px', textAlign: 'center' }}>
           {error}
         </div>
+      )}
+
+      {/* ADDED: تصدير Excel/PDF حقيقي للقائمة المُصفّاة المعروضة فعلياً */}
+      {!loading && (
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <ExportMenu rows={filteredMosques} columns={mosqueColumns} title="تقرير المساجد" filename="mosques_report" />
+        </Box>
       )}
 
       {/* ADDED: إخفاء الجدول أثناء التحميل الأولي */}

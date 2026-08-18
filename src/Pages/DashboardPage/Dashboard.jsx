@@ -10,6 +10,7 @@ import { getAllAnnouncements, createAnnouncement } from '../../services/announce
 import { getAllDonations } from '../../services/donationService'
 import { getAllPreachers } from '../../services/preacherService'
 import { getAllEmployees } from '../../services/employeeService'
+import { getAllTickets } from '../../services/maintenanceService' // ADDED: تذاكر الصيانة لعرض مؤشر التذاكر المفتوحة بلوحة التحكم
 import { getRegionsTree } from '../../services/regionService' // ADDED: شجرة التقسيم الجغرافي لمنتقي الموقع بنموذج الإضافة السريع
 import { findSelectedLocationName } from '../../utils/regionUtils' // ADDED
 import { useCurrentUser } from '../../context/userContext' // ADDED: لإخفاء أزرار الكتابة عن المستخدمين ذوي صلاحية القراءة فقط
@@ -31,6 +32,7 @@ export default function Dashboard() {
   const [donations, setDonations] = useState([])
   const [preachers, setPreachers] = useState([])
   const [employees, setEmployees] = useState([])
+  const [maintenanceTickets, setMaintenanceTickets] = useState([]) // ADDED: تذاكر الصيانة لمؤشر لوحة التحكم
   const [regionsTree, setRegionsTree] = useState([]) // ADDED: شجرة التقسيم الجغرافي
   const [error, setError] = useState(null)
 
@@ -38,7 +40,7 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchAllData = async () => {
       try {
-        const [mosquesData, announcementsData, donationsData, preachersData, employeesData, regionsTreeData] =
+        const [mosquesData, announcementsData, donationsData, preachersData, employeesData, regionsTreeData, maintenanceData] =
           await Promise.all([
             getAllMosques(),
             getAllAnnouncements(),
@@ -46,6 +48,7 @@ export default function Dashboard() {
             getAllPreachers(),
             getAllEmployees(),
             getRegionsTree(),
+            getAllTickets(),
           ])
 
         setMosques(mosquesData)
@@ -54,6 +57,7 @@ export default function Dashboard() {
         setPreachers(preachersData)
         setEmployees(employeesData)
         setRegionsTree(regionsTreeData) // ADDED
+        setMaintenanceTickets(maintenanceData)
         setError(null)
       } catch (err) {
         console.error('خطأ في جلب البيانات:', err)
@@ -135,6 +139,7 @@ export default function Dashboard() {
         donations={donations}
         preachers={preachers}
         employees={employees}
+        maintenanceTickets={maintenanceTickets}
       />
 
       <AddMosqueDialog

@@ -11,6 +11,8 @@ import { DonationsModule } from './donations/donations.module';
 import { ReportsModule } from './reports/reports.module';
 import { PreacherAssignmentsModule } from './preacher-assignments/preacher-assignments.module';
 import { RegionsModule } from './regions/regions.module';
+import { MaintenanceModule } from './maintenance/maintenance.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -29,6 +31,8 @@ import { RegionsModule } from './regions/regions.module';
     ReportsModule,
     PreacherAssignmentsModule,
     RegionsModule,
+    MaintenanceModule,
+    NotificationsModule,
   ],
   controllers: [],
   providers: [],

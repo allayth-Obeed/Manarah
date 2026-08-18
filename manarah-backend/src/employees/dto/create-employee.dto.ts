@@ -39,4 +39,9 @@ export class CreateEmployeeDto {
   @IsOptional()
   @IsDateString({}, { message: 'تاريخ التوظيف غير صالح' })
   hireDate?: string;
+
+  // ADDED: المسجد الذي يعمل به الموظف — يُستخدم لتوجيه إشعارات المسجد لموظفيه (إمام/خطيب/مؤذن...)
+  @IsOptional()
+  @IsInt({ message: 'المسجد غير صالح' })
+  mosqueId?: number;
 }
