@@ -8,6 +8,7 @@ import '@fontsource/amiri/700.css' // ADDED: خط Amiri الكلاسيكي ال�
 import { useTheme } from '../../theme/themeContext'
 import AuthBackground from '../../components/common/AuthBackground'
 import AuthInput from '../../components/common/AuthInput'
+import LoginSplashLogo from '../../components/common/LoginSplashLogo' // ADDED: شاشة شعار الشركة بعد نجاح تسجيل الدخول
 import EmailIcon from '@mui/icons-material/Email'
 import LockIcon from '@mui/icons-material/Lock'
 import VisibilityIcon from '@mui/icons-material/Visibility'
@@ -31,6 +32,9 @@ const SignInPage = () => {
   // حالة إظهار كلمة المرور
   const [showPassword, setShowPassword] = useState(false)
 
+  // ADDED: حالة إظهار شاشة شعار الشركة بعد نجاح تسجيل الدخول
+  const [showSplash, setShowSplash] = useState(false)
+
   // التعامل مع تغيير الحقول
   const handleChange = (field) => (e) => {
     setFormData((prev) => ({ ...prev, [field]: e.target.value }))
@@ -44,8 +48,13 @@ const SignInPage = () => {
     const result = await signIn(formData.email, formData.password)
     if (result.success) {
       await refreshUser() // ADDED: مزامنة Context المستخدم المشترك بالتوكن الجديد قبل الانتقال
-      navigate('/')
+      setShowSplash(true) // ADDED: عرض شعار الشركة بدل الانتقال الفوري للوحة التحكم
     }
+  }
+
+  // ADDED: تُستدعى بعد اكتمال شاشة الشعار (10 ثواني + تلاشي) للانتقال الفعلي للوحة التحكم
+  const handleSplashFinish = () => {
+    navigate('/')
   }
 
   return (
@@ -54,7 +63,12 @@ const SignInPage = () => {
       <AuthBackground />
 
       {/* بطاقة تسجيل الدخول */}
-      <div className="w-full max-w-md">
+      {/* MODIFIED: تلاشي وتصغير تدريجي للبطاقة عند نجاح الدخول قبل ظهور شعار الشركة */}
+      <div
+        className={`w-full max-w-md transition-all duration-500 ease-in-out ${
+          showSplash ? 'opacity-0 scale-95 pointer-events-none' : 'opacity-100 scale-100'
+        }`}
+      >
         {/* جزء التصميم العلوي */}
         <div className="text-center mb-8">
           {/* شعار المشروع */}
@@ -192,6 +206,9 @@ const SignInPage = () => {
           © 2025 منارة - جميع الحقوق محفوظة
         </p>
       </div>
+
+      {/* ADDED: شاشة شعار الشركة بعد نجاح تسجيل الدخول، تظهر 10 ثواني ثم تختفي وتنتقل للوحة التحكم */}
+      {showSplash && <LoginSplashLogo onFinish={handleSplashFinish} />}
     </div>
   )
 }
