@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule'; // ADDED: يفعّل @Cron لتنظيف الحسابات غير المصنَّفة تلقائياً
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
@@ -20,6 +21,7 @@ import { NotificationsModule } from './notifications/notifications.module';
       isGlobal: true,
       envFilePath: ['.env', '.env.local'],
     }),
+    ScheduleModule.forRoot(),
     PrismaModule,
     AuthModule,
     UsersModule,

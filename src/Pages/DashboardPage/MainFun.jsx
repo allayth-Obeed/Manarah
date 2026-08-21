@@ -33,9 +33,15 @@ export default function MainFun({
     <div>
       <Box
         dir="rtl"
-        sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+        sx={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: 2,
+        }}
       >
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, minWidth: 0 }}>
           <Typography
             variant="h4"
             sx={{
@@ -47,12 +53,16 @@ export default function MainFun({
             {title}
           </Typography>
           <Typography
-            sx={{ color: activeTheme.colors.mutedText, width: '50ch', whiteSpace: 'normal' }}
+            sx={{
+              color: activeTheme.colors.mutedText,
+              maxWidth: { xs: '100%', sm: '50ch' },
+              whiteSpace: 'normal',
+            }}
           >
             {description}
           </Typography>
         </Box>
-        <Box>
+        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
           {showAnnouncementButton && (
             <AppButton
               variant="contained"
@@ -68,7 +78,7 @@ export default function MainFun({
               fontSize={14}
               minWidth={140}
               onClick={onAnnouncementClick}
-              sx={{ mr: 2, boxShadow: '0 6px 12px rgba(0,0,0,0.08)', flexDirection: 'row-reverse' }}
+              sx={{ boxShadow: '0 6px 12px rgba(0,0,0,0.08)', flexDirection: 'row-reverse' }}
             >
               {announcementButton}
             </AppButton>
@@ -89,7 +99,7 @@ export default function MainFun({
               fontSize={14}
               minWidth={140}
               onClick={onAddClick}
-              sx={{ mr: 2, boxShadow: '0 6px 12px rgba(0,0,0,0.08)', flexDirection: 'row-reverse' }}
+              sx={{ boxShadow: '0 6px 12px rgba(0,0,0,0.08)', flexDirection: 'row-reverse' }}
             >
               {addButton}
             </AppButton>

@@ -15,7 +15,7 @@ import { useTheme } from '../../theme/themeContext'
 import { useNavigate } from 'react-router-dom'
 import useAuth from '../../hooks/useAuth'
 import { useCurrentUser } from '../../context/userContext' // MODIFIED: مصدر مستخدم مشترك بدل جلب /auth/me منفصل بهذا الملف
-import { useNotifications } from '../../context/NotificationsProvider' // ADDED: قائمة الإشعارات اللحظية الحقيقية بدل رسالة ثابتة
+import { useNotifications } from '../../context/notificationsContext' // ADDED: قائمة الإشعارات اللحظية الحقيقية بدل رسالة ثابتة
 import { getAllMosques } from '../../services/mosqueService' // ADDED: لتفعيل البحث الحقيقي عن المساجد
 import { getAllPreachers } from '../../services/preacherService' // ADDED: لتفعيل البحث الحقيقي عن الأئمة
 import { API_ORIGIN } from '../../services/apiClient' // ADDED: لبناء رابط كامل لصورة المستخدم (تُخدَّم من الباك اند مباشرة وليس عبر /api)

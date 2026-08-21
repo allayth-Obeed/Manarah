@@ -256,7 +256,7 @@ export default function DonationsHeader({ onAddClick, donations = [] }) {
         showAnnouncementButton={canWrite} // ADDED: تقرير التبرعات بيانات مالية — الباك اند يرفضه لغير ADMIN/MANAGER أصلاً
       />
 
-      <Box sx={{ display: 'flex', gap: 2, alignItems: 'stretch' }}>
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, alignItems: 'stretch' }}>
         {dynamicCards.map((card) => (
           <StatCard key={card.title} card={card} colors={colors} />
         ))}

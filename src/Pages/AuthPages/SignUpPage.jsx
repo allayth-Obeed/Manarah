@@ -10,7 +10,6 @@ import AuthInput from '../../components/common/AuthInput'
 import PersonIcon from '@mui/icons-material/Person'
 import LockIcon from '@mui/icons-material/Lock'
 import EmailIcon from '@mui/icons-material/Email'
-import PhoneIcon from '@mui/icons-material/Phone'
 import VisibilityIcon from '@mui/icons-material/Visibility'
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff'
 import CameraAltIcon from '@mui/icons-material/CameraAlt' // ADDED: أيقونة اختيار/تغيير الصورة الشخصية
@@ -27,8 +26,6 @@ const SignUpPage = () => {
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
-    phone: '',
-    username: '',
     password: '',
     confirmPassword: '',
   })
@@ -95,16 +92,6 @@ const SignUpPage = () => {
       newErrors.email = 'البريد الإلكتروني مطلوب'
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'البريد الإلكتروني غير صالح'
-    }
-
-    if (!formData.phone.trim()) {
-      newErrors.phone = 'رقم الجوال مطلوب'
-    }
-
-    if (!formData.username.trim()) {
-      newErrors.username = 'اسم المستخدم مطلوب'
-    } else if (formData.username.length < 3) {
-      newErrors.username = 'اسم المستخدم يجب أن يكون 3 أحرف على الأقل'
     }
 
     if (!formData.password) {
@@ -237,36 +224,6 @@ const SignUpPage = () => {
                 error={errors.email}
                 icon={EmailIcon}
                 autoComplete="email"
-              />
-            </div>
-
-            {/* حقل رقم الجوال */}
-            <div className="mt-5">
-              <AuthInput
-                label="رقم الجوال"
-                type="tel"
-                value={formData.phone}
-                onChange={handleChange('phone')}
-                placeholder="أدخل رقم جوالك"
-                required
-                error={errors.phone}
-                icon={PhoneIcon}
-                autoComplete="tel"
-              />
-            </div>
-
-            {/* حقل اسم المستخدم */}
-            <div className="mt-5">
-              <AuthInput
-                label="اسم المستخدم"
-                type="text"
-                value={formData.username}
-                onChange={handleChange('username')}
-                placeholder="اختر اسم مستخدم"
-                required
-                error={errors.username}
-                icon={PersonIcon}
-                autoComplete="username"
               />
             </div>
 

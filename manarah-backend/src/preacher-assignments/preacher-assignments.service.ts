@@ -2,14 +2,20 @@ import { Injectable, NotFoundException, ConflictException } from '@nestjs/common
 import { PrismaService } from '../prisma/prisma.service'
 import { Prisma } from '@prisma/client'
 import { NotificationsGateway } from '../notifications/notifications.gateway'
+import { NotificationsService } from '../notifications/notifications.service'
 import { CreatePreacherAssignmentDto } from './dto/create-preacher-assignment.dto'
 import { UpdatePreacherAssignmentDto } from './dto/update-preacher-assignment.dto'
+
+// نص عربي مقروء لتاريخ التكليف (يوم الأسبوع + التاريخ) — يُستخدم برسالة إشعار الخطيب المُكلَّف تحديداً
+const formatAssignmentDate = (date: Date) =>
+  date.toLocaleDateString('ar-SA', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
 
 @Injectable()
 export class PreacherAssignmentsService {
   constructor(
     private prisma: PrismaService,
     private notifications: NotificationsGateway,
+    private notificationsService: NotificationsService,
   ) {}
 
   private buildDayRange(dateInput?: string) {
@@ -113,13 +119,36 @@ export class PreacherAssignmentsService {
         },
       })
 
-      // ADDED: بث لحظي عند تثبيت تكليف خطيب جديد
-      this.notifications.emitEvent('assignment.created', {
-        id: assignment.id,
-        preacherName: `${assignment.preacher.firstName} ${assignment.preacher.lastName}`,
-        mosqueName: assignment.mosque.name,
-        role: assignment.role,
-      })
+      // ADDED: إشعار شخصي موجَّه ومحفوظ للخطيب المُكلَّف نفسه — يصله حتى لو لم يكن متصلاً لحظة التكليف
+      let notifiedUserId: number | null = null
+      if (assignment.preacher.userId) {
+        const dateLabel = formatAssignmentDate(new Date(assignment.startDate))
+        const message =
+          assignment.role === 'IMAM'
+            ? `تم تكليفك كإمام دائم في مسجد ${assignment.mosque.name} اعتباراً من ${dateLabel}`
+            : `تم تكليفك بخطبة الجمعة في مسجد ${assignment.mosque.name} بتاريخ ${dateLabel}`
+
+        const saved = await this.notificationsService.createForUser(
+          assignment.preacher.userId,
+          'assignment',
+          message,
+        )
+        this.notifications.emitToUser(assignment.preacher.userId, 'notification.new', saved)
+        notifiedUserId = assignment.preacher.userId
+      }
+
+      // بث عام يصل لبقية المسؤولين المتصلين (لوحة التحكم الإدارية) — مع استثناء الخطيب المُكلَّف نفسه
+      // (استلم رسالته الشخصية الموجَّهة أعلاه، فبثّ نفس الحدث له مجدداً بصيغة عامة يكون مربكاً ومكرَّراً)
+      this.notifications.emitEvent(
+        'assignment.created',
+        {
+          id: assignment.id,
+          preacherName: `${assignment.preacher.firstName} ${assignment.preacher.lastName}`,
+          mosqueName: assignment.mosque.name,
+          role: assignment.role,
+        },
+        notifiedUserId ? [notifiedUserId] : [],
+      )
 
       return assignment
     } catch (error) {
@@ -151,16 +180,30 @@ export class PreacherAssignmentsService {
   }
 
   async remove(id: number) {
-    // التحقق من وجود التعيين قبل الحذف
+    // التحقق من وجود التعيين قبل الحذف — يشمل preacher/mosque لإرسال إشعار إنهاء التكليف بعد الحذف
     const existing = await this.prisma.preacherAssignment.findUnique({
       where: { id },
+      include: { preacher: true, mosque: true },
     })
     if (!existing) {
       throw new NotFoundException('تعيين الخطيب غير موجود')
     }
 
-    return this.prisma.preacherAssignment.delete({
+    const removed = await this.prisma.preacherAssignment.delete({
       where: { id },
     })
+
+    // ADDED: إشعار شخصي للخطيب بانتهاء تكليفه بهذا المسجد (مثلاً بعد "إنهاء التكليف" اليدوي)
+    if (existing.preacher.userId) {
+      const message = `تم إنهاء تكليفك في مسجد ${existing.mosque.name}`
+      const saved = await this.notificationsService.createForUser(
+        existing.preacher.userId,
+        'assignment',
+        message,
+      )
+      this.notifications.emitToUser(existing.preacher.userId, 'notification.new', saved)
+    }
+
+    return removed
   }
 }

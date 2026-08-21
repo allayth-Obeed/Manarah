@@ -315,6 +315,8 @@ export default function DonationsOverview({ donations = [], onRowClick, onDelete
             </Typography>
           </Box>
 
+          {/* ADDED: تمرير أفقي داخل حدود العمود بدل تسرّب شبكة الأعمدة الثابتة العرض خارج الشاشة بالجوال */}
+          <Box sx={{ overflowX: 'auto' }}>
           <Box
             sx={{
               display: 'grid',
@@ -325,6 +327,7 @@ export default function DonationsOverview({ donations = [], onRowClick, onDelete
               borderRadius: 2,
               backgroundColor: colors.bgelem,
               mb: 1.25,
+              minWidth: 600,
             }}
           >
             <Typography
@@ -349,7 +352,7 @@ export default function DonationsOverview({ donations = [], onRowClick, onDelete
             </Typography>
           </Box>
 
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.1 }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.1, minWidth: 600 }}>
             {activityRows.length === 0 ? (
               <Box sx={{ textAlign: 'center', py: 4, color: colors.mutedText }}>
                 لا توجد تبرعات حالياً
@@ -374,6 +377,7 @@ export default function DonationsOverview({ donations = [], onRowClick, onDelete
                 </Box>
               ))
             )}
+          </Box>
           </Box>
         </Box>
       </Box>

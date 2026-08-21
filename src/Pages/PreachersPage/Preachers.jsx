@@ -10,13 +10,14 @@ import { ConfirmAssignDialog } from '../../components/Dialogs/DashboardDialogs' 
 // ✅ تم الربط مع الـ API الحقيقي للخطباء
 import { getAllPreachers, createPreacher, deletePreacher } from '../../services/preacherService' // ADDED: Preacher CRUD API functions
 import { getAllMosques } from '../../services/mosqueService' // ADDED: Mosque API to fetch mosque list for display
+import { getAllUsers } from '../../services/userService' // ADDED: قائمة الحسابات القابلة للربط بخطيب جديد عند الإضافة
 import { createAssignment, checkPreacherConflict, deleteAssignment } from '../../services/preacherAssignmentService' // MODIFIED: أضيف deleteAssignment لتفعيل زر "إنهاء التكليف" الحقيقي
 import { useNavigate } from 'react-router-dom' // ADDED: للانتقال الحقيقي عند الضغط على زر "إعلان تكليف"
 import { useCurrentUser } from '../../context/userContext' // ADDED: لإخفاء أزرار الكتابة عن المستخدمين ذوي صلاحية القراءة فقط
 
 // ============= أعمدة جدول الخطباء (جديد) =============
 const preacherColumns = [
-  { key: 'name', label: 'اسم الخطيب', type: 'avatar' },
+  { key: 'name', label: 'اسم الخطيب', type: 'avatar', align: 'right' },
   { key: 'specialization', label: 'التخصص', align: 'right' },
   { key: 'mosque', label: 'المسجد الحالي', align: 'right' },
   { key: 'phone', label: 'رقم الهاتف', align: 'center' },
@@ -40,6 +41,7 @@ const initialPreacherForm = {
   phone: '',
   email: '',
   specialization: '',
+  userId: '', // ADDED: ربط اختياري بحساب دخول موجود — يفعّل استلام هذا الخطيب لإشعاراته الشخصية
 }
 
 export default function Preachers() {
@@ -56,6 +58,7 @@ export default function Preachers() {
   // ✅ حالة البيانات من الـ API
   const [preachers, setPreachers] = useState([]) // ADDED: State for preachers list from API
   const [mosques, setMosques] = useState([]) // ADDED: State for mosques list from API
+  const [linkableUsers, setLinkableUsers] = useState([]) // ADDED: حسابات الدخول غير المرتبطة بعد — لربط خطيب جديد بحسابه
   const [error, setError] = useState(null) // ADDED: State for error messages
   const [loading, setLoading] = useState(false) // ADDED: State for loading indicator during API calls
   const [selectedMosqueId, setSelectedMosqueId] = useState('') // ADDED: حفظ معرف المسجد المختار في بطاقة الجمعة القادمة
@@ -88,6 +91,16 @@ export default function Preachers() {
 
     fetchData()
   }, [])
+
+  // ============= حسابات الدخول القابلة للربط بخطيب جديد =============
+  // GET /users محصور بـ ADMIN/MANAGER بالباك اند — لا داعي لمحاولته لمستخدم قراءة فقط (سيفشل 403 دون فائدة)
+  // منفصل بـ useEffect خاص لأن canWrite يبدأ false دائماً قبل اكتمال جلب المستخدم الحالي في UserProvider
+  useEffect(() => {
+    if (!canWrite) return
+    getAllUsers()
+      .then((users) => setLinkableUsers(users.filter((u) => !u.isLinked)))
+      .catch(() => {})
+  }, [canWrite])
 
   const getNextFridayDate = () => {
     // ADDED: حساب تاريخ الجمعة القادمة لاستخدامه في الفحص والتكليف
@@ -139,8 +152,6 @@ export default function Preachers() {
   const handleAddSubmit = async (e) => {
     e?.preventDefault()
     try {
-      console.log('📤 إرسال بيانات الخطيب للـ API:', preacherForm)
-
       // ✅ بناء بيانات الخطيب حسب CreatePreacherDto في الباك إند
       const preacherData = {
         firstName: preacherForm.firstName.trim(),
@@ -148,18 +159,20 @@ export default function Preachers() {
         phone: preacherForm.phone?.trim() || undefined,
         email: preacherForm.email?.trim() || undefined,
         specialization: preacherForm.specialization?.trim() || undefined,
+        userId: preacherForm.userId ? Number(preacherForm.userId) : undefined, // ADDED: ربط اختياري بحساب دخول — يفعّل إشعاراته الشخصية عند تكليفه
       }
-
-      console.log('📦 البيانات المرسلة:', preacherData)
 
       // إرسال البيانات للـ API
       const created = await createPreacher(preacherData)
 
-      console.log('✅ تم إنشاء الخطيب بنجاح:', created)
-
       // إعادة جلب القائمة المحدثة
       const updatedData = await getAllPreachers()
       setPreachers(updatedData)
+
+      // ADDED: إزالة الحساب المرتبَط للتو من قائمة الحسابات المتاحة للربط
+      if (preacherData.userId) {
+        setLinkableUsers((prev) => prev.filter((u) => u.id !== preacherData.userId))
+      }
 
       setAddOpen(false)
       setPreacherForm(initialPreacherForm)
@@ -250,8 +263,6 @@ export default function Preachers() {
       setSelectedMosqueId('') // ADDED: إعادة تعيين اختيار المسجد بعد نجاح عملية التكليف
       setConflictState({ hasConflict: false, conflictCount: 0, conflicts: [], error: null }) // ADDED: تصفير حالة التعارض بعد الحفظ الناجح
       setError(null)
-
-      console.log('✅ تم إنشاء التعيين بنجاح')
     } catch (err) {
       console.error('❌ خطأ في إنشاء التعيين:', err)
       const msg = err?.response?.data?.message || err?.message || 'فشل في إنشاء التعيين'
@@ -345,6 +356,7 @@ export default function Preachers() {
         preacherForm={preacherForm}
         setPreacherForm={setPreacherForm}
         handleAddSubmit={handleAddSubmit}
+        linkableUsers={linkableUsers} // ADDED: حسابات الدخول غير المرتبطة — لربط الخطيب الجديد بحسابه
         deleteOpen={deleteOpen} // ADDED: Pass delete dialog state to the dialog component
         setDeleteOpen={setDeleteOpen} // ADDED: Pass delete dialog setter to the dialog component
         selectedRow={selectedRow} // ADDED: Pass selected preacher row to the dialog component

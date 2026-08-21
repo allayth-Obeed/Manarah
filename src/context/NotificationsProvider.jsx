@@ -1,17 +1,9 @@
-import { createContext, useCallback, useContext, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Snackbar, Alert } from '@mui/material'
 import { useCurrentUser } from './userContext'
+import { NotificationsContext } from './notificationsContext'
 import { connectSocket, disconnectSocket } from '../services/socket'
-
-const NotificationsContext = createContext(null)
-
-export function useNotifications() {
-  const context = useContext(NotificationsContext)
-  if (!context) {
-    throw new Error('useNotifications must be used within a NotificationsProvider')
-  }
-  return context
-}
+import { getMyNotifications, markAllNotificationsRead } from '../services/notificationService'
 
 const STATUS_LABELS = { OPEN: 'مفتوحة', IN_PROGRESS: 'قيد المعالجة', RESOLVED: 'تم الحل', CLOSED: 'مغلقة' }
 
@@ -30,10 +22,37 @@ const EVENT_MESSAGES = {
 
 // Provider واحد على مستوى التطبيق يفتح اتصال Socket.IO حال تسجيل الدخول، ويجمّع الأحداث اللحظية
 // (تبرع جديد، تذكرة صيانة، تغيّر حالة تذكرة، تكليف خطيب) في قائمة إشعارات + توست فوري
+// يحوّل سجل إشعار شخصي محفوظ قادم من الباك اند (id رقمي حقيقي، isRead) لنفس شكل عناصر القائمة المحلية
+const fromPersisted = (record) => ({
+  id: record.id,
+  message: record.message,
+  read: record.isRead,
+  createdAt: new Date(record.createdAt),
+  persisted: true,
+})
+
 export function NotificationsProvider({ children }) {
   const { user } = useCurrentUser()
   const [notifications, setNotifications] = useState([])
   const [toast, setToast] = useState(null)
+
+  // ADDED: جلب الإشعارات الشخصية المحفوظة عند تسجيل الدخول — تصله حتى لو لم يكن متصلاً وقت وقوع الحدث
+  useEffect(() => {
+    if (!user) return undefined
+
+    let cancelled = false
+    getMyNotifications()
+      .then((records) => {
+        if (!cancelled) setNotifications(records.map(fromPersisted))
+      })
+      .catch(() => {})
+
+    // عند تسجيل الخروج (أو تبديل المستخدم) نفرّغ القائمة بدل إبقاء إشعارات المستخدم السابق ظاهرة
+    return () => {
+      cancelled = true
+      setNotifications([])
+    }
+  }, [user])
 
   useEffect(() => {
     if (!user) {
@@ -59,13 +78,23 @@ export function NotificationsProvider({ children }) {
       return [event, handler]
     })
 
+    // ADDED: إشعار شخصي موجَّه ومحفوظ (تكليف خطبة، إسناد صيانة...) — يصل مباشرة كسجل حقيقي بدل بناء رسالة من payload عام
+    const personalHandler = (record) => {
+      const item = fromPersisted(record)
+      setNotifications((prev) => [item, ...prev].slice(0, 30))
+      setToast(item)
+    }
+    socket.on('notification.new', personalHandler)
+
     return () => {
       entries.forEach(([event, handler]) => socket.off(event, handler))
+      socket.off('notification.new', personalHandler)
     }
   }, [user])
 
   const markAllRead = useCallback(() => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))
+    markAllNotificationsRead().catch(() => {})
   }, [])
 
   const clearToast = useCallback(() => setToast(null), [])

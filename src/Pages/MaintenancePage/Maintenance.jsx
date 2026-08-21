@@ -41,7 +41,7 @@ const transformTicketsToRows = (tickets) =>
   }))
 
 export default function Maintenance() {
-  const { canWrite } = useCurrentUser()
+  const { canWrite, user } = useCurrentUser()
 
   const [addOpen, setAddOpen] = useState(false)
   const [detailsOpen, setDetailsOpen] = useState(false)
@@ -108,10 +108,14 @@ export default function Maintenance() {
   const handleUpdateSubmit = async () => {
     if (!selectedTicket || !editForm) return
     try {
-      await updateTicket(selectedTicket.id, {
-        status: editForm.status,
-        assignedToId: editForm.assignedToId === '' ? undefined : Number(editForm.assignedToId),
-      })
+      // ADDED: الموظف المُسنَدة إليه التذكرة يقدر يحدّث حالتها هو فقط — الباك اند يرفض أي حقل آخر منه
+      // (حتى assignedToId بنفس قيمته الحالية)، فيُرسَل status وحده بدون canWrite
+      await updateTicket(
+        selectedTicket.id,
+        canWrite
+          ? { status: editForm.status, assignedToId: editForm.assignedToId === '' ? undefined : Number(editForm.assignedToId) }
+          : { status: editForm.status },
+      )
 
       const updated = await getAllTickets()
       setTickets(updated)
@@ -139,6 +143,8 @@ export default function Maintenance() {
   }
 
   const rows = transformTicketsToRows(tickets)
+  // ADDED: هل التذكرة المفتوحة حالياً مُسنَدة فعلياً للموظف المرتبط بحساب المستخدم الحالي؟ يفعّل تحديث الحالة الذاتي
+  const isMyTicket = Boolean(selectedTicket?.assignedTo?.userId && selectedTicket.assignedTo.userId === user?.id)
 
   return (
     <div>
@@ -208,6 +214,7 @@ export default function Maintenance() {
         handleConfirmDelete={handleConfirmDelete}
         employees={employees}
         canWrite={canWrite}
+        isMyTicket={isMyTicket} // ADDED: يفعّل تحديث الحالة الذاتي للموظف المُسنَدة إليه التذكرة (حتى بلا صلاحية كتابة كاملة)
       />
     </div>
   )

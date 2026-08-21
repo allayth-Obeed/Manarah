@@ -1,5 +1,5 @@
 import React from 'react'
-import { Box, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, MenuItem, Stack, TextField, Typography } from '@mui/material'
+import { Box, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, MenuItem, Select, Stack, TextField, Typography } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close'
 import DeleteIcon from '@mui/icons-material/Delete'
 import AppButton from '../common/AppButton'
@@ -7,10 +7,10 @@ import { useTheme } from '../../theme/themeContext'
 
 /**
  * Dialog لإضافة خطيب جديد
- * ✅ الحقول تتوافق مع CreatePreacherDto في الباك إند: firstName, lastName, phone?, email?, specialization?
+ * ✅ الحقول تتوافق مع CreatePreacherDto في الباك إند: firstName, lastName, phone?, email?, specialization?, userId?
  * ✅ البيانات تأتي من المكون الأب Preachers.jsx إلى preacherForm
  */
-export default function PreachersDialogs({ addOpen, setAddOpen, preacherForm, setPreacherForm, handleAddSubmit, deleteOpen, setDeleteOpen, selectedRow, handleConfirmDelete }) {
+export default function PreachersDialogs({ addOpen, setAddOpen, preacherForm, setPreacherForm, handleAddSubmit, linkableUsers = [], deleteOpen, setDeleteOpen, selectedRow, handleConfirmDelete }) {
   const { activeTheme } = useTheme()
   const { colors, mode } = activeTheme
   const isDark = mode === 'dark'
@@ -63,6 +63,25 @@ export default function PreachersDialogs({ addOpen, setAddOpen, preacherForm, se
             <Stack spacing={0.5}>
               <Typography sx={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 500, fontSize: 14, color: colors.text, lineHeight: '20px', textAlign: 'right' }}>التخصص</Typography>
               <TextField value={preacherForm.specialization} onChange={(e) => setPreacherForm((p) => ({ ...p, specialization: e.target.value }))} placeholder="مثال: تخصص في الفقه الإسلامي" fullWidth sx={inputSx} />
+            </Stack>
+          </Box>
+          {/* ADDED: ربط اختياري بحساب دخول موجود — يفعّل استلام هذا الخطيب لإشعاراته الشخصية (تكليف خطبة...) */}
+          <Box sx={{ mt: 3 }}>
+            <Stack spacing={0.5}>
+              <Typography sx={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 500, fontSize: 14, color: colors.text, lineHeight: '20px', textAlign: 'right' }}>ربط بحساب دخول (اختياري)</Typography>
+              <Select
+                value={preacherForm.userId || ''}
+                onChange={(e) => setPreacherForm((p) => ({ ...p, userId: e.target.value }))}
+                displayEmpty
+                fullWidth
+                sx={{ ...inputSx, '& .MuiSelect-select': { textAlign: 'right', fontFamily: '"IBM Plex Sans Arabic", sans-serif' } }}
+                MenuProps={{ sx: { '& .MuiMenu-paper': { direction: 'rtl', bgcolor: colors.surface }, '& .MuiMenuItem-root': { justifyContent: 'flex-end', fontFamily: '"IBM Plex Sans Arabic", sans-serif', color: colors.text } } }}
+              >
+                <MenuItem value="" sx={{ justifyContent: 'flex-end' }}>بلا ربط (يمكن ربطه لاحقاً)</MenuItem>
+                {linkableUsers.map((u) => (
+                  <MenuItem key={u.id} value={u.id} sx={{ justifyContent: 'flex-end' }}>{u.name} — {u.email}</MenuItem>
+                ))}
+              </Select>
             </Stack>
           </Box>
         </DialogContent>

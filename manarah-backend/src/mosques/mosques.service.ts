@@ -32,6 +32,8 @@ export class MosquesService {
             preacher: true,
           },
         },
+        // ADDED: طاقم المسجد (إمام/خطيب/مؤذن/إداري...) — لبطاقة "من يعمل بهذا المسجد"
+        employees: true,
         announcements: true,
         donations: true,
         ...locationInclude,
@@ -48,6 +50,8 @@ export class MosquesService {
             preacher: true,
           },
         },
+        // ADDED: طاقم المسجد (إمام/خطيب/مؤذن/إداري...) — لبطاقة "من يعمل بهذا المسجد"
+        employees: true,
         announcements: true,
         donations: true,
         ...locationInclude,

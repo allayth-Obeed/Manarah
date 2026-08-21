@@ -8,7 +8,9 @@ import {
   Delete,
   ParseIntPipe,
   UseGuards,
+  Req,
 } from '@nestjs/common';
+import type { Request } from 'express';
 import { MaintenanceService } from './maintenance.service';
 import { CreateMaintenanceTicketDto } from './dto/create-maintenance.dto';
 import { UpdateMaintenanceTicketDto } from './dto/update-maintenance.dto';
@@ -39,13 +41,15 @@ export class MaintenanceController {
   }
 
   @Patch(':id')
-  @UseGuards(RolesGuard) // إسناد/تغيير حالة/تعديل تذكرة: ADMIN/MANAGER فقط
-  @Roles(Role.ADMIN, Role.MANAGER)
+  // ADDED: التعديل الكامل (إسناد/عنوان/مسجد) يبقى ADMIN/MANAGER فقط، لكن الموظف المُسنَدة إليه التذكرة
+  // يقدر يحدّث حالتها هو بنفسه — الفحص الفعلي بحسب هوية المستخدم وليس دوره فقط، فهو بالخدمة (Service) وليس هنا
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateMaintenanceTicketDto,
+    @Req() req: Request,
   ) {
-    return this.maintenanceService.update(id, dto);
+    const actingUser = req.user as { userId: number; role: Role };
+    return this.maintenanceService.update(id, dto, actingUser);
   }
 
   @Delete(':id')

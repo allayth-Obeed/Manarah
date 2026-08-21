@@ -445,7 +445,7 @@ const MyTable = ({
       >
         <Typography
           sx={{ color: colors.mutedText, fontSize: 13 }}
-        >{`عرض ${rangeStart}-${rangeEnd} من أصل ${totalRows.toLocaleString('en-US')} ${entityLabel}اً`}</Typography>
+        >{`عرض ${rangeStart}-${rangeEnd} من أصل ${totalRows.toLocaleString('en-US')} ${entityLabel}${entityLabel.endsWith('ة') ? 'ً' : 'اً'}`}</Typography>
 
         <Box dir="ltr" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <IconButton

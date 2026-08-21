@@ -3,6 +3,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { NotificationsGateway } from './notifications.gateway';
 import { MosqueNotificationsService } from './mosque-notifications.service';
+import { NotificationsService } from './notifications.service';
+import { NotificationsController } from './notifications.controller';
 
 @Module({
   imports: [
@@ -14,7 +16,8 @@ import { MosqueNotificationsService } from './mosque-notifications.service';
       }),
     }),
   ],
-  providers: [NotificationsGateway, MosqueNotificationsService],
-  exports: [NotificationsGateway, MosqueNotificationsService],
+  controllers: [NotificationsController],
+  providers: [NotificationsGateway, MosqueNotificationsService, NotificationsService],
+  exports: [NotificationsGateway, MosqueNotificationsService, NotificationsService],
 })
 export class NotificationsModule {}

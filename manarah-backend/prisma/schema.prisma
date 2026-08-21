@@ -21,6 +21,8 @@ model User {
   mosques     Mosque[] @relation("MosqueManager")
   preacher    Preacher? @relation("PreacherUser")
   employee    Employee? @relation("EmployeeUser")
+  // ADDED: إشعارات هذا المستخدم الشخصية (تكليف خطبة/إسناد صيانة...) — محفوظة ليراها حتى لو لم يكن متصلاً لحظة الحدث
+  notifications Notification[]
 }
 
 // Mosque model
@@ -184,6 +186,19 @@ model MaintenanceTicket {
   resolvedAt   DateTime?
   createdAt    DateTime          @default(now())
   updatedAt    DateTime          @updatedAt
+}
+
+// ADDED: إشعار شخصي محفوظ لمستخدم — يظهر له حتى لو لم يكن متصلاً بالبث اللحظي وقت وقوع الحدث
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead])
 }
 
 // Enums

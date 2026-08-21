@@ -22,14 +22,15 @@ export default function FilterSearch({ mosques = [], regionFilter, onRegionFilte
 
   return (
     <Box dir="rtl" sx={{ display: 'flex', flexDirection: 'column', gap: 2, py: 2 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+      <Box sx={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 2 }}>
         <Typography variant="body1">تصفية بـ:</Typography>
         {/* filtering */}
         <Box
           sx={{
             display: 'flex',
+            flexWrap: 'wrap',
             alignItems: 'center',
-            gap: 3,
+            gap: 1.5,
             bgcolor: activeTheme.colors.bgelem,
             px: 2.5,
             py: 1.5,

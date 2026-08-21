@@ -3,7 +3,7 @@
  * رفع الصورة الشخصية للمستخدم المسجَّل دخوله
  */
 
-import { API_ORIGIN } from './apiClient' // ADDED: لبناء رابط الـ API بدون استخدام apiClient نفسه (انظر السبب أدناه)
+import apiClient, { API_ORIGIN } from './apiClient' // ADDED: لبناء رابط الـ API بدون استخدام apiClient نفسه (انظر السبب أدناه)
 
 // ملاحظة: نستخدم fetch الخام هنا بدل apiClient (axios) عمداً — apiClient يفرض
 // Content-Type: application/json افتراضياً على كل الطلبات، وهذا يكسر رفع الملفات
@@ -38,4 +38,45 @@ export const uploadAvatar = async (file) => {
   return response.json()
 }
 
-export default { uploadAvatar }
+/**
+ * جلب لوحة المستخدم الحالي الشخصية: بيانات الخطيب/الموظف المرتبطة بحسابه (إن وُجدت) مع تكليفاته/تذاكره
+ * GET /api/users/me/overview
+ * @returns {Promise<{preacher: object|null, employee: object|null}>}
+ */
+export const getMyOverview = async () => {
+  const { data } = await apiClient.get('/users/me/overview')
+  return data
+}
+
+/**
+ * جلب قائمة كل المستخدمين (ADMIN/MANAGER فقط) — لربط حساب دخول بسجل خطيب/موظف جديد
+ * GET /api/users
+ * @returns {Promise<Array<{id, name, email, role, isLinked}>>}
+ */
+export const getAllUsers = async () => {
+  const { data } = await apiClient.get('/users')
+  return data
+}
+
+/**
+ * تحديث دور مستخدم — مستخدم عادي/خطيب/موظف فقط (ADMIN/MANAGER فقط يقدرون، ولا تعمل على حساب مسؤول نظام)
+ * PATCH /api/users/:id/role
+ * @param {number} id
+ * @param {'USER'|'PREACHER'|'EMPLOYEE'} role
+ */
+export const updateUserRole = async (id, role) => {
+  const { data } = await apiClient.patch(`/users/${id}/role`, { role })
+  return data
+}
+
+/**
+ * حذف حساب مستخدم نهائياً (ADMIN فقط، ولا يعمل على حساب مسؤول نظام أو حسابك الخاص)
+ * DELETE /api/users/:id
+ * @param {number} id
+ */
+export const deleteUser = async (id) => {
+  const { data } = await apiClient.delete(`/users/${id}`)
+  return data
+}
+
+export default { uploadAvatar, getMyOverview, getAllUsers, updateUserRole, deleteUser }

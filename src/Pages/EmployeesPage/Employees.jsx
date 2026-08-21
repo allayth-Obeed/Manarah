@@ -12,6 +12,7 @@ import { Box } from '@mui/material'
 // نستورد دوال الاتصال بالـ API من ملف الخدمة التي أنشأناه
 import { getAllEmployees, createEmployee, deleteEmployee } from '../../services/employeeService' // ADDED: Added deleteEmployee import for delete CRUD operation
 import { getAllMosques } from '../../services/mosqueService' // ADDED: لإسناد الموظف لمسجد يعمل به (تُستخدم لتوجيه إشعارات المسجد لموظفيه)
+import { getAllUsers } from '../../services/userService' // ADDED: قائمة الحسابات القابلة للربط بموظف جديد عند الإضافة
 import { useCurrentUser } from '../../context/userContext' // ADDED: لإخفاء أزرار الكتابة عن المستخدمين ذوي صلاحية القراءة فقط
 
 // ============= تعريف أعمدة الجدول =============
@@ -21,6 +22,7 @@ const employeeColumns = [
     key: 'name',
     label: 'اسم الموظف',
     type: 'avatar',
+    align: 'right',
   },
   {
     key: 'job',
@@ -56,6 +58,7 @@ const initialEmployeeForm = {
   salary: '',
   hireDate: '',
   mosqueId: '', // ADDED: المسجد الذي يعمل به الموظف
+  userId: '', // ADDED: ربط اختياري بحساب دخول موجود — يفعّل إشعاراته الشخصية عند إسناد تذكرة صيانة له
 }
 
 // ============= دالة تحويل البيانات من Backend إلى تنسيق الجدول =============
@@ -104,6 +107,7 @@ export default function Employees() {
   // حالة الموظفين (ستُخزن البيانات الحقيقية من الـ API هنا)
   const [employees, setEmployees] = useState([])
   const [mosques, setMosques] = useState([]) // ADDED: لقائمة اختيار المسجد بنموذج إضافة/تعديل الموظف
+  const [linkableUsers, setLinkableUsers] = useState([]) // ADDED: حسابات الدخول غير المرتبطة بعد — لربط موظف جديد بحسابه
 
   // حالة الخطأ (error state)
   const [error, setError] = useState(null)
@@ -132,6 +136,16 @@ export default function Employees() {
     fetchEmployees()
   }, []) // المصفوفة الفارغة تعني تنفيذها مرة واحدة عند التحميل
 
+  // ============= حسابات الدخول القابلة للربط بموظف جديد =============
+  // GET /users محصور بـ ADMIN/MANAGER بالباك اند؛ منفصل بـ useEffect خاص لأن canWrite يبدأ false دائماً
+  // قبل اكتمال جلب المستخدم الحالي في UserProvider
+  useEffect(() => {
+    if (!canWrite) return
+    getAllUsers()
+      .then((users) => setLinkableUsers(users.filter((u) => !u.isLinked)))
+      .catch(() => {})
+  }, [canWrite])
+
   // ============= معالجة إرسال النموذج =============
   /**
    * عندما يضيف المستخدم موظف جديد:
@@ -143,15 +157,22 @@ export default function Employees() {
     e?.preventDefault()
 
     try {
+      const employeeUserId = employeeForm.userId ? Number(employeeForm.userId) : undefined
       // إرسال البيانات للـ API
       await createEmployee({
         ...employeeForm,
         mosqueId: employeeForm.mosqueId ? Number(employeeForm.mosqueId) : undefined, // ADDED
+        userId: employeeUserId, // ADDED: ربط اختياري بحساب دخول — يفعّل إشعاراته الشخصية عند إسناد تذكرة صيانة له
       })
 
       // إعادة جلب القائمة المحدثة
       const updatedData = await getAllEmployees()
       setEmployees(transformEmployeesToRows(updatedData))
+
+      // ADDED: إزالة الحساب المرتبَط للتو من قائمة الحسابات المتاحة للربط
+      if (employeeUserId) {
+        setLinkableUsers((prev) => prev.filter((u) => u.id !== employeeUserId))
+      }
 
       // إغلاق النافذة وإعادة تعيين النموذج
       setAddOpen(false)
@@ -268,6 +289,7 @@ export default function Employees() {
         detailsOpen={detailsOpen} // ADDED: ديالوج عرض التفاصيل الجديد
         setDetailsOpen={setDetailsOpen} // ADDED
         mosques={mosques} // ADDED: لاختيار المسجد الذي يعمل به الموظف
+        linkableUsers={linkableUsers} // ADDED: حسابات الدخول غير المرتبطة — لربط الموظف الجديد بحسابه
       />
     </div>
   )

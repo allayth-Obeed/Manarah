@@ -5,6 +5,7 @@ import FilterSearch from './FilterSearch' // ADDED: Filter and search component
 import MyTable from './MyTable' // ADDED: Reusable table component
 import ReportsAndValid from './ReportsAndValid' // ADDED: Reports and validation section
 import MosqueDialogs from '../../components/Dialogs/MosqueDialogs' // ADDED: Dialogs for add/edit/assign/delete
+import MosqueStaffDialog from '../../components/Dialogs/MosqueStaffDialog' // ADDED: بطاقة "من يعمل بهذا المسجد"
 import ExportMenu from '../../components/common/ExportMenu' // ADDED: تصدير Excel/PDF حقيقي من البيانات المعروضة فعلياً
 
 // ============= استيراد خدمات API =============
@@ -118,6 +119,9 @@ export default function Mosque() {
 
   // ✅ حالة البيانات من الـ API
   const [mosques, setMosques] = useState([]) // ADDED: State for mosques list from API
+  const [rawMosques, setRawMosques] = useState([]) // ADDED: نسخة خام غير مُحوَّلة (تحتفظ بـ preachers/employees الكاملة) لبطاقة الطاقم
+  const [staffDialogOpen, setStaffDialogOpen] = useState(false) // ADDED: حالة فتح بطاقة "من يعمل بهذا المسجد"
+  const [staffMosque, setStaffMosque] = useState(null) // ADDED: المسجد الخام المعروض ببطاقة الطاقم (منفصل عن selectedRow المُحوَّل)
   const [preachers, setPreachers] = useState([]) // ADDED: State for preachers list from API
   const [regionsTree, setRegionsTree] = useState([]) // ADDED: شجرة التقسيم الجغرافي لتغذية LocationPicker
   const [error, setError] = useState(null) // ADDED: State for error messages
@@ -135,6 +139,7 @@ export default function Mosque() {
           getRegionsTree(),
         ])
         setMosques(transformMosquesToRows(mosquesData)) // ADDED: Transform and store mosques data
+        setRawMosques(mosquesData) // ADDED: نسخة خام لبطاقة "من يعمل بهذا المسجد"
         setPreachers(transformPreachersToOptions(preachersData)) // ADDED: Transform and store preachers data
         setRegionsTree(regionsTreeData) // ADDED: Store the geographic hierarchy tree
         setError(null) // ADDED: Clear any previous errors
@@ -213,6 +218,12 @@ export default function Mosque() {
     setDeleteOpen(true)
   }
 
+  // ADDED: فتح بطاقة "من يعمل بهذا المسجد" — متاحة للجميع (ليست مقيَّدة بـ canWrite) لأنها عرض فقط
+  const handleRowViewStaff = (row) => {
+    setStaffMosque(rawMosques.find((m) => m.id === row.id) || null)
+    setStaffDialogOpen(true)
+  }
+
   // ============= إضافة مسجد جديد (API) =============
   const handleAddSubmit = async (event) => {
     event.preventDefault()
@@ -238,6 +249,7 @@ export default function Mosque() {
       // إعادة جلب القائمة المحدثة
       const updatedData = await getAllMosques()
       setMosques(transformMosquesToRows(updatedData))
+      setRawMosques(updatedData) // ADDED: تحديث النسخة الخام لبطاقة الطاقم كي تعكس آخر تعيين/إسناد
 
       setAddOpen(false)
       openToast('تم حفظ المسجد الجديد بنجاح')
@@ -268,6 +280,7 @@ export default function Mosque() {
 
       const updatedData = await getAllMosques()
       setMosques(transformMosquesToRows(updatedData))
+      setRawMosques(updatedData) // ADDED: تحديث النسخة الخام لبطاقة الطاقم كي تعكس آخر تعيين/إسناد
 
       setEditOpen(false)
       openToast('تم تحديث بيانات المسجد بنجاح')
@@ -295,6 +308,7 @@ export default function Mosque() {
       // ADDED: إعادة جلب قائمة المساجد المحدثة بعد التعيين الناجح
       const updatedData = await getAllMosques()
       setMosques(transformMosquesToRows(updatedData))
+      setRawMosques(updatedData) // ADDED: تحديث النسخة الخام لبطاقة الطاقم كي تعكس آخر تعيين/إسناد
 
       const selectedPreacher = preachers.find((item) => item.id === selectedPreacherId) // ADDED: Find the selected preacher object for the toast message
       setAssignOpen(false)
@@ -317,6 +331,7 @@ export default function Mosque() {
       // إعادة جلب القائمة المحدثة
       const updatedData = await getAllMosques()
       setMosques(transformMosquesToRows(updatedData))
+      setRawMosques(updatedData) // ADDED: تحديث النسخة الخام لبطاقة الطاقم كي تعكس آخر تعيين/إسناد
 
       setDeleteOpen(false)
       openToast(`تم حذف سجل ${selectedRow?.name || 'المسجد'} بنجاح`)
@@ -369,6 +384,7 @@ export default function Mosque() {
           totalRows={filteredMosques.length} // MODIFIED: العدد يعكس نتيجة الفلترة الفعلية
           totalPages={1}
           entityLabel="مسجد"
+          onRowViewClick={handleRowViewStaff} // ADDED: بطاقة "من يعمل بهذا المسجد" — متاحة للجميع
           // ADDED: كل أزرار الكتابة (تعيين/تعديل/حذف) تُخفى تلقائياً عن المستخدمين ذوي صلاحية القراءة فقط
           onRowMoreClick={canWrite ? handleRowMoreClick : undefined}
           onRowEditClick={canWrite ? handleRowEditClick : undefined}
@@ -405,6 +421,12 @@ export default function Mosque() {
         setSnackbarOpen={setSnackbarOpen}
         snackbarMessage={snackbarMessage}
         regionsTree={regionsTree} // ADDED: لتغذية LocationPicker بديالوجي الإضافة والتعديل
+      />
+
+      <MosqueStaffDialog
+        open={staffDialogOpen}
+        onClose={() => setStaffDialogOpen(false)}
+        mosque={staffMosque}
       />
     </Box>
   )

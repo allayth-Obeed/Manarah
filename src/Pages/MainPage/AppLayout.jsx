@@ -19,6 +19,7 @@ import PaymentsOutlinedIcon from '@mui/icons-material/PaymentsOutlined'
 import CampaignOutlinedIcon from '@mui/icons-material/CampaignOutlined'
 import MapOutlinedIcon from '@mui/icons-material/MapOutlined'
 import BuildOutlinedIcon from '@mui/icons-material/BuildOutlined'
+import ManageAccountsOutlinedIcon from '@mui/icons-material/ManageAccountsOutlined'
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined'
 import LogoutOutlinedIcon from '@mui/icons-material/LogoutOutlined'
 import MosqueRoundedIcon from '@mui/icons-material/MosqueRounded'
@@ -26,17 +27,22 @@ import TopBar from './TopBar'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom' // MODIFIED: useNavigate للتوجيه بعد تسجيل الخروج
 import useAuth from '../../hooks/useAuth' // ADDED: signOut الحقيقي لزر تسجيل الخروج بالقائمة الجانبية
 import { validateToken } from '../../services/authService' // ADDED: عرض بيانات الحساب الحقيقية داخل قائمة الإعدادات
+import { useCurrentUser } from '../../context/userContext' // ADDED: تصفية القائمة الجانبية حسب الدور — صفحات الإدارة لا تخص غير ADMIN/MANAGER
 
 const drawerWidth = 240
 
+// audience: 'all' يظهر للجميع، 'admin' لـ ADMIN/MANAGER فقط (canWrite)، 'personal' لغير ADMIN/MANAGER فقط
+// (بعض الصفحات لها نسخة إدارية كاملة ونسخة مبسّطة للقراءة فقط بنفس المفهوم — مثل المساجد)
 const navItems = [
-  { label: 'الرئيسية', icon: GridViewOutlinedIcon, path: '/' },
-  { label: 'المساجد', icon: MosqueOutlinedIcon, path: '/mosques' },
-  { label: 'توزيع الخطباء', icon: EventNoteOutlinedIcon, path: '/preachers' },
-  { label: 'الموظفين', icon: BadgeOutlinedIcon, path: '/employees' },
-  { label: 'التبرعات', icon: PaymentsOutlinedIcon, path: '/donations' },
-  { label: 'الصيانة والشكاوى', icon: BuildOutlinedIcon, path: '/maintenance' },
-  { label: 'الإعلانات', icon: CampaignOutlinedIcon, path: '/announcements' },
+  { label: 'الرئيسية', icon: GridViewOutlinedIcon, path: '/', audience: 'all' },
+  { label: 'المساجد', icon: MosqueOutlinedIcon, path: '/mosques', audience: 'admin' },
+  { label: 'دليل المساجد', icon: MosqueOutlinedIcon, path: '/mosque-directory', audience: 'personal' },
+  { label: 'توزيع الخطباء', icon: EventNoteOutlinedIcon, path: '/preachers', audience: 'admin' },
+  { label: 'الموظفين', icon: BadgeOutlinedIcon, path: '/employees', audience: 'admin' },
+  { label: 'التبرعات', icon: PaymentsOutlinedIcon, path: '/donations', audience: 'admin' },
+  { label: 'الصيانة والشكاوى', icon: BuildOutlinedIcon, path: '/maintenance', audience: 'all' },
+  { label: 'الإعلانات', icon: CampaignOutlinedIcon, path: '/announcements', audience: 'all' },
+  { label: 'إدارة المستخدمين', icon: ManageAccountsOutlinedIcon, path: '/users', audience: 'admin' },
 ]
 
 const NavItem = memo(({ item, pathname, palette }) => {
@@ -104,14 +110,23 @@ const AppLayout = ({ children }) => {
   const { pathname } = useLocation()
   const navigate = useNavigate() // ADDED: للتنقل إلى صفحة تسجيل الدخول بعد الخروج
   const { signOut } = useAuth() // ADDED: نفس منطق تسجيل الخروج المستخدم في TopBar
+  const { canWrite } = useCurrentUser() // ADDED: تحديد القائمة الجانبية المناسبة حسب الدور
   const palette = activeTheme.layout
 
   const [settingsAnchor, setSettingsAnchor] = useState(null) // ADDED: عنصر الإرساء لقائمة الإعدادات المنسدلة (null = مغلقة)
   const [accountInfo, setAccountInfo] = useState({ name: '', email: '', role: '' }) // ADDED: بيانات الحساب الحقيقية المعروضة بالإعدادات
 
+  const visibleNavItems = useMemo(
+    () =>
+      navItems.filter(
+        (item) => item.audience === 'all' || (canWrite ? item.audience === 'admin' : item.audience === 'personal')
+      ),
+    [canWrite]
+  )
+
   const navList = useMemo(
     () =>
-      navItems.map((item) => (
+      visibleNavItems.map((item) => (
         <NavItem
           key={item.label}
           item={item}
@@ -119,7 +134,7 @@ const AppLayout = ({ children }) => {
           palette={palette}
         />
       )),
-    [pathname, palette]
+    [visibleNavItems, pathname, palette]
   )
 
   // ADDED: فتح قائمة الإعدادات وجلب بيانات الحساب الحقيقية عند الضغط على الزر

@@ -24,7 +24,7 @@ const statusOptions = [
 export default function MaintenanceDialogs({
   addOpen, setAddOpen, ticketForm, setTicketForm, handleAddSubmit, mosques = [],
   detailsOpen, setDetailsOpen, selectedRow, editForm, setEditForm, handleUpdateSubmit,
-  deleteOpen, setDeleteOpen, handleConfirmDelete, employees = [], canWrite,
+  deleteOpen, setDeleteOpen, handleConfirmDelete, employees = [], canWrite, isMyTicket = false,
 }) {
   const { activeTheme } = useTheme()
   const { colors, mode } = activeTheme
@@ -140,6 +140,19 @@ export default function MaintenanceDialogs({
                     </TextField>
                   </Stack>
                 </Box>
+              ) : isMyTicket && editForm ? (
+                // ADDED: الموظف المُسنَدة إليه هذه التذكرة تحديداً يقدر يحدّث حالتها هو بنفسه (بلا إسناد/تعديل آخر)
+                <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
+                  <Stack spacing={0.5}>
+                    <Typography sx={fieldLabelSx}>الحالة</Typography>
+                    <TextField select value={editForm.status} onChange={(e) => setEditForm((p) => ({ ...p, status: e.target.value }))} fullWidth
+                      sx={selectSx} SelectDisplayProps={{ style: { direction: 'rtl' } }}
+                      MenuProps={{ sx: { '& .MuiMenu-paper': { direction: 'rtl', bgcolor: colors.surface }, '& .MuiMenuItem-root': { justifyContent: 'flex-end', fontFamily: '"IBM Plex Sans Arabic", sans-serif', color: colors.text } } }}>
+                      {statusOptions.map((option) => <MenuItem key={option.value} value={option.value} sx={{ justifyContent: 'flex-end' }}>{option.label}</MenuItem>)}
+                    </TextField>
+                  </Stack>
+                  <Box><Typography sx={{ fontSize: 12, color: colors.mutedText, mb: 0.5 }}>المسؤول</Typography><Typography sx={{ fontSize: 15, fontWeight: 600, color: colors.text }}>أنت</Typography></Box>
+                </Box>
               ) : (
                 <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
                   <Box><Typography sx={{ fontSize: 12, color: colors.mutedText, mb: 0.5 }}>الحالة</Typography><Typography sx={{ fontSize: 15, fontWeight: 600, color: colors.text }}>{statusOptions.find((s) => s.value === selectedRow.status)?.label || selectedRow.status}</Typography></Box>
@@ -149,8 +162,8 @@ export default function MaintenanceDialogs({
             </Stack>
           ) : <Typography sx={{ textAlign: 'center', color: colors.mutedText, py: 4 }}>لا توجد تفاصيل متاحة</Typography>}
         </DialogContent>
-        <DialogActions sx={{ px: 4, pb: 4, gap: 1.5, justifyContent: canWrite ? 'flex-start' : 'center', flexDirection: canWrite ? 'row-reverse' : 'row' }}>
-          {canWrite && (
+        <DialogActions sx={{ px: 4, pb: 4, gap: 1.5, justifyContent: (canWrite || isMyTicket) ? 'flex-start' : 'center', flexDirection: (canWrite || isMyTicket) ? 'row-reverse' : 'row' }}>
+          {(canWrite || isMyTicket) && (
             <AppButton variant="contained" backgroundColor="linear-gradient(135deg, #C5A059 0%, #9E7E43 100%)" textColor="#FFFFFF" borderColor="transparent" onClick={handleUpdateSubmit} sx={{ background: 'linear-gradient(135deg, #C5A059 0%, #9E7E43 100%) !important', borderRadius: 2, height: 44, px: 4 }}>حفظ التغييرات</AppButton>
           )}
           <AppButton variant="outlined" backgroundColor="transparent" textColor={colors.text} borderColor={colors.border} onClick={() => setDetailsOpen(false)} sx={{ borderRadius: 2, height: 44, px: 4 }}>إغلاق</AppButton>
