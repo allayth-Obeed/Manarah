@@ -4,6 +4,7 @@ import Box from '@mui/material/Box'
 import Drawer from '@mui/material/Drawer'
 import CssBaseline from '@mui/material/CssBaseline'
 import List from '@mui/material/List'
+import Divider from '@mui/material/Divider' // ADDED: فاصل احترافي أسفل شعار الشريط الجانبي
 import Typography from '@mui/material/Typography'
 import ListItem from '@mui/material/ListItem'
 import ListItemButton from '@mui/material/ListItemButton'
@@ -22,7 +23,7 @@ import BuildOutlinedIcon from '@mui/icons-material/BuildOutlined'
 import ManageAccountsOutlinedIcon from '@mui/icons-material/ManageAccountsOutlined'
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined'
 import LogoutOutlinedIcon from '@mui/icons-material/LogoutOutlined'
-import MosqueRoundedIcon from '@mui/icons-material/MosqueRounded'
+import syriaEmblem from '../../assets/images/Coat_of_arms_of_syria/Coat_of_Arms_of_Syria_(2025-).png' // MODIFIED: شعار الجمهورية العربية السورية بدل أيقونة المسجد الجنيرية
 import TopBar from './TopBar'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom' // MODIFIED: useNavigate للتوجيه بعد تسجيل الخروج
 import useAuth from '../../hooks/useAuth' // ADDED: signOut الحقيقي لزر تسجيل الخروج بالقائمة الجانبية
@@ -188,29 +189,40 @@ const AppLayout = ({ children }) => {
           variant="permanent"
           anchor="right"
         >
-          <Box className="mt-3 mb-2 flex items-start gap-1.5 group" sx={{ cursor: 'pointer' }}>
+          <Box
+            className="mt-2 mb-3 flex flex-col items-center text-center gap-1 group"
+            sx={{ cursor: 'pointer', px: 1 }}
+          >
             <Box
-              sx={{ bgcolor: activeTheme.colors.primary }}
-              className="w-10 h-10 rounded-md text-white flex items-center justify-center"
+              sx={{ bgcolor: themeMode === 'dark' ? '#000000' : 'transparent' }}
+              className="w-14 h-14 md:w-24 md:h-24 rounded-md flex items-center justify-center p-1"
             >
-              <MosqueRoundedIcon fontSize="18px" />
+              <img
+                src={syriaEmblem}
+                alt="شعار الجمهورية العربية السورية"
+                className="w-full h-full object-contain transition-transform duration-200 group-hover:scale-105"
+                style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.18))' }}
+              />
             </Box>
             <Box className="hidden md:block">
               <Typography
                 sx={{
-                  fontSize: 31,
-                  lineHeight: 1.2,
+                  fontSize: 21,
+                  lineHeight: 1.35,
                   fontWeight: 700,
+                  letterSpacing: 0.2,
                   color: palette.logoText,
                 }}
               >
                 مديرية الأوقاف
               </Typography>
-              <Typography sx={{ fontSize: 14, lineHeight: 1.3, color: palette.subTitle }}>
+              <Typography sx={{ fontSize: 12.5, lineHeight: 1.4, color: palette.subTitle }}>
                 نظام إدارة الأصول
               </Typography>
             </Box>
           </Box>
+
+          <Divider sx={{ borderColor: palette.sidebarBorder, mb: 1 }} />
 
           <List sx={{ mt: 1 }}>{navList}</List>
 
