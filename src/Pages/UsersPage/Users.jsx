@@ -16,13 +16,23 @@ import {
   Dialog,
   DialogContent,
   DialogActions,
+  Stack,
+  TextField,
+  InputAdornment,
+  Snackbar,
+  Alert,
+  Tooltip,
 } from '@mui/material'
+import { alpha } from '@mui/material/styles'
 import DeleteIcon from '@mui/icons-material/Delete'
+import LockResetIcon from '@mui/icons-material/LockReset'
+import VisibilityIcon from '@mui/icons-material/Visibility'
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff'
 import MainFun from '../DashboardPage/MainFun'
 import AppButton from '../../components/common/AppButton'
 import { useTheme } from '../../theme/themeContext'
 import { useCurrentUser } from '../../context/userContext'
-import { getAllUsers, updateUserRole, deleteUser } from '../../services/userService'
+import { getAllUsers, updateUserRole, deleteUser, resetUserPassword } from '../../services/userService'
 
 // نفس تسميات TopBar.jsx للاتساق
 const roleLabels = { ADMIN: 'مشرف النظام', MANAGER: 'مدير', USER: 'مستخدم', PREACHER: 'داعية', EMPLOYEE: 'موظف' }
@@ -40,11 +50,22 @@ export default function Users() {
   const { activeTheme } = useTheme()
   const { colors } = activeTheme
   const { role: myRole, user: me } = useCurrentUser()
+  // خلفية رأس الجدول: البيج الذهبي (الهوية البصرية السورية) بالوضع الفاتح، وتدرّج برونزي خفيف بالوضع الداكن
+  const headerBg = activeTheme.mode === 'dark' ? alpha(colors.secondary, 0.14) : colors.accent
 
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [deleteTarget, setDeleteTarget] = useState(null)
+
+  // إعادة تعيين كلمة السر (ADMIN/MANAGER): dialog + حقول + حالة الإرسال
+  const [passwordTarget, setPasswordTarget] = useState(null)
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [passwordError, setPasswordError] = useState(null)
+  const [passwordSubmitting, setPasswordSubmitting] = useState(false)
+  const [successMessage, setSuccessMessage] = useState(null)
 
   useEffect(() => {
     getAllUsers()
@@ -78,6 +99,40 @@ export default function Users() {
     }
   }
 
+  const openPasswordDialog = (u) => {
+    setPasswordTarget(u)
+    setNewPassword('')
+    setConfirmPassword('')
+    setShowPassword(false)
+    setPasswordError(null)
+  }
+
+  const closePasswordDialog = () => {
+    setPasswordTarget(null)
+    setPasswordError(null)
+  }
+
+  const handleResetPassword = async () => {
+    if (newPassword.length < 6) {
+      setPasswordError('كلمة المرور يجب أن تكون 6 أحرف على الأقل')
+      return
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError('كلمتا المرور غير متطابقتين')
+      return
+    }
+    setPasswordSubmitting(true)
+    try {
+      await resetUserPassword(passwordTarget.id, newPassword)
+      setSuccessMessage(`تم تغيير كلمة سر ${passwordTarget.name} بنجاح`)
+      closePasswordDialog()
+    } catch (err) {
+      setPasswordError(err?.response?.data?.message || 'فشل في تغيير كلمة السر')
+    } finally {
+      setPasswordSubmitting(false)
+    }
+  }
+
   return (
     <div>
       <MainFun
@@ -99,10 +154,10 @@ export default function Users() {
           <Table dir="rtl">
             <TableHead>
               <TableRow>
-                <TableCell align="right" sx={{ color: colors.mutedText, fontWeight: 700 }}>الاسم</TableCell>
-                <TableCell align="right" sx={{ color: colors.mutedText, fontWeight: 700 }}>البريد الإلكتروني</TableCell>
-                <TableCell align="right" sx={{ color: colors.mutedText, fontWeight: 700 }}>الدور</TableCell>
-                <TableCell align="center" sx={{ color: colors.mutedText, fontWeight: 700 }}>إجراءات</TableCell>
+                <TableCell align="right" sx={{ color: colors.mutedText, fontWeight: 700, bgcolor: headerBg }}>الاسم</TableCell>
+                <TableCell align="right" sx={{ color: colors.mutedText, fontWeight: 700, bgcolor: headerBg }}>البريد الإلكتروني</TableCell>
+                <TableCell align="right" sx={{ color: colors.mutedText, fontWeight: 700, bgcolor: headerBg }}>الدور</TableCell>
+                <TableCell align="center" sx={{ color: colors.mutedText, fontWeight: 700, bgcolor: headerBg }}>إجراءات</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -131,13 +186,30 @@ export default function Users() {
                       )}
                     </TableCell>
                     <TableCell align="center">
-                      {/* حذف الحساب: ADMIN فقط بالباك اند، ولا يظهر لحسابات مسؤولي النظام أو لحسابك الخاص */}
-                      {myRole === 'ADMIN' && !isProtected && !isSelf ? (
-                        <IconButton size="small" aria-label="delete" onClick={() => setDeleteTarget(u)}>
-                          <DeleteIcon fontSize="small" sx={{ color: colors.mutedText }} />
-                        </IconButton>
+                      {isProtected ? (
+                        <Typography sx={{ fontSize: 12, color: colors.mutedText }}>محمي</Typography>
                       ) : (
-                        <Typography sx={{ fontSize: 12, color: colors.mutedText }}>—</Typography>
+                        <Stack direction="row" spacing={0.5} justifyContent="center">
+                          {/* تغيير كلمة السر: ADMIN/MANAGER، لا تظهر لحسابات مسؤولي النظام */}
+                          {(myRole === 'ADMIN' || myRole === 'MANAGER') && (
+                            <Tooltip title="تغيير كلمة السر">
+                              <IconButton size="small" aria-label="reset-password" onClick={() => openPasswordDialog(u)}>
+                                <LockResetIcon fontSize="small" sx={{ color: colors.secondary }} />
+                              </IconButton>
+                            </Tooltip>
+                          )}
+                          {/* حذف الحساب: ADMIN فقط بالباك اند، ولا يظهر لحسابات مسؤولي النظام أو لحسابك الخاص */}
+                          {myRole === 'ADMIN' && !isSelf && (
+                            <Tooltip title="حذف الحساب">
+                              <IconButton size="small" aria-label="delete" onClick={() => setDeleteTarget(u)}>
+                                <DeleteIcon fontSize="small" sx={{ color: colors.danger500 }} />
+                              </IconButton>
+                            </Tooltip>
+                          )}
+                          {!(myRole === 'ADMIN' || myRole === 'MANAGER') && (
+                            <Typography sx={{ fontSize: 12, color: colors.mutedText }}>—</Typography>
+                          )}
+                        </Stack>
                       )}
                     </TableCell>
                   </TableRow>
@@ -165,6 +237,62 @@ export default function Users() {
           <AppButton variant="outlined" backgroundColor="transparent" textColor={colors.text} borderColor={colors.border} onClick={() => setDeleteTarget(null)} sx={{ borderRadius: 2, height: 44, px: 3 }}>تراجع عن الإجراء</AppButton>
         </DialogActions>
       </Dialog>
+
+      {/* ============= Dialog تغيير كلمة السر ============= */}
+      <Dialog open={Boolean(passwordTarget)} onClose={closePasswordDialog} maxWidth="xs" fullWidth
+        PaperProps={{ sx: { borderRadius: 4, bgcolor: colors.surface, color: colors.text, boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' } }}>
+        <DialogContent sx={{ pt: 4, pb: 2 }}>
+          <Box sx={{ width: 64, height: 64, mx: 'auto', mb: 2, borderRadius: 3, display: 'grid', placeItems: 'center', bgcolor: colors.accent, color: colors.secondary }}>
+            <LockResetIcon sx={{ fontSize: 32 }} />
+          </Box>
+          <Typography sx={{ fontWeight: 900, fontSize: 22, mb: 1, color: colors.text, textAlign: 'center' }}>تغيير كلمة السر</Typography>
+          <Typography sx={{ color: colors.mutedText, fontSize: 14, lineHeight: 1.8, textAlign: 'center', mb: 3 }}>
+            تعيين كلمة سر جديدة لحساب {passwordTarget?.name}. لن يُطلَب منك معرفة كلمة سره الحالية.
+          </Typography>
+          <Stack spacing={2}>
+            <TextField
+              label="كلمة السر الجديدة"
+              type={showPassword ? 'text' : 'password'}
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              fullWidth
+              dir="rtl"
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton size="small" onClick={() => setShowPassword((s) => !s)}>
+                      {showPassword ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+            />
+            <TextField
+              label="تأكيد كلمة السر"
+              type={showPassword ? 'text' : 'password'}
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              fullWidth
+              dir="rtl"
+            />
+            {passwordError && (
+              <Typography sx={{ color: colors.danger500, fontSize: 13, textAlign: 'center' }}>{passwordError}</Typography>
+            )}
+          </Stack>
+        </DialogContent>
+        <DialogActions sx={{ px: 2.5, pb: 3, gap: 1, justifyContent: 'center' }}>
+          <AppButton variant="contained" backgroundColor={colors.primary} textColor={colors.onPrimary} borderColor={colors.primary} onClick={handleResetPassword} disabled={passwordSubmitting} sx={{ borderRadius: 2, height: 44, px: 3 }}>
+            {passwordSubmitting ? 'جارٍ الحفظ...' : 'حفظ كلمة السر'}
+          </AppButton>
+          <AppButton variant="outlined" backgroundColor="transparent" textColor={colors.text} borderColor={colors.border} onClick={closePasswordDialog} sx={{ borderRadius: 2, height: 44, px: 3 }}>إلغاء</AppButton>
+        </DialogActions>
+      </Dialog>
+
+      <Snackbar open={Boolean(successMessage)} autoHideDuration={4000} onClose={() => setSuccessMessage(null)} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
+        <Alert onClose={() => setSuccessMessage(null)} severity="success" variant="filled" sx={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif' }}>
+          {successMessage}
+        </Alert>
+      </Snackbar>
     </div>
   )
 }

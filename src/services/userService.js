@@ -79,4 +79,15 @@ export const deleteUser = async (id) => {
   return data
 }
 
-export default { uploadAvatar, getMyOverview, getAllUsers, updateUserRole, deleteUser }
+/**
+ * تعيين كلمة سر جديدة لمستخدم عادي/خطيب/موظف دون معرفة كلمته الحالية (ADMIN/MANAGER فقط، لا تعمل على حساب مسؤول نظام)
+ * PATCH /api/users/:id/password
+ * @param {number} id
+ * @param {string} newPassword
+ */
+export const resetUserPassword = async (id, newPassword) => {
+  const { data } = await apiClient.patch(`/users/${id}/password`, { newPassword })
+  return data
+}
+
+export default { uploadAvatar, getMyOverview, getAllUsers, updateUserRole, deleteUser, resetUserPassword }

@@ -164,6 +164,8 @@ const MyTable = ({
 }) => {
   const { activeTheme } = useTheme()
   const colors = activeTheme.colors
+  // خلفية رأس الجدول: البيج الذهبي (الهوية البصرية السورية) بالوضع الفاتح، وتدرّج برونزي خفيف بالوضع الداكن
+  const headerBg = activeTheme.mode === 'dark' ? alpha(colors.secondary, 0.14) : colors.accent
 
   const rows = propRows ?? EMPTY_ROWS // MODIFIED: مرجع ثابت لمصفوفة فارغة بدل بيانات وهمية أو [] جديدة بكل رندر
   const columns = propColumns || COLUMNS
@@ -329,7 +331,7 @@ const MyTable = ({
               <TableCell
                 align="center"
                 sx={{
-                  bgcolor: alpha(colors.primary, 0.04),
+                  bgcolor: headerBg,
                   color: colors.mutedText,
                   fontWeight: 700,
                 }}

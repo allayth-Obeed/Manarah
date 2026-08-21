@@ -11,6 +11,7 @@ import {
   TableRow,
   Chip,
 } from '@mui/material'
+import { alpha } from '@mui/material/styles'
 
 import {
   LineChart,
@@ -65,7 +66,12 @@ export default function Statistics({ mosques = [], donations = [], preachers = [
 
   const titleSx = { fontWeight: 'bold', color: colors.primary }
   const tableCellSx = { color: colors.text, borderColor: colors.border }
-  const headerCellSx = { color: colors.mutedText, borderColor: colors.border }
+  // خلفية رأس الجدول: البيج الذهبي (الهوية البصرية السورية) بالوضع الفاتح، وتدرّج برونزي خفيف بالوضع الداكن
+  const headerCellSx = {
+    color: colors.mutedText,
+    borderColor: colors.border,
+    bgcolor: activeTheme.mode === 'dark' ? alpha(colors.secondary, 0.14) : colors.accent,
+  }
 
   // ============= تحويل بيانات الخطباء والتعيينات إلى تنسيق الجدول =============
   // نأخذ أحدث 4 تعيينات نشطة من الخطباء

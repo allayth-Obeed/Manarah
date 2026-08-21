@@ -2,8 +2,9 @@ export const themeTokens = {
   light: {
     mode: 'light',
     colors: {
-      // Page background.
-      background: '#F8F9FA',
+      // MODIFIED: كانت رمادية باردة (#F8F9FA) لا تعكس دفء الهوية السورية — بيج فاتح مشتق من الذهبي الحنطي
+      // Page background. (مشتق من الذهبي الحنطي - Golden Wheat family)
+      background: '#FAF7F0',
       // Project-specific page background (used in MainAssignment layout)
       pageBg: '#F5F2EB',
       // Surface color for cards and panels.
@@ -54,8 +55,9 @@ export const themeTokens = {
       sidebarBorder: '#E6EBEF',
       // Inactive navigation item color.
       navInactive: '#7C879B',
-      // Active navigation item background.
-      navActiveBg: ' #CFE2F9',
+      // MODIFIED: كان أزرق باهت (#CFE2F9) لا علاقة له بالهوية — بيج ذهبي (الذهبي الحنطي) ينسجم مع النص الأخضر والحد البرونزي
+      // Active navigation item background. (الذهبي الحنطي - Golden Wheat)
+      navActiveBg: '#EDEBE0',
       // Hover background for navigation items.
       navHoverBg: '#F5F7F8',
       // MODIFIED: تغميق إضافي — نفس الأخضر الداكن الأساسي الجديد (خلفية فاتحة هنا فالتباين لا يزال ممتازاً)
