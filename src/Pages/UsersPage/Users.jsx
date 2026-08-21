@@ -32,7 +32,8 @@ import MainFun from '../DashboardPage/MainFun'
 import AppButton from '../../components/common/AppButton'
 import { useTheme } from '../../theme/themeContext'
 import { useCurrentUser } from '../../context/userContext'
-import { getAllUsers, updateUserRole, deleteUser, resetUserPassword } from '../../services/userService'
+import { getAllUsers, createUser, updateUserRole, deleteUser, resetUserPassword } from '../../services/userService'
+import { EMPLOYEE_JOB_TITLES } from '../../constants/jobTitles' // ADDED: مسمّيات وظيفية حقيقية عند إنشاء حساب بدور "موظف" بدل مسمى عام ثابت
 
 // نفس تسميات TopBar.jsx للاتساق
 const roleLabels = { ADMIN: 'مشرف النظام', MANAGER: 'مدير', USER: 'مستخدم', PREACHER: 'داعية', EMPLOYEE: 'موظف' }
@@ -57,6 +58,12 @@ export default function Users() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [deleteTarget, setDeleteTarget] = useState(null)
+
+  // ADDED: إضافة حساب جديد مباشرة (ADMIN/MANAGER): dialog + نموذج + حالة الإرسال
+  const [addOpen, setAddOpen] = useState(false)
+  const [addForm, setAddForm] = useState({ name: '', email: '', password: '', role: 'USER', position: '' })
+  const [addError, setAddError] = useState(null)
+  const [addSubmitting, setAddSubmitting] = useState(false)
 
   // إعادة تعيين كلمة السر (ADMIN/MANAGER): dialog + حقول + حالة الإرسال
   const [passwordTarget, setPasswordTarget] = useState(null)
@@ -99,6 +106,45 @@ export default function Users() {
     }
   }
 
+  const openAddDialog = () => {
+    setAddForm({ name: '', email: '', password: '', role: 'USER', position: '' })
+    setAddError(null)
+    setAddOpen(true)
+  }
+
+  const closeAddDialog = () => {
+    setAddOpen(false)
+    setAddError(null)
+  }
+
+  const handleAddUser = async () => {
+    if (!addForm.name.trim() || !addForm.email.trim()) {
+      setAddError('الاسم والبريد الإلكتروني مطلوبان')
+      return
+    }
+    if (addForm.password.length < 6) {
+      setAddError('كلمة المرور يجب أن تكون 6 أحرف على الأقل')
+      return
+    }
+    // ADDED: عند اختيار دور "موظف" يجب تحديد مسمى وظيفي حقيقي (مؤذن، إمام وخطيب...) بدل مسمى عام لا معنى له
+    if (addForm.role === 'EMPLOYEE' && !addForm.position) {
+      setAddError('يرجى اختيار المسمى الوظيفي')
+      return
+    }
+    setAddSubmitting(true)
+    try {
+      const created = await createUser(addForm)
+      setUsers((prev) => [...prev, { ...created, isLinked: false }].sort((a, b) => a.name.localeCompare(b.name, 'ar')))
+      setSuccessMessage(`تم إنشاء حساب ${created.name} بنجاح`)
+      closeAddDialog()
+    } catch (err) {
+      const msg = err?.response?.data?.message
+      setAddError(Array.isArray(msg) ? msg.join('، ') : msg || 'فشل في إنشاء الحساب')
+    } finally {
+      setAddSubmitting(false)
+    }
+  }
+
   const openPasswordDialog = (u) => {
     setPasswordTarget(u)
     setNewPassword('')
@@ -138,8 +184,10 @@ export default function Users() {
       <MainFun
         title="إدارة المستخدمين"
         description="تحديد دور كل حساب (خطيب/موظف/مستخدم عادي) وحذف الحسابات — لا يشمل حسابات مسؤولي النظام."
+        addButton="إضافة مستخدم"
+        onAddClick={openAddDialog}
         showAnnouncementButton={false}
-        showAddButton={false}
+        showAddButton={myRole === 'ADMIN' || myRole === 'MANAGER'}
       />
 
       {loading && (
@@ -219,6 +267,81 @@ export default function Users() {
           </Table>
         </TableContainer>
       )}
+
+      {/* ============= Dialog إضافة مستخدم جديد ============= */}
+      <Dialog open={addOpen} onClose={closeAddDialog} maxWidth="xs" fullWidth
+        PaperProps={{ sx: { borderRadius: 4, bgcolor: colors.surface, color: colors.text, boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)' } }}>
+        <DialogContent sx={{ pt: 4, pb: 2 }}>
+          <Typography sx={{ fontWeight: 900, fontSize: 22, mb: 1, color: colors.text, textAlign: 'center' }}>إضافة مستخدم جديد</Typography>
+          <Typography sx={{ color: colors.mutedText, fontSize: 14, lineHeight: 1.8, textAlign: 'center', mb: 3 }}>
+            إنشاء حساب دخول جديد وتحديد دوره مباشرة (لا يشمل حسابات مسؤولي النظام).
+          </Typography>
+          <Stack spacing={2}>
+            <TextField
+              label="الاسم"
+              value={addForm.name}
+              onChange={(e) => setAddForm((p) => ({ ...p, name: e.target.value }))}
+              fullWidth
+              dir="rtl"
+            />
+            <TextField
+              label="البريد الإلكتروني"
+              type="email"
+              value={addForm.email}
+              onChange={(e) => setAddForm((p) => ({ ...p, email: e.target.value }))}
+              fullWidth
+              dir="rtl"
+            />
+            <TextField
+              label="كلمة السر"
+              type="password"
+              value={addForm.password}
+              onChange={(e) => setAddForm((p) => ({ ...p, password: e.target.value }))}
+              fullWidth
+              dir="rtl"
+            />
+            <Select
+              size="small"
+              value={addForm.role}
+              onChange={(e) => setAddForm((p) => ({ ...p, role: e.target.value, position: '' }))}
+              fullWidth
+              sx={{ bgcolor: colors.bgelem, color: colors.text }}
+              MenuProps={{ sx: { '& .MuiMenu-paper': { direction: 'rtl', bgcolor: colors.surface }, '& .MuiMenuItem-root': { justifyContent: 'flex-end', color: colors.text } } }}
+            >
+              {assignableRoles.map((r) => (
+                <MenuItem key={r.value} value={r.value} sx={{ justifyContent: 'flex-end' }}>{r.label}</MenuItem>
+              ))}
+            </Select>
+            {/* ADDED: مسمى وظيفي حقيقي (مؤذن، إمام وخطيب...) عند اختيار دور "موظف" — بدونه كان يُنشأ سجل
+                الموظف بمسمى عام ثابت "موظف" لا معنى له، بدل مسمى فعلي كأي موظف مُضاف من صفحة الموظفين مباشرة */}
+            {addForm.role === 'EMPLOYEE' && (
+              <Select
+                size="small"
+                displayEmpty
+                value={addForm.position}
+                onChange={(e) => setAddForm((p) => ({ ...p, position: e.target.value }))}
+                fullWidth
+                sx={{ bgcolor: colors.bgelem, color: colors.text }}
+                MenuProps={{ sx: { '& .MuiMenu-paper': { direction: 'rtl', bgcolor: colors.surface }, '& .MuiMenuItem-root': { justifyContent: 'flex-end', color: colors.text } } }}
+              >
+                <MenuItem value="" disabled sx={{ justifyContent: 'flex-end' }}>اختر المسمى الوظيفي</MenuItem>
+                {EMPLOYEE_JOB_TITLES.map((jt) => (
+                  <MenuItem key={jt.value} value={jt.value} sx={{ justifyContent: 'flex-end' }}>{jt.label}</MenuItem>
+                ))}
+              </Select>
+            )}
+            {addError && (
+              <Typography sx={{ color: colors.danger500, fontSize: 13, textAlign: 'center' }}>{addError}</Typography>
+            )}
+          </Stack>
+        </DialogContent>
+        <DialogActions sx={{ px: 2.5, pb: 3, gap: 1, justifyContent: 'center' }}>
+          <AppButton variant="contained" backgroundColor={colors.primary} textColor={colors.onPrimary} borderColor={colors.primary} onClick={handleAddUser} disabled={addSubmitting} sx={{ borderRadius: 2, height: 44, px: 3 }}>
+            {addSubmitting ? 'جارٍ الإنشاء...' : 'إنشاء الحساب'}
+          </AppButton>
+          <AppButton variant="outlined" backgroundColor="transparent" textColor={colors.text} borderColor={colors.border} onClick={closeAddDialog} sx={{ borderRadius: 2, height: 44, px: 3 }}>إلغاء</AppButton>
+        </DialogActions>
+      </Dialog>
 
       {/* ============= Dialog تأكيد حذف حساب ============= */}
       <Dialog open={Boolean(deleteTarget)} onClose={() => setDeleteTarget(null)} maxWidth="xs" fullWidth

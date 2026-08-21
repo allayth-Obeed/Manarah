@@ -14,15 +14,9 @@ import {
 import CloseIcon from '@mui/icons-material/Close' // ADDED: Close icon for dialog header
 import DeleteIcon from '@mui/icons-material/Delete' // ADDED: Delete icon for delete confirmation dialog
 import AppButton from '../common/AppButton' // ADDED: Reusable custom button component
+import SearchableSelect from '../common/SearchableSelect' // ADDED: اختيار حساب الربط بالبحث عن الاسم بدل قائمة منسدلة طويلة
 import { useTheme } from '../../theme/themeContext' // ADDED: Theme context for dynamic styling
-
-const jobTitles = [
-  { value: 'إمام وخطيب', label: 'إمام وخطيب' },
-  { value: 'مؤذن', label: 'مؤذن' },
-  { value: 'خطيب معتمد', label: 'خطيب معتمد' },
-  { value: 'إمام جامع', label: 'إمام جامع' },
-  { value: 'خطيب جمعة', label: 'خطيب جمعة' },
-]
+import { EMPLOYEE_JOB_TITLES as jobTitles } from '../../constants/jobTitles' // MODIFIED: مصدر مشترك مع صفحة إدارة المستخدمين بدل نسخة محلية منفصلة
 
 // ADDED: New props for delete functionality: deleteOpen, setDeleteOpen, selectedRow, handleConfirmDelete
 export default function EmployeesDialogs({
@@ -156,19 +150,14 @@ export default function EmployeesDialogs({
                 <Typography sx={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 500, fontSize: 14, color: colors.text, lineHeight: '20px', textAlign: 'right' }}>
                   ربط بحساب دخول (اختياري)
                 </Typography>
-                <TextField
-                  select value={employeeForm.userId || ''} onChange={(e) => setEmployeeForm((prev) => ({ ...prev, userId: e.target.value }))} fullWidth
-                  SelectProps={{ IconComponent: () => <svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginLeft: 8 }}><path d="M1 1.5L6 6.5L11 1.5" stroke={colors.mutedText} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg> }}
-                  sx={{
-                    '& .MuiOutlinedInput-root': { backgroundColor: colors.bgelem, borderRadius: 2, height: 48, '& fieldset': { border: 'none' }, '&:hover fieldset': { border: 'none' }, '&.Mui-focused fieldset': { border: 'none' } },
-                    '& .MuiSelect-select': { textAlign: 'right', fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 400, fontSize: 16, color: colors.text, py: 1.5 },
-                  }}
-                  SelectDisplayProps={{ style: { direction: 'rtl' } }}
-                  MenuProps={{ sx: { '& .MuiMenu-paper': { direction: 'rtl', bgcolor: colors.surface }, '& .MuiMenuItem-root': { justifyContent: 'flex-end', fontFamily: '"IBM Plex Sans Arabic", sans-serif', color: colors.text } } }}
-                >
-                  <MenuItem value="" sx={{ justifyContent: 'flex-end' }}>بلا ربط (يمكن ربطه لاحقاً)</MenuItem>
-                  {linkableUsers.map((u) => (<MenuItem key={u.id} value={u.id} sx={{ justifyContent: 'flex-end' }}>{u.name} — {u.email}</MenuItem>))}
-                </TextField>
+                <SearchableSelect
+                  options={linkableUsers}
+                  value={employeeForm.userId}
+                  onChange={(id) => setEmployeeForm((prev) => ({ ...prev, userId: id }))}
+                  getOptionSecondary={(u) => u.email}
+                  placeholder="ابحث عن حساب بالاسم... (اختياري)"
+                  noOptionsText="لا يوجد حساب مطابق"
+                />
               </Stack>
             </Stack>
           </Box>

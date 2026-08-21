@@ -84,7 +84,9 @@ export default function Donations() {
       setDonationForm({ donorName: '', amount: '', mosqueId: '', purpose: '', notes: '' })
     } catch (err) {
       console.error('خطأ في إضافة التبرع:', err)
-      setError('فشل في إضافة التبرع')
+      // MODIFIED: عرض رسالة الباك اند الفعلية بدل رسالة عامة تُخفي السبب الحقيقي
+      const msg = err?.response?.data?.message
+      setError(Array.isArray(msg) ? msg.join('، ') : msg || 'فشل في إضافة التبرع')
     }
   }
 

@@ -72,8 +72,12 @@ const transformMosquesToRows = (mosques) => {
 }
 
 // ============= دالة تحويل بيانات الخطباء من Backend إلى تنسيق القائمة المنسدلة =============
+// ADDED: تستبعد من تغيّر دور حسابه بعيداً عن "خطيب" (رُقّي لموظف أو أُعيد لمستخدم عادي مثلاً) — سجل الخطيب
+// قد يبقى موجوداً بقاعدة البيانات لكن لا يجوز عرضه كخيار جديد للتعيين. الخطباء بلا حساب دخول مرتبط يبقون مؤهَّلين دائماً
 const transformPreachersToOptions = (preachers) => {
-  return preachers.map((preacher) => ({
+  return preachers
+    .filter((preacher) => !preacher.userId || preacher.user?.role === 'PREACHER')
+    .map((preacher) => ({
     id: preacher.id,
     name: preacher.firstName && preacher.lastName
       ? `${preacher.firstName} ${preacher.lastName}`
@@ -100,7 +104,6 @@ export default function Mosque() {
   const [selectedRow, setSelectedRow] = useState(null) // ADDED: State for the currently selected mosque row
   const [selectedPreacherId, setSelectedPreacherId] = useState('') // ADDED: State for selected preacher in assignment dropdown
   const [assignmentRole, setAssignmentRole] = useState('KHATIB') // ADDED: نوع التكليف (إمام/خطيب) عند التعيين من صفحة المساجد
-  const [searchTerm, setSearchTerm] = useState('') // ADDED: State for search/filter input
   // MODIFIED: فلتر المنطقة الحقيقي (بمعرّف Region) بدل نص المدينة الحر — يمنع تفتّت النتائج بسبب اختلاف الكتابة
   const [regionFilter, setRegionFilter] = useState('')
   const emptyMosqueForm = { // ADDED: نموذج فارغ موحّد يشمل حقول الموقع الجغرافي الأربعة
@@ -159,15 +162,6 @@ export default function Mosque() {
     ? mosques.filter((row) => row.regionId === regionFilter)
     : mosques
 
-  // ============= تصفية الخطباء حسب البحث =============
-  const filteredPreachers = preachers.filter((item) => {
-    const query = searchTerm.trim().toLowerCase()
-    if (!query) return true
-    return [item.name, item.role, item.mosque, item.badge].some((field) =>
-      String(field).toLowerCase().includes(query)
-    )
-  })
-
   // ============= دوال مساعدة =============
   const openToast = (message) => {
     setSnackbarMessage(message)
@@ -207,8 +201,7 @@ export default function Mosque() {
 
   const handleRowMoreClick = (row) => {
     setSelectedRow(row)
-    setSearchTerm('')
-    setSelectedPreacherId(preachers[0]?.id || '')
+    setSelectedPreacherId('') // MODIFIED: بلا اختيار مسبق — المستخدم يبحث عن الخطيب باسمه الآن بدل تحديد أول عنصر بالقائمة تلقائياً
     setAssignmentRole('KHATIB') // ADDED: إعادة الضبط الافتراضي في كل مرة يُفتح فيها الديالوج
     setAssignOpen(true)
   }
@@ -405,14 +398,12 @@ export default function Mosque() {
         handleEditSubmit={handleEditSubmit} // ADDED
         assignOpen={assignOpen}
         setAssignOpen={setAssignOpen}
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
         selectedRow={selectedRow}
         selectedPreacherId={selectedPreacherId}
         setSelectedPreacherId={setSelectedPreacherId}
         assignmentRole={assignmentRole} // ADDED
         setAssignmentRole={setAssignmentRole} // ADDED
-        filteredPreachers={filteredPreachers}
+        filteredPreachers={preachers} // MODIFIED: القائمة الكاملة — بحث اختيار الخطيب أصبح داخل الديالوج نفسه (SearchableSelect) بدل ربطه ببحث الصفحة
         handleConfirmAssign={handleConfirmAssign}
         deleteOpen={deleteOpen}
         setDeleteOpen={setDeleteOpen}

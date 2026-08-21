@@ -1,8 +1,9 @@
 import React from 'react'
-import { Box, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, MenuItem, Select, Stack, TextField, Typography } from '@mui/material'
+import { Box, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Stack, TextField, Typography } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close'
 import DeleteIcon from '@mui/icons-material/Delete'
 import AppButton from '../common/AppButton'
+import SearchableSelect from '../common/SearchableSelect' // ADDED: اختيار حساب الربط بالبحث عن الاسم بدل قائمة منسدلة طويلة
 import { useTheme } from '../../theme/themeContext'
 
 /**
@@ -69,19 +70,14 @@ export default function PreachersDialogs({ addOpen, setAddOpen, preacherForm, se
           <Box sx={{ mt: 3 }}>
             <Stack spacing={0.5}>
               <Typography sx={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 500, fontSize: 14, color: colors.text, lineHeight: '20px', textAlign: 'right' }}>ربط بحساب دخول (اختياري)</Typography>
-              <Select
-                value={preacherForm.userId || ''}
-                onChange={(e) => setPreacherForm((p) => ({ ...p, userId: e.target.value }))}
-                displayEmpty
-                fullWidth
-                sx={{ ...inputSx, '& .MuiSelect-select': { textAlign: 'right', fontFamily: '"IBM Plex Sans Arabic", sans-serif' } }}
-                MenuProps={{ sx: { '& .MuiMenu-paper': { direction: 'rtl', bgcolor: colors.surface }, '& .MuiMenuItem-root': { justifyContent: 'flex-end', fontFamily: '"IBM Plex Sans Arabic", sans-serif', color: colors.text } } }}
-              >
-                <MenuItem value="" sx={{ justifyContent: 'flex-end' }}>بلا ربط (يمكن ربطه لاحقاً)</MenuItem>
-                {linkableUsers.map((u) => (
-                  <MenuItem key={u.id} value={u.id} sx={{ justifyContent: 'flex-end' }}>{u.name} — {u.email}</MenuItem>
-                ))}
-              </Select>
+              <SearchableSelect
+                options={linkableUsers}
+                value={preacherForm.userId}
+                onChange={(id) => setPreacherForm((p) => ({ ...p, userId: id }))}
+                getOptionSecondary={(u) => u.email}
+                placeholder="ابحث عن حساب بالاسم... (اختياري)"
+                noOptionsText="لا يوجد حساب مطابق"
+              />
             </Stack>
           </Box>
         </DialogContent>

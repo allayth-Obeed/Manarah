@@ -203,7 +203,7 @@ const SignInPage = () => {
 
         {/* نسخة المشروع */}
         <p className="mt-8 text-center text-xs" style={{ color: activeTheme.colors.mutedText }}>
-          © 2025 منارة - جميع الحقوق محفوظة
+          © 2026 منارة - جميع الحقوق محفوظة
         </p>
       </div>
 

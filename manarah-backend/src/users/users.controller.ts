@@ -25,6 +25,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { Role } from '@prisma/client';
 import { UpdateUserRoleDto } from './dto/update-user-role.dto';
 import { ResetUserPasswordDto } from './dto/reset-user-password.dto';
+import { CreateUserDto } from './dto/create-user.dto';
 
 // ADDED: أنواع الصور المسموحة فقط لرفع الصورة الشخصية
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
@@ -38,6 +39,13 @@ export class UsersController {
   @Roles(Role.ADMIN, Role.MANAGER)
   async findAll() {
     return this.usersService.findAllBasic();
+  }
+
+  @Post()
+  @UseGuards(JwtAuthGuard, RolesGuard) // ADMIN/MANAGER فقط — إنشاء حساب مباشرة من صفحة إدارة المستخدمين
+  @Roles(Role.ADMIN, Role.MANAGER)
+  async createUser(@Body() dto: CreateUserDto) {
+    return this.usersService.createByAdmin(dto);
   }
 
   @Get('me/overview')

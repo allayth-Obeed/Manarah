@@ -59,6 +59,17 @@ export const getAllUsers = async () => {
 }
 
 /**
+ * إنشاء حساب مستخدم جديد مباشرة (ADMIN/MANAGER فقط) — بخلاف التسجيل العام، يمكن هنا تحديد
+ * الدور فور الإنشاء (مستخدم عادي/خطيب/موظف فقط — لا يمكن إنشاء حساب مسؤول نظام من هنا)
+ * POST /api/users
+ * @param {{email: string, password: string, name: string, role?: 'USER'|'PREACHER'|'EMPLOYEE', position?: string}} data - position مطلوب فعلياً فقط عند role='EMPLOYEE'
+ */
+export const createUser = async (data) => {
+  const { data: created } = await apiClient.post('/users', data)
+  return created
+}
+
+/**
  * تحديث دور مستخدم — مستخدم عادي/خطيب/موظف فقط (ADMIN/MANAGER فقط يقدرون، ولا تعمل على حساب مسؤول نظام)
  * PATCH /api/users/:id/role
  * @param {number} id
@@ -90,4 +101,4 @@ export const resetUserPassword = async (id, newPassword) => {
   return data
 }
 
-export default { uploadAvatar, getMyOverview, getAllUsers, updateUserRole, deleteUser, resetUserPassword }
+export default { uploadAvatar, getMyOverview, getAllUsers, createUser, updateUserRole, deleteUser, resetUserPassword }

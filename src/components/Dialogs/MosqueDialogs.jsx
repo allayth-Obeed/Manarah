@@ -14,6 +14,7 @@ import {
 import CloseIcon from '@mui/icons-material/Close'
 import AppButton from '../common/AppButton'
 import LocationPicker from '../common/LocationPicker' // ADDED: منتقي الموقع الجغرافي المتتالي بدل حقل "المدينة" النصي
+import SearchableSelect from '../common/SearchableSelect' // ADDED: اختيار الخطيب بالبحث عن اسمه بدل التمرير بقائمة طويلة
 import { useTheme } from '../../theme/themeContext'
 
 /**
@@ -25,7 +26,7 @@ export default function MosqueDialogs({
   addOpen, setAddOpen, mosqueForm, setMosqueForm,
   handleAddSubmit, editOpen, setEditOpen, handleEditSubmit, // ADDED: ديالوج التعديل (بيانات + حالة المسجد)
   assignOpen, setAssignOpen,
-  selectedRow, selectedPreacherId, setSelectedPreacherId, filteredPreachers,
+  selectedRow, selectedPreacherId, setSelectedPreacherId, filteredPreachers, // MODIFIED: filteredPreachers أصبحت القائمة الكاملة غير المصفّاة بحسب بحث الصفحة — البحث أصبح داخل الديالوج نفسه
   assignmentRole, setAssignmentRole, // ADDED: نوع التكليف (إمام/خطيب) — يحدد قابلية التعارض
   handleConfirmAssign, deleteOpen, setDeleteOpen, handleConfirmDelete,
   snackbarOpen, snackbarMessage,
@@ -184,13 +185,16 @@ export default function MosqueDialogs({
           <Typography sx={{ color: colors.mutedText, fontSize: 14, lineHeight: 1.8 }}>اختر الخطيب من القائمة لتكليفه بالمسجد</Typography>
         </DialogContent>
         <DialogActions sx={{ px: 2.5, pb: 3, gap: 1, justifyContent: 'center', flexDirection: 'column' }}>
-          <TextField select value={selectedPreacherId} onChange={(e) => setSelectedPreacherId(e.target.value)} fullWidth
-            SelectProps={{ IconComponent: () => <svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginLeft: 8 }}><path d="M1 1.5L6 6.5L11 1.5" stroke={colors.mutedText} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg> }}
-            sx={{ '& .MuiOutlinedInput-root': { backgroundColor: colors.bgelem, borderRadius: 2, height: 48, '& fieldset': { border: 'none' }, '&:hover fieldset': { border: 'none' }, '&.Mui-focused fieldset': { border: 'none' } }, '& .MuiSelect-select': { textAlign: 'right', fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 400, fontSize: 16, color: colors.text, py: 1.5 } }}
-            SelectDisplayProps={{ style: { direction: 'rtl' } }}
-            MenuProps={{ sx: { '& .MuiMenu-paper': { direction: 'rtl', bgcolor: colors.surface }, '& .MuiMenuItem-root': { justifyContent: 'flex-end', fontFamily: '"IBM Plex Sans Arabic", sans-serif', color: colors.text } } }}>
-            {filteredPreachers.map((preacher) => (<MenuItem key={preacher.id} value={preacher.id} sx={{ justifyContent: 'flex-end' }}>{preacher.name} - {preacher.role}</MenuItem>))}
-          </TextField>
+          {/* MODIFIED: بحث عن الخطيب بكتابة اسمه بدل قائمة منسدلة يجب تمريرها بالكامل */}
+          <SearchableSelect
+            options={filteredPreachers}
+            value={selectedPreacherId}
+            onChange={setSelectedPreacherId}
+            getOptionLabel={(preacher) => preacher.name}
+            getOptionSecondary={(preacher) => preacher.role}
+            placeholder="ابحث عن خطيب بالاسم..."
+            noOptionsText="لا يوجد خطيب مطابق"
+          />
 
           {/* ADDED: نوع التكليف — إمام (تعيين دائم، يجوز تعدد المساجد) أو خطيب جمعة (لا يجوز تعارضه بنفس اليوم) */}
           <TextField

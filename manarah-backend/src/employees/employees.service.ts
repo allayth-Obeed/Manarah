@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Prisma } from '@prisma/client';
+import { Prisma, Role } from '@prisma/client';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
 
@@ -56,10 +56,22 @@ export class EmployeesService {
   async create(createEmployeeDto: CreateEmployeeDto) {
     await this.assertMosqueExists(createEmployeeDto.mosqueId); // ADDED
     try {
-      return await this.prisma.employee.create({
+      const employee = await this.prisma.employee.create({
         data: createEmployeeDto,
-        include: { mosque: true }, // ADDED: يعيد اسم المسجد فوراً بدل انتظار إعادة جلب القائمة
+        include: { mosque: true, user: { select: { id: true, role: true } } }, // ADDED: يعيد اسم المسجد فوراً بدل انتظار إعادة جلب القائمة
       });
+
+      // ADDED: ربط موظف بحساب دخول موجود كان يترك دور ذلك الحساب "مستخدم عادي" رغم أنه أصبح موظفاً فعلياً —
+      // فيظهر بصفحة إدارة المستخدمين بدور مضلِّل. لا نلمس حسابات ADMIN/MANAGER أو من له دور مخصَّص آخر أصلاً
+      if (employee.user && employee.user.role === Role.USER) {
+        await this.prisma.user.update({
+          where: { id: employee.user.id },
+          data: { role: Role.EMPLOYEE },
+        });
+        employee.user.role = Role.EMPLOYEE;
+      }
+
+      return employee;
     } catch (error) {
       // كانت هذه الدالة بدون try/catch — أي خطأ Prisma خام كان يتسرب كـ 500 عام
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
@@ -101,8 +113,14 @@ export class EmployeesService {
       throw new NotFoundException('الموظف غير موجود');
     }
 
-    return this.prisma.employee.delete({
-      where: { id },
+    // MODIFIED: كان يحذف الموظف مباشرة فيفشل بخطأ قيد مفتاح أجنبي خام (500 غير مفهوم) إن كانت لديه أي تذكرة
+    // صيانة مُسنَدة — نُحرّر التذاكر (تبقى موجودة، فقط بلا مُسنَد إليها) بدل رفض الحذف، ثم نحذف الموظف بعملية واحدة ذرّية
+    return this.prisma.$transaction(async (tx) => {
+      await tx.maintenanceTicket.updateMany({
+        where: { assignedToId: id },
+        data: { assignedToId: null },
+      });
+      return tx.employee.delete({ where: { id } });
     });
   }
 }

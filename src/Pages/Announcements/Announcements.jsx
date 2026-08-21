@@ -77,7 +77,9 @@ export default function Announcements() {
       setAnnouncementForm({ title: '', content: '', mosqueId: '', priority: 'MEDIUM' })
     } catch (err) {
       console.error('خطأ في إضافة الإعلان:', err)
-      setError('فشل في إضافة الإعلان')
+      // MODIFIED: عرض رسالة الباك اند الفعلية بدل رسالة عامة تُخفي السبب الحقيقي
+      const msg = err?.response?.data?.message
+      setError(Array.isArray(msg) ? msg.join('، ') : msg || 'فشل في إضافة الإعلان')
     }
   }
 
@@ -94,7 +96,9 @@ export default function Announcements() {
       setSelectedRow(null)
     } catch (err) {
       console.error('خطأ في حذف الإعلان:', err)
-      setError('فشل في حذف الإعلان')
+      // MODIFIED: عرض رسالة الباك اند الفعلية بدل رسالة عامة تُخفي السبب الحقيقي
+      const msg = err?.response?.data?.message
+      setError(Array.isArray(msg) ? msg.join('، ') : msg || 'فشل في حذف الإعلان')
     }
   }
 

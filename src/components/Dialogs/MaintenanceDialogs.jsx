@@ -3,6 +3,7 @@ import { Box, Dialog, DialogActions, DialogContent, DialogTitle, IconButton, Men
 import CloseIcon from '@mui/icons-material/Close'
 import DeleteIcon from '@mui/icons-material/Delete'
 import AppButton from '../common/AppButton'
+import SearchableSelect from '../common/SearchableSelect' // ADDED: اختيار الموظف المُسنَد إليه بالبحث عن اسمه بدل قائمة منسدلة طويلة
 import { useTheme } from '../../theme/themeContext'
 
 const priorityOptions = [
@@ -132,12 +133,13 @@ export default function MaintenanceDialogs({
                   </Stack>
                   <Stack spacing={0.5}>
                     <Typography sx={fieldLabelSx}>إسناد إلى موظف</Typography>
-                    <TextField select value={editForm.assignedToId} onChange={(e) => setEditForm((p) => ({ ...p, assignedToId: e.target.value }))} fullWidth
-                      sx={selectSx} SelectDisplayProps={{ style: { direction: 'rtl' } }}
-                      MenuProps={{ sx: { '& .MuiMenu-paper': { direction: 'rtl', bgcolor: colors.surface }, '& .MuiMenuItem-root': { justifyContent: 'flex-end', fontFamily: '"IBM Plex Sans Arabic", sans-serif', color: colors.text } } }}>
-                      <MenuItem value="" sx={{ justifyContent: 'flex-end' }}>غير مُسند</MenuItem>
-                      {employees.map((emp) => <MenuItem key={emp.id} value={emp.id} sx={{ justifyContent: 'flex-end' }}>{emp.firstName} {emp.lastName}</MenuItem>)}
-                    </TextField>
+                    <SearchableSelect
+                      options={employees}
+                      value={editForm.assignedToId}
+                      onChange={(id) => setEditForm((p) => ({ ...p, assignedToId: id }))}
+                      placeholder="ابحث عن موظف بالاسم..."
+                      noOptionsText="لا يوجد موظف مطابق"
+                    />
                   </Stack>
                 </Box>
               ) : isMyTicket && editForm ? (

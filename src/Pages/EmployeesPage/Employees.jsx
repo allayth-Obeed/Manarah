@@ -179,7 +179,9 @@ export default function Employees() {
       setEmployeeForm(initialEmployeeForm)
     } catch (err) {
       console.error('خطأ في إضافة الموظف:', err)
-      setError('فشل في إضافة الموظف')
+      // MODIFIED: عرض رسالة الباك اند الفعلية بدل رسالة عامة تُخفي السبب الحقيقي
+      const msg = err?.response?.data?.message
+      setError(Array.isArray(msg) ? msg.join('، ') : msg || 'فشل في إضافة الموظف')
     }
   }
 
@@ -198,7 +200,9 @@ export default function Employees() {
       setError(null)
     } catch (err) {
       console.error('خطأ في حذف الموظف:', err)
-      setError('فشل في حذف الموظف')
+      // MODIFIED: عرض رسالة الباك اند الفعلية (سبب رفض الحذف الحقيقي إن وُجد) بدل رسالة عامة
+      const msg = err?.response?.data?.message
+      setError(Array.isArray(msg) ? msg.join('، ') : msg || 'فشل في حذف الموظف')
     }
   }
 

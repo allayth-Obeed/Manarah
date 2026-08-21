@@ -28,6 +28,9 @@ const transformPreachersToRows = (preachers) =>
   preachers.map((p) => ({
     id: p.id,
     name: p.firstName && p.lastName ? `${p.firstName} ${p.lastName}` : p.user?.name || 'خطيب',
+    // ADDED: سجل الخطيب لا يتطلّب حساب دخول أصلاً (ربطه اختياري عند الإضافة) — هذا التنويه يوضّح
+    // لماذا يظهر خطيب هنا بلا أي حساب مقابل له بصفحة "إدارة المستخدمين" بدل أن يبدو خطأً بالبيانات
+    subtitle: p.userId ? null : 'بدون حساب دخول',
     specialization: p.specialization || 'غير محدد',
     mosque: p.assignments?.find((a) => a.isActive)?.mosque?.name || 'غير معيَّن',
     phone: p.phone || '—',

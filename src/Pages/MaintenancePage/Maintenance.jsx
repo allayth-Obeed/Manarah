@@ -124,7 +124,9 @@ export default function Maintenance() {
       setError(null)
     } catch (err) {
       console.error('خطأ في تحديث التذكرة:', err)
-      setError('فشل في تحديث التذكرة')
+      // MODIFIED: عرض رسالة الباك اند الفعلية بدل رسالة عامة تُخفي السبب الحقيقي
+      const msg = err?.response?.data?.message
+      setError(Array.isArray(msg) ? msg.join('، ') : msg || 'فشل في تحديث التذكرة')
     }
   }
 
@@ -138,7 +140,9 @@ export default function Maintenance() {
       setError(null)
     } catch (err) {
       console.error('خطأ في حذف التذكرة:', err)
-      setError('فشل في حذف التذكرة')
+      // MODIFIED: عرض رسالة الباك اند الفعلية بدل رسالة عامة تُخفي السبب الحقيقي
+      const msg = err?.response?.data?.message
+      setError(Array.isArray(msg) ? msg.join('، ') : msg || 'فشل في حذف التذكرة')
     }
   }
 

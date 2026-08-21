@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Prisma } from '@prisma/client';
+import { Prisma, Role } from '@prisma/client';
 import { CreatePreacherDto } from './dto/create-preacher.dto';
 import { UpdatePreacherDto } from './dto/update-preacher.dto';
 
@@ -59,6 +59,17 @@ export class PreachersService {
           },
         },
       });
+
+      // ADDED: ربط خطيب بحساب دخول موجود كان يترك دور ذلك الحساب "مستخدم عادي" رغم أنه أصبح خطيباً فعلياً —
+      // فيظهر بصفحة إدارة المستخدمين بدور مضلِّل. لا نلمس حسابات ADMIN/MANAGER أو من له دور مخصَّص آخر أصلاً
+      if (preacher.user && preacher.user.role === Role.USER) {
+        await this.prisma.user.update({
+          where: { id: preacher.user.id },
+          data: { role: Role.PREACHER },
+        });
+        preacher.user.role = Role.PREACHER;
+      }
+
       return preacher;
     } catch (error) {
       // تحويل أخطاء Prisma الخام إلى استثناءات NestJS ذات معنى بدل 500 عام
@@ -98,8 +109,11 @@ export class PreachersService {
       throw new NotFoundException('الخطيب غير موجود');
     }
 
-    return this.prisma.preacher.delete({
-      where: { id },
+    // MODIFIED: كان يحذف الخطيب مباشرة فيفشل بخطأ قيد مفتاح أجنبي خام (500 غير مفهوم) إن كان له أي تعيين —
+    // نحذف تعييناته أولاً (كما تفعل بالضبط users.service.ts عند حذف حساب مرتبط بخطيب) ثم الخطيب، بعملية واحدة ذرّية
+    return this.prisma.$transaction(async (tx) => {
+      await tx.preacherAssignment.deleteMany({ where: { preacherId: id } });
+      return tx.preacher.delete({ where: { id } });
     });
   }
 }

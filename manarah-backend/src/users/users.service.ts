@@ -1,7 +1,8 @@
-import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, BadRequestException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { Role } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
+import { CreateUserDto } from './dto/create-user.dto';
 
 @Injectable()
 export class UsersService {
@@ -101,6 +102,41 @@ export class UsersService {
     return { preacher, employee };
   }
 
+  // ADDED: يقسّم اسم المستخدم الكامل إلى (اسم أول/اسم أخير) لتعبئة سجل الخطيب/الموظف المُنشأ تلقائياً —
+  // الكلمة الأخيرة تُعتبر الاسم الأخير وما قبلها الاسم الأول، وإن كانت كلمة واحدة يبقى الاسم الأخير فارغاً
+  private splitName(fullName: string): { firstName: string; lastName: string } {
+    const parts = fullName.trim().split(/\s+/).filter(Boolean);
+    if (parts.length <= 1) {
+      return { firstName: parts[0] || fullName, lastName: '' };
+    }
+    return { firstName: parts.slice(0, -1).join(' '), lastName: parts[parts.length - 1] };
+  }
+
+  // ADDED: تعيين دور "خطيب"/"موظف" لحساب كان يغيّر role فقط دون أي سجل فعلي، فيبقى الحساب غائباً تماماً
+  // عن قوائم تعيين الخطباء (المبنية على جدول Preacher لا على role المستخدم) رغم أن دوره يظهر "خطيب" بالواجهة —
+  // ننشئ السجل تلقائياً هنا إن لم يكن موجوداً بعد ليصبح الحساب قابلاً للتعيين فوراً. مشتركة بين updateRole وcreateByAdmin
+  private async ensureRoleEntity(userId: number, name: string, email: string, role: Role, position?: string) {
+    if (role === Role.PREACHER) {
+      const existingPreacher = await this.prisma.preacher.findUnique({ where: { userId } });
+      if (!existingPreacher) {
+        const { firstName, lastName } = this.splitName(name);
+        await this.prisma.preacher.create({
+          data: { userId, firstName, lastName, email },
+        });
+      }
+    } else if (role === Role.EMPLOYEE) {
+      const existingEmployee = await this.prisma.employee.findUnique({ where: { userId } });
+      if (!existingEmployee) {
+        const { firstName, lastName } = this.splitName(name);
+        // MODIFIED: مسمى وظيفي حقيقي إن أُرسل (من ديالوج "إضافة مستخدم")، وإلا قيمة افتراضية عامة
+        // قابلة للتعديل لاحقاً من صفحة الموظفين (حال ترقية حساب موجود عبر updateRole بلا مسمى محدَّد)
+        await this.prisma.employee.create({
+          data: { userId, firstName, lastName, position: position?.trim() || 'موظف' },
+        });
+      }
+    }
+  }
+
   // ADDED: تحديث دور مستخدم (مستخدم عادي/خطيب/موظف فقط — لا يمكن الترقية إلى ADMIN/MANAGER من هنا،
   // ولا يمكن تعديل دور حساب هو أصلاً ADMIN/MANAGER لحماية حسابات مسؤولي النظام من التعديل عبر هذه الواجهة)
   async updateRole(id: number, role: Role) {
@@ -110,11 +146,37 @@ export class UsersService {
       throw new ForbiddenException('لا يمكن تغيير دور حساب مسؤول النظام من هنا');
     }
 
-    return this.prisma.user.update({
+    const updated = await this.prisma.user.update({
       where: { id },
       data: { role },
       select: { id: true, name: true, email: true, role: true },
     });
+
+    await this.ensureRoleEntity(id, user.name, user.email, role);
+
+    return updated;
+  }
+
+  // ADDED: إنشاء حساب جديد من صفحة إدارة المستخدمين مباشرة (ADMIN/MANAGER) — بخلاف التسجيل العام
+  // الذي يفرض دور "مستخدم عادي" دائماً، هنا يمكن تحديد الدور فور الإنشاء (محصور بنفس الأدوار
+  // المسموح إسنادها من updateRole)، وإن كان الدور "خطيب"/"موظف" يُنشأ سجله المرتبط تلقائياً كما بـ updateRole تماماً
+  async createByAdmin(dto: CreateUserDto) {
+    const existing = await this.findByEmail(dto.email);
+    if (existing) {
+      throw new ConflictException('البريد الإلكتروني مستخدم مسبقاً');
+    }
+
+    const hashedPassword = await bcrypt.hash(dto.password, 10);
+    const role = (dto.role as Role) || Role.USER;
+
+    const user = await this.prisma.user.create({
+      data: { email: dto.email, password: hashedPassword, name: dto.name, role },
+      select: { id: true, name: true, email: true, role: true },
+    });
+
+    await this.ensureRoleEntity(user.id, user.name, user.email, role, dto.position);
+
+    return user;
   }
 
   // ADDED: يسمح لـ ADMIN/MANAGER بتعيين كلمة سر جديدة لمستخدم عادي (لنسيان كلمة السر مثلاً) دون معرفة كلمته الحالية —

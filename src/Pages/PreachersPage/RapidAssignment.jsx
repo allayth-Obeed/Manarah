@@ -18,6 +18,7 @@ import {
   Person2Outlined,
 } from '@mui/icons-material' // ADDED: استيراد الأيقونات المستخدمة في الحقول والتنبيه.
 import AppButton from '../../components/common/AppButton' // ADDED: استيراد زر التطبيق الموحد للاستخدام في التثبيت.
+import SearchableSelect from '../../components/common/SearchableSelect' // ADDED: اختيار الخطيب بالبحث عن اسمه بدل قائمة منسدلة طويلة
 
 export default function RapidAssignment({
   // ADDED: تعريف مكوّن التكليف السريع مع الخصائص القادمة من الصفحة الأب.
@@ -34,6 +35,11 @@ export default function RapidAssignment({
   loading, // ADDED: علم يحدد وجود عملية حفظ جارية.
 }) {
   const { activeTheme } = useTheme() // ADDED: الحصول على ألوان الثيم النشط.
+
+  // ADDED: استبعاد الخطباء الذين تغيّر دور حسابهم بعيداً عن "خطيب" (رُقّي لموظف أو أُعيد لمستخدم عادي مثلاً) —
+  // سجل الخطيب قد يبقى موجوداً بقاعدة البيانات، لكن لا يجوز عرضه كخيار جديد للتعيين ما دام صاحبه لم يعد خطيباً فعلياً.
+  // الخطباء بلا حساب دخول مرتبط (userId فارغ) يبقون مؤهَّلين دائماً — لا "دور" حساب يقيّدهم أصلاً
+  const assignablePreachers = preachers.filter((p) => !p.userId || p.user?.role === 'PREACHER')
 
   const selectedMosque = mosques.find((mosque) => mosque.id === Number(selectedMosqueId)) || null // ADDED: استخراج المسجد المختار كاملًا لعرض اسمه.
   const selectedPreacher =
@@ -142,35 +148,19 @@ export default function RapidAssignment({
             {/* ADDED: نهاية نص عنوان الخطيب. */}
           </Box>{' '}
           {/* ADDED: نهاية صف عنوان الخطيب. */}
-          <FormControl fullWidth size="small" sx={{ mb: 2 }}>
+          <Box sx={{ mb: 2 }}>
             {' '}
-            {/* ADDED: حاوية اختيار الخطيب. */}
-            <Select
-              value={selectedPreacherId ? String(selectedPreacherId) : ''}
-              displayEmpty
-              onChange={(event) => onSelectPreacher(Number(event.target.value))}
-              sx={{ background: activeTheme.colors.panelBg, borderRadius: 1.5 }}
-            >
-              {' '}
-              {/* ADDED: قائمة منسدلة لاختيار الخطيب مع تحديث الحالة في الصفحة الأب. */}
-              <MenuItem value="">اختر خطيبًا</MenuItem>{' '}
-              {/* ADDED: خيار افتراضي قبل تحديد أي خطيب. */}
-              {preachers.map(
-                (
-                  preacher // ADDED: التكرار على الخطباء القادمة من الـ API.
-                ) => (
-                  <MenuItem key={preacher.id} value={String(preacher.id)}>
-                    {' '}
-                    {/* ADDED: عنصر قائمة يمثل خطيبًا واحدًا. */}
-                    {`${preacher.firstName} ${preacher.lastName}`}{' '}
-                    {/* ADDED: عرض الاسم الكامل للخطيب في القائمة. */}
-                  </MenuItem> // ADDED: نهاية عنصر الخطيب في القائمة.
-                )
-              )}{' '}
-              {/* ADDED: نهاية تكرار خيارات الخطباء. */}
-            </Select>{' '}
-            {/* ADDED: نهاية قائمة اختيار الخطيب. */}
-          </FormControl>{' '}
+            {/* MODIFIED: بحث عن الخطيب بكتابة اسمه بدل قائمة منسدلة طويلة. */}
+            <SearchableSelect
+              options={assignablePreachers}
+              value={selectedPreacherId}
+              onChange={onSelectPreacher}
+              getOptionLabel={(preacher) => `${preacher.firstName} ${preacher.lastName}`}
+              getOptionSecondary={(preacher) => preacher.specialization}
+              placeholder="ابحث عن خطيب بالاسم..."
+              noOptionsText="لا يوجد خطيب مطابق"
+            />
+          </Box>{' '}
           {/* ADDED: نهاية حاوية اختيار الخطيب. */}
           <Box
             sx={{
