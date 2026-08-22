@@ -1,84 +1,91 @@
+// Official color palette of the Syrian Arab Republic's visual identity
+// (visual-identity.momc.gov.sy). Every color below is derived from this
+// palette so it stays the single source of truth for the app's theming.
+export const syrianIdentityPalette = {
+  charcoal: { light: '#FFFFFF', mid: '#3D3A3B', dark: '#161616' },
+  deepUmber: { light: '#6B1F2A', mid: '#4A151E', dark: '#260F14' },
+  goldenWheat: { light: '#EDEBE0', mid: '#B9A779', dark: '#988561' },
+  forest: { light: '#428177', mid: '#054239', dark: '#002623' },
+}
+
+function hexToRgb(hex) {
+  const value = parseInt(hex.replace('#', ''), 16)
+  return { r: (value >> 16) & 255, g: (value >> 8) & 255, b: value & 255 }
+}
+
+function rgbToHex({ r, g, b }) {
+  return `#${[r, g, b].map((c) => Math.round(c).toString(16).padStart(2, '0')).join('')}`
+}
+
+// Blends two hex colors so derived tints/shades stay traceable to the palette above.
+function mix(hexA, hexB, ratio) {
+  const a = hexToRgb(hexA)
+  const b = hexToRgb(hexB)
+  return rgbToHex({
+    r: a.r + (b.r - a.r) * ratio,
+    g: a.g + (b.g - a.g) * ratio,
+    b: a.b + (b.b - a.b) * ratio,
+  })
+}
+
+function rgba(hex, alpha) {
+  const { r, g, b } = hexToRgb(hex)
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`
+}
+
+// Public helper so components can derive a transparent variant of any theme color
+// instead of hardcoding their own rgba() triples.
+export function withAlpha(hex, alpha) {
+  return rgba(hex, alpha)
+}
+
+const P = syrianIdentityPalette
+
 export const themeTokens = {
   light: {
     mode: 'light',
     colors: {
-      // MODIFIED: كانت رمادية باردة (#F8F9FA) لا تعكس دفء الهوية السورية — بيج فاتح مشتق من الذهبي الحنطي
-      // Page background. (مشتق من الذهبي الحنطي - Golden Wheat family)
-      background: '#FAF7F0',
-      // Project-specific page background (used in MainAssignment layout)
-      pageBg: '#F5F2EB',
-      // Surface color for cards and panels.
-      surface: '#FFFFFF',
-      // Panel background used for event list card.
-      panelBg: '#F7F6F3',
-      // Main readable text color.
-      text: '#0F172A',
-      // Muted text for hints and secondary copy.
-      mutedText: '#64748B',
-      // Borders and dividers.
-      border: '#E2E8F0',
-      // Lighter border used in panels
-      borderLight: '#E7E3DC',
-      // MODIFIED: تغميق إضافي بناءً على الطلب — الأخضر الداكن أصبح هو الأساسي ليطابق عمق الهوية الرسمية
-      // Primary brand color for buttons and focus states. (الأخضر الداكن - Forest)
-      primary: '#054239',
-      // A darker primary used in some UI elements (closer to design) (الأخضر العميق جداً - Forest)
-      primaryDark: '#002623',
-      // Text color used on primary backgrounds (buttons/cards)
-      onPrimary: '#FFFFFF',
-      // Softer text on primary backgrounds.
-      onPrimaryMuted: 'rgba(255, 255, 255, 0.82)',
-      // MODIFIED: الأخضر العميق جداً من الهوية بدل الأسود الملاحي العام — يوحّد لون النص فوق الذهبي مع هوية اللونين
-      // Text color used on secondary backgrounds (الأخضر العميق جداً - Forest)
-      onSecondary: '#002623',
-      // MODIFIED: لوحة القمح الذهبي (Golden Wheat) للذهبي الثانوي
-      // Secondary accent color for highlights. (الذهبي المتوسط - Golden Wheat)
-      secondary: '#B9A779',
-      // Soft accent background for small emphasis areas. (البيج الفاتح - Golden Wheat)
-      accent: '#EDEBE0',
-      // Date box / small emphasis background (البيج الفاتح - Golden Wheat)
-      dateBg: '#EDEBE0',
-      // Element background used in filter bars and similar blocks.
-      bgelem: '#F1F4F2',
-      // Button background color for light controls.
-      btn: '#F3F4F6',
-      // Danger colors (new shades taken from provided design)
-      danger100: '#FFF3F3',
-      danger300: '#FCE7E7',
-      danger500: '#DC2626',
-      danger700: '#B91C1C',
+      // Golden Wheat tinted over white — warm neutral background layers.
+      background: mix(P.charcoal.light, P.goldenWheat.light, 0.35),
+      pageBg: mix(P.charcoal.light, P.goldenWheat.light, 0.55),
+      surface: P.charcoal.light,
+      panelBg: mix(P.charcoal.light, P.goldenWheat.light, 0.15),
+      text: P.charcoal.dark,
+      mutedText: mix(P.charcoal.mid, P.charcoal.light, 0.35),
+      border: mix(P.charcoal.mid, P.charcoal.light, 0.75),
+      borderLight: mix(P.goldenWheat.light, P.charcoal.light, 0.4),
+      // Forest — primary brand color for buttons and focus states.
+      primary: P.forest.mid,
+      primaryDark: P.forest.dark,
+      onPrimary: P.charcoal.light,
+      onPrimaryMuted: rgba(P.charcoal.light, 0.82),
+      onSecondary: P.forest.dark,
+      // Golden Wheat — secondary accent color for highlights.
+      secondary: P.goldenWheat.mid,
+      accent: P.goldenWheat.light,
+      dateBg: P.goldenWheat.light,
+      bgelem: mix(P.forest.light, P.charcoal.light, 0.85),
+      btn: mix(P.charcoal.mid, P.charcoal.light, 0.9),
+      // Deep Umber — the identity's alert/destructive color family.
+      danger100: mix(P.deepUmber.light, P.charcoal.light, 0.92),
+      danger300: mix(P.deepUmber.light, P.charcoal.light, 0.82),
+      danger500: P.deepUmber.light,
+      danger700: P.deepUmber.mid,
     },
     layout: {
-      // Sidebar background.
-      sidebarBg: '#FFFFFF',
-      // Sidebar border.
-      sidebarBorder: '#E6EBEF',
-      // Inactive navigation item color.
-      navInactive: '#7C879B',
-      // MODIFIED: كان أزرق باهت (#CFE2F9) لا علاقة له بالهوية — بيج ذهبي (الذهبي الحنطي) ينسجم مع النص الأخضر والحد البرونزي
-      // Active navigation item background. (الذهبي الحنطي - Golden Wheat)
-      navActiveBg: '#EDEBE0',
-      // Hover background for navigation items.
-      navHoverBg: '#F5F7F8',
-      // MODIFIED: تغميق إضافي — نفس الأخضر الداكن الأساسي الجديد (خلفية فاتحة هنا فالتباين لا يزال ممتازاً)
-      // Active navigation item text color.
-      navActiveText: '#054239',
-      // MODIFIED: الذهبي المتوسط من لوحة القمح الذهبي
-      // Active navigation item border color.
-      navActiveBorder: '#B9A779',
-      // Subtitle and helper text color.
-      subTitle: '#9AA3B2',
-      // Danger and destructive action color.
-      danger: '#D64040',
-      // MODIFIED: تغميق إضافي — نفس الأخضر الداكن الأساسي الجديد
-      // Logo text color.
-      logoText: '#054239',
-      // Search input border.
-      searchBorder: 'rgba(0, 0, 0, 0.15)',
-      // Search hover background.
-      searchHoverBg: 'rgba(0, 0, 0, 0.04)',
-      // Default search field background.
-      searchBaseBg: 'rgba(0, 0, 0, 0.02)',
+      sidebarBg: P.charcoal.light,
+      sidebarBorder: mix(P.charcoal.mid, P.charcoal.light, 0.85),
+      navInactive: mix(P.charcoal.mid, P.charcoal.light, 0.35),
+      navActiveBg: P.goldenWheat.light,
+      navHoverBg: mix(P.goldenWheat.light, P.charcoal.light, 0.5),
+      navActiveText: P.forest.mid,
+      navActiveBorder: P.goldenWheat.mid,
+      subTitle: mix(P.charcoal.mid, P.charcoal.light, 0.45),
+      danger: P.deepUmber.light,
+      logoText: P.forest.mid,
+      searchBorder: rgba(P.charcoal.dark, 0.15),
+      searchHoverBg: rgba(P.charcoal.dark, 0.04),
+      searchBaseBg: rgba(P.charcoal.dark, 0.02),
     },
     fontFamily: {
       arabic: ['"Qomra Arabic"', '"IBM Plex Sans Arabic"', 'sans-serif'],
@@ -87,82 +94,47 @@ export const themeTokens = {
   dark: {
     mode: 'dark',
     colors: {
-      // Page background.
       background: '#0B1220',
-      // Project-specific page background (used in MainAssignment layout)
       pageBg: '#07121A',
-      // Surface color for cards and panels.
       surface: '#111827',
-      // Panel background used for event list card.
       panelBg: '#0B1620',
-      // Main readable text color.
-      text: '#F8FAFC',
-      // Muted text for hints and secondary copy.
-      mutedText: '#94A3B8',
-      // Text color to use on primary buttons/cards
+      // Lightened beyond the original #F8FAFC for better readability on very dark surfaces.
+      text: '#FFFFFF',
+      // Lightened beyond the original #94A3B8 for better readability on very dark surfaces.
+      mutedText: '#B4BFCD',
       onPrimary: '#FFFFFF',
-      // Softer text on primary backgrounds.
       onPrimaryMuted: 'rgba(255, 255, 255, 0.84)',
-      // Borders and dividers.
       border: '#334155',
-      // Lighter border used in panels
       borderLight: '#1F2A37',
-      // MODIFIED: تغميق إضافي بناءً على الطلب — الأخضر العميق جداً كأقصى تدرّج (الوضع الليلي أصلاً داكن)
-      // A darker primary used in some UI elements (الأخضر العميق جداً - Forest)
-      primaryDark: '#002623',
-      // MODIFIED: الأخضر الداكن هو الأساسي الآن ليطابق عمق الهوية الرسمية (يبقى واضحاً فوق النص الأبيض بالأزرار)
-      // Primary brand color for buttons and focus states. (الأخضر الداكن - Forest)
-      primary: '#054239',
-      // MODIFIED: لوحة القمح الذهبي (Golden Wheat) للذهبي الثانوي
-      // Secondary accent color for highlights. (الذهبي المتوسط - Golden Wheat)
-      secondary: '#B9A779',
-      // MODIFIED: الأخضر العميق جداً من الهوية بدل الأسود الملاحي العام
-      // Text color used on secondary backgrounds in dark mode (الأخضر العميق جداً - Forest)
-      onSecondary: '#002623',
-      // Soft accent background for small emphasis areas.
+      // Forest — primary brand color for buttons and focus states.
+      primaryDark: P.forest.dark,
+      primary: P.forest.mid,
+      // Golden Wheat — secondary accent color for highlights.
+      secondary: P.goldenWheat.mid,
+      onSecondary: P.forest.dark,
       accent: '#1E293B',
-      // Date box / small emphasis background
       dateBg: '#0E1A26',
-      // Element background used in filter bars and similar blocks.
       bgelem: '#1A1A1A',
-      // Button background color for dark controls.
       btn: '#2C2C2C',
-      // Danger colors (dark variants)
       danger100: '#2B0B0B',
       danger300: '#4C0F0F',
       danger500: '#F87171',
       danger700: '#B91C1C',
     },
     layout: {
-      // Sidebar background.
       sidebarBg: '#111827',
-      // Sidebar border.
       sidebarBorder: '#334155',
-      // Inactive navigation item color.
       navInactive: '#CBD5E1',
-      // Active navigation item background.
       navActiveBg: 'rgba(148, 163, 184, 0.16)',
-      // Hover background for navigation items.
       navHoverBg: 'rgba(148, 163, 184, 0.12)',
-      // ملاحظة: أُبقي على الأخضر الفاتح (#428177) هنا فقط دون تغميق أكثر — النص/الأيقونة على خلفية داكنة
-      // جداً (#111827)، والتغميق الإضافي (#054239) يفقد الوضوح والتباين المطلوب لقراءة عنصر القائمة النشط
-      // Active navigation item text color.
-      navActiveText: '#428177',
-      // MODIFIED: الذهبي المتوسط من لوحة القمح الذهبي
-      // Active navigation item border color.
-      navActiveBorder: '#B9A779',
-      // Subtitle and helper text color.
-      subTitle: '#94A3B8',
-      // Danger and destructive action color.
+      navActiveText: P.forest.light,
+      navActiveBorder: P.goldenWheat.mid,
+      // Lightened beyond the original #94A3B8 for better readability on very dark surfaces.
+      subTitle: '#B4BFCD',
       danger: '#F87171',
-      // ملاحظة: نفس سبب navActiveText أعلاه — الإبقاء على الدرجة الأفتح لضمان وضوح الشعار بالوضع الليلي
-      // Logo text color.
-      logoText: '#428177',
-      // Search input border.
+      logoText: P.forest.light,
       searchBorder: '#334155',
-      // Search hover background.
       searchHoverBg: 'rgba(148, 163, 184, 0.12)',
-      // Default search field background.
       searchBaseBg: 'rgba(148, 163, 184, 0.08)',
     },
     fontFamily: {

@@ -73,8 +73,12 @@ const SignInPage = () => {
         <div className="text-center mb-8">
           {/* شعار المشروع */}
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl mb-4 shadow-lg relative overflow-hidden">
-            {/* MODIFIED: تغميق إضافي — الأخضر الداكن والعميق جداً من الهوية بدل الدرجة الفاتحة */}
-            <div className="absolute inset-0 bg-gradient-to-br from-[#054239] to-[#002623] animate-pulse" />
+            <div
+              className="absolute inset-0 animate-pulse"
+              style={{
+                backgroundImage: `linear-gradient(to bottom right, ${activeTheme.colors.primary}, ${activeTheme.colors.primaryDark})`,
+              }}
+            />
             {/* MODIFIED: أيقونة مسجد (نفس شعار القائمة الجانبية) بدل حرف "م" المفرد */}
             <MosqueRoundedIcon className="relative text-white" sx={{ fontSize: 36 }} />
           </div>
@@ -103,7 +107,10 @@ const SignInPage = () => {
         {/* نموذج تسجيل الدخول */}
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* بطاقة النموذج */}
-          <div className="bg-white dark:bg-[#111827] rounded-3xl p-8 shadow-xl border border-[#E7E3DC]">
+          <div
+            className="rounded-3xl p-8 shadow-xl border"
+            style={{ backgroundColor: activeTheme.colors.surface, borderColor: activeTheme.colors.borderLight }}
+          >
             {/* حقل البريد الإلكتروني */}
             <AuthInput
               label="البريد الإلكتروني"
@@ -136,9 +143,9 @@ const SignInPage = () => {
                 className="absolute left-3 top-[42px] p-1 rounded-lg hover:bg-[#F1F4F2] transition-colors"
               >
                 {showPassword ? (
-                  <VisibilityOffIcon className="h-5 w-5 text-[#64748B]" />
+                  <VisibilityOffIcon className="h-5 w-5" style={{ color: activeTheme.colors.mutedText }} />
                 ) : (
-                  <VisibilityIcon className="h-5 w-5 text-[#64748B]" />
+                  <VisibilityIcon className="h-5 w-5" style={{ color: activeTheme.colors.mutedText }} />
                 )}
               </button>
             </div>
@@ -148,7 +155,8 @@ const SignInPage = () => {
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
-                  className="w-4 h-4 rounded border-[#E2E8F0] text-[#054239] focus:ring-[#054239]" // MODIFIED: تغميق إضافي لأخضر الهوية
+                  className="w-4 h-4 rounded"
+                  style={{ borderColor: activeTheme.colors.border, accentColor: activeTheme.colors.primary }}
                 />
                 <span className="text-sm" style={{ color: activeTheme.colors.mutedText }}>
                   تذكرني
@@ -157,7 +165,8 @@ const SignInPage = () => {
 
               <Link
                 to="/auth/signup"
-                className="text-sm font-medium text-[#054239] hover:text-[#B9A779] transition-colors" // MODIFIED: تغميق إضافي لأخضر الهوية
+                className="text-sm font-medium hover:text-[#B9A779] transition-colors"
+                style={{ color: activeTheme.colors.primary }}
               >
                 إنشاء حساب جديد
               </Link>
@@ -169,11 +178,14 @@ const SignInPage = () => {
               disabled={loading}
               className={`
                 w-full mt-6 py-4 rounded-xl font-bold text-lg transition-all duration-300
-                bg-gradient-to-r from-[#054239] to-[#002623] text-white
+                text-white
                 hover:shadow-lg hover:scale-[1.02] transform
                 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
                 flex items-center justify-center gap-2
               `}
+              style={{
+                backgroundImage: `linear-gradient(to right, ${activeTheme.colors.primary}, ${activeTheme.colors.primaryDark})`,
+              }}
             >
               {loading ? (
                 <>
@@ -194,8 +206,13 @@ const SignInPage = () => {
 
             {/* رسالة الخطأ العامة */}
             {error && (
-              <div className="mt-4 p-3 rounded-lg bg-[#FFF3F3] border border-[#FCE7E7]">
-                <p className="text-sm text-center text-[#DC2626]">{error}</p>
+              <div
+                className="mt-4 p-3 rounded-lg border"
+                style={{ backgroundColor: activeTheme.colors.danger100, borderColor: activeTheme.colors.danger300 }}
+              >
+                <p className="text-sm text-center" style={{ color: activeTheme.colors.danger500 }}>
+                  {error}
+                </p>
               </div>
             )}
           </div>

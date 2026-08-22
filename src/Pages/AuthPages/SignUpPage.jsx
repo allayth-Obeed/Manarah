@@ -161,8 +161,12 @@ const SignUpPage = () => {
                 <img src={photoPreview} alt="الصورة الشخصية" className="w-full h-full object-cover" />
               ) : (
                 <>
-                  {/* MODIFIED: تغميق إضافي — نفس الأخضر الداكن والعميق جداً من الهوية بدل الأخضر السابق */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-[#054239] to-[#002623]" />
+                  <div
+                    className="absolute inset-0"
+                    style={{
+                      backgroundImage: `linear-gradient(to bottom right, ${activeTheme.colors.primary}, ${activeTheme.colors.primaryDark})`,
+                    }}
+                  />
                   <CameraAltIcon className="relative text-white" sx={{ fontSize: 28 }} />
                 </>
               )}
@@ -172,7 +176,8 @@ const SignUpPage = () => {
               <button
                 type="button"
                 onClick={handleRemovePhoto}
-                className="absolute -top-1.5 -left-1.5 w-6 h-6 rounded-full bg-[#DC2626] text-white flex items-center justify-center shadow"
+                className="absolute -top-1.5 -left-1.5 w-6 h-6 rounded-full text-white flex items-center justify-center shadow"
+                style={{ backgroundColor: activeTheme.colors.danger500 }}
                 title="إزالة الصورة"
               >
                 <CloseIcon sx={{ fontSize: 14 }} />
@@ -180,7 +185,9 @@ const SignUpPage = () => {
             )}
           </div>
           {photoError && (
-            <p className="text-xs text-[#DC2626] mb-2">{photoError}</p>
+            <p className="text-xs mb-2" style={{ color: activeTheme.colors.danger500 }}>
+              {photoError}
+            </p>
           )}
           {/* ADDED: توضيح أن اختيار الصورة اختياري وليس شعاراً ثابتاً كما كان سابقاً */}
           <p className="text-xs mb-2" style={{ color: activeTheme.colors.mutedText }}>
@@ -198,7 +205,10 @@ const SignUpPage = () => {
         {/* نموذج إنشاء الحساب */}
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* بطاقة النموذج */}
-          <div className="bg-white dark:bg-[#111827] rounded-3xl p-8 shadow-xl border border-[#E7E3DC]">
+          <div
+            className="rounded-3xl p-8 shadow-xl border"
+            style={{ backgroundColor: activeTheme.colors.surface, borderColor: activeTheme.colors.borderLight }}
+          >
             {/* حقل الاسم الكامل */}
             <AuthInput
               label="الاسم الكامل"
@@ -248,9 +258,9 @@ const SignUpPage = () => {
                 className="absolute left-3 top-[42px] p-1 rounded-lg hover:bg-[#F1F4F2] transition-colors"
               >
                 {showPassword ? (
-                  <VisibilityOffIcon className="h-5 w-5 text-[#64748B]" />
+                  <VisibilityOffIcon className="h-5 w-5" style={{ color: activeTheme.colors.mutedText }} />
                 ) : (
-                  <VisibilityIcon className="h-5 w-5 text-[#64748B]" />
+                  <VisibilityIcon className="h-5 w-5" style={{ color: activeTheme.colors.mutedText }} />
                 )}
               </button>
             </div>
@@ -276,9 +286,9 @@ const SignUpPage = () => {
                 className="absolute left-3 top-[42px] p-1 rounded-lg hover:bg-[#F1F4F2] transition-colors"
               >
                 {showConfirmPassword ? (
-                  <VisibilityOffIcon className="h-5 w-5 text-[#64748B]" />
+                  <VisibilityOffIcon className="h-5 w-5" style={{ color: activeTheme.colors.mutedText }} />
                 ) : (
-                  <VisibilityIcon className="h-5 w-5 text-[#64748B]" />
+                  <VisibilityIcon className="h-5 w-5" style={{ color: activeTheme.colors.mutedText }} />
                 )}
               </button>
             </div>
@@ -289,11 +299,14 @@ const SignUpPage = () => {
               disabled={loading}
               className={`
                 w-full mt-8 py-4 rounded-xl font-bold text-lg transition-all duration-300
-                bg-gradient-to-r from-[#054239] to-[#002623] text-white
+                text-white
                 hover:shadow-lg hover:scale-[1.02] transform
                 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
                 flex items-center justify-center gap-2
               `}
+              style={{
+                backgroundImage: `linear-gradient(to right, ${activeTheme.colors.primary}, ${activeTheme.colors.primaryDark})`,
+              }}
             >
               {loading ? (
                 <>
@@ -314,8 +327,13 @@ const SignUpPage = () => {
 
             {/* رسالة الخطأ العامة */}
             {error && (
-              <div className="mt-4 p-3 rounded-lg bg-[#FFF3F3] border border-[#FCE7E7]">
-                <p className="text-sm text-center text-[#DC2626]">{error}</p>
+              <div
+                className="mt-4 p-3 rounded-lg border"
+                style={{ backgroundColor: activeTheme.colors.danger100, borderColor: activeTheme.colors.danger300 }}
+              >
+                <p className="text-sm text-center" style={{ color: activeTheme.colors.danger500 }}>
+                  {error}
+                </p>
               </div>
             )}
           </div>
@@ -328,7 +346,8 @@ const SignUpPage = () => {
           </span>
           <Link
             to="/auth/signin"
-            className="text-sm font-medium text-[#054239] hover:text-[#B9A779] transition-colors" // MODIFIED: تغميق إضافي لأخضر الهوية
+            className="text-sm font-medium hover:text-[#B9A779] transition-colors"
+            style={{ color: activeTheme.colors.primary }}
           >
             سجل دخولك الآن
           </Link>

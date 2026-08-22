@@ -4,6 +4,7 @@
  */
 import React, { useState } from 'react'
 import { useTheme } from '../../theme/themeContext'
+import { withAlpha } from '../../theme/theme'
 
 const AuthInput = ({
   label,
@@ -28,11 +29,15 @@ const AuthInput = ({
           className="block text-sm font-bold mb-2 px-2 py-1 rounded-lg"
           style={{
             color: activeTheme.colors.secondary,
-            backgroundColor: activeTheme.colors.mode === 'dark' ? 'rgba(197, 160, 89, 0.15)' : 'rgba(197, 160, 89, 0.12)',
+            backgroundColor: withAlpha(activeTheme.colors.secondary, activeTheme.colors.mode === 'dark' ? 0.15 : 0.12),
           }}
         >
           {label}
-          {required && <span className="text-[#D64040] mr-1">*</span>}
+          {required && (
+            <span className="mr-1" style={{ color: activeTheme.layout.danger }}>
+              *
+            </span>
+          )}
         </label>
       )}
 
@@ -42,9 +47,8 @@ const AuthInput = ({
         {Icon && (
           <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
             <Icon
-              className={`h-5 w-5 transition-colors ${
-                focused || value ? 'text-[#006747]' : 'text-[#64748B]'
-              }`}
+              className="h-5 w-5 transition-colors"
+              style={{ color: focused || value ? activeTheme.colors.primary : activeTheme.colors.mutedText }}
             />
           </div>
         )}
@@ -62,14 +66,14 @@ const AuthInput = ({
             w-full px-4 py-3.5 rounded-xl border-2 transition-all duration-300 outline-none
             text-right text-base font-semibold
             ${Icon ? 'pr-12 pl-4' : 'px-4'}
-            ${error ? 'border-[#DC2626]' : focused ? 'border-[#006747]' : 'border-[#E2E8F0]'}
-            bg-white dark:bg-[#111827]
             placeholder:text-[#475569] placeholder:text-sm
             ${!error && 'hover:border-[#C5A059]/50'}
           `}
           style={{
-            color: activeTheme.colors.mode === 'dark' ? '#F8FAFC' : activeTheme.colors.secondary,
-            boxShadow: focused ? '0 0 0 3px rgba(197, 160, 89, 0.25)' : 'none',
+            color: activeTheme.colors.mode === 'dark' ? activeTheme.colors.text : activeTheme.colors.secondary,
+            backgroundColor: activeTheme.colors.surface,
+            borderColor: error ? activeTheme.colors.danger500 : focused ? activeTheme.colors.primary : activeTheme.colors.border,
+            boxShadow: focused ? `0 0 0 3px ${withAlpha(activeTheme.colors.secondary, 0.25)}` : 'none',
           }}
           {...props}
         />
@@ -77,15 +81,19 @@ const AuthInput = ({
         {/* مؤشر التركيز الزخرفي */}
         <div
           className={`
-            absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-[#006747] to-[#C5A059]
-            transition-all duration-300
+            absolute bottom-0 left-0 h-0.5 transition-all duration-300
             ${focused ? 'w-full' : 'w-0'}
           `}
+          style={{ backgroundImage: `linear-gradient(to right, ${activeTheme.colors.primary}, ${activeTheme.colors.secondary})` }}
         />
       </div>
 
       {/* رسالة الخطأ - مظهر واضح */}
-      {error && <p className="mt-2 text-sm text-[#DC2626] text-right font-medium">{error}</p>}
+      {error && (
+        <p className="mt-2 text-sm text-right font-medium" style={{ color: activeTheme.colors.danger500 }}>
+          {error}
+        </p>
+      )}
     </div>
   )
 }

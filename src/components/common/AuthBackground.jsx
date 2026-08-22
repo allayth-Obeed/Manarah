@@ -4,18 +4,30 @@
  */
 import React from 'react'
 import { useTheme } from '../../theme/themeContext'
+import { syrianIdentityPalette, themeTokens, withAlpha } from '../../theme/theme'
 
 const AuthBackground = () => {
   const { activeTheme } = useTheme()
 
   return (
     <div className="fixed inset-0 overflow-hidden -z-10">
-      {/* MODIFIED: خلفية داكنة بدرجات الأخضر العميق من الهوية البصرية بدل التدرج الفاتح جداً السابق */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#002623] via-[#054239] to-[#0B1220]" />
+      {/* الخلفية دائماً داكنة بدرجات الأخضر من الهوية البصرية بغض النظر عن وضع الثيم */}
+      <div
+        className="absolute inset-0"
+        style={{
+          backgroundImage: `linear-gradient(to bottom right, ${syrianIdentityPalette.forest.dark}, ${syrianIdentityPalette.forest.mid}, ${themeTokens.dark.colors.background})`,
+        }}
+      />
 
-      {/* دوامات زخرفية — MODIFIED: شفافية أعلى لتظهر بوضوح فوق الخلفية الداكنة الجديدة */}
-      <div className="absolute top-0 left-0 w-96 h-96 bg-[#428177]/20 rounded-full blur-3xl animate-pulse" />
-      <div className="absolute bottom-0 right-0 w-80 h-80 bg-[#B9A779]/15 rounded-full blur-3xl animate-pulse delay-1000" />
+      {/* دوامات زخرفية */}
+      <div
+        className="absolute top-0 left-0 w-96 h-96 rounded-full blur-3xl animate-pulse"
+        style={{ backgroundColor: withAlpha(syrianIdentityPalette.forest.light, 0.2) }}
+      />
+      <div
+        className="absolute bottom-0 right-0 w-80 h-80 rounded-full blur-3xl animate-pulse delay-1000"
+        style={{ backgroundColor: withAlpha(syrianIdentityPalette.goldenWheat.mid, 0.15) }}
+      />
 
       {/* نمط هندسي إبداعي */}
       <div className="absolute inset-0 opacity-10">
