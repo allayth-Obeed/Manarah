@@ -158,7 +158,11 @@ const SignUpPage = () => {
             >
               {photoPreview ? (
                 // ADDED: معاينة الصورة المختارة بدل الشعار الثابت
-                <img src={photoPreview} alt="الصورة الشخصية" className="w-full h-full object-cover" />
+                <img
+                  src={photoPreview}
+                  alt="الصورة الشخصية"
+                  className="w-full h-full object-cover"
+                />
               ) : (
                 <>
                   <div
@@ -207,7 +211,10 @@ const SignUpPage = () => {
           {/* بطاقة النموذج */}
           <div
             className="rounded-3xl p-8 shadow-xl border"
-            style={{ backgroundColor: activeTheme.colors.surface, borderColor: activeTheme.colors.borderLight }}
+            style={{
+              backgroundColor: activeTheme.colors.surface,
+              borderColor: activeTheme.colors.borderLight,
+            }}
           >
             {/* حقل الاسم الكامل */}
             <AuthInput
@@ -258,9 +265,15 @@ const SignUpPage = () => {
                 className="absolute left-3 top-[42px] p-1 rounded-lg hover:bg-[#F1F4F2] transition-colors"
               >
                 {showPassword ? (
-                  <VisibilityOffIcon className="h-5 w-5" style={{ color: activeTheme.colors.mutedText }} />
+                  <VisibilityOffIcon
+                    className="h-5 w-5"
+                    style={{ color: activeTheme.colors.mutedText }}
+                  />
                 ) : (
-                  <VisibilityIcon className="h-5 w-5" style={{ color: activeTheme.colors.mutedText }} />
+                  <VisibilityIcon
+                    className="h-5 w-5"
+                    style={{ color: activeTheme.colors.mutedText }}
+                  />
                 )}
               </button>
             </div>
@@ -286,9 +299,15 @@ const SignUpPage = () => {
                 className="absolute left-3 top-[42px] p-1 rounded-lg hover:bg-[#F1F4F2] transition-colors"
               >
                 {showConfirmPassword ? (
-                  <VisibilityOffIcon className="h-5 w-5" style={{ color: activeTheme.colors.mutedText }} />
+                  <VisibilityOffIcon
+                    className="h-5 w-5"
+                    style={{ color: activeTheme.colors.mutedText }}
+                  />
                 ) : (
-                  <VisibilityIcon className="h-5 w-5" style={{ color: activeTheme.colors.mutedText }} />
+                  <VisibilityIcon
+                    className="h-5 w-5"
+                    style={{ color: activeTheme.colors.mutedText }}
+                  />
                 )}
               </button>
             </div>
@@ -311,7 +330,15 @@ const SignUpPage = () => {
               {loading ? (
                 <>
                   <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                      fill="none"
+                    />
                     <path
                       className="opacity-75"
                       fill="currentColor"
@@ -329,7 +356,10 @@ const SignUpPage = () => {
             {error && (
               <div
                 className="mt-4 p-3 rounded-lg border"
-                style={{ backgroundColor: activeTheme.colors.danger100, borderColor: activeTheme.colors.danger300 }}
+                style={{
+                  backgroundColor: activeTheme.colors.danger100,
+                  borderColor: activeTheme.colors.danger300,
+                }}
               >
                 <p className="text-sm text-center" style={{ color: activeTheme.colors.danger500 }}>
                   {error}
@@ -347,7 +377,7 @@ const SignUpPage = () => {
           <Link
             to="/auth/signin"
             className="text-sm font-medium hover:text-[#B9A779] transition-colors"
-            style={{ color: activeTheme.colors.primary }}
+            style={{ color: activeTheme.colors.danger500 }}
           >
             سجل دخولك الآن
           </Link>
