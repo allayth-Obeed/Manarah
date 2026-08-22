@@ -81,7 +81,7 @@ export const themeTokens = {
       searchBaseBg: 'rgba(0, 0, 0, 0.02)',
     },
     fontFamily: {
-      arabic: ['"IBM Plex Sans Arabic"', 'sans-serif'],
+      arabic: ['"Qomra Arabic"', '"IBM Plex Sans Arabic"', 'sans-serif'],
     },
   },
   dark: {
@@ -166,7 +166,7 @@ export const themeTokens = {
       searchBaseBg: 'rgba(148, 163, 184, 0.08)',
     },
     fontFamily: {
-      arabic: ['"IBM Plex Sans Arabic"', 'sans-serif'],
+      arabic: ['"Qomra Arabic"', '"IBM Plex Sans Arabic"', 'sans-serif'],
     },
   },
 }
