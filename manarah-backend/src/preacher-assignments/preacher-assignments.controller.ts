@@ -48,14 +48,14 @@ export class PreacherAssignmentsController {
 
   @Post()
   @UseGuards(RolesGuard) // إسناد داعية لمسجد: ADMIN/MANAGER فقط
-  @Roles(Role.ADMIN, Role.MANAGER)
+  @Roles(Role.ADMIN, Role.MANAGER, Role.SUPER_ADMIN)
   create(@Body() createPreacherAssignmentDto: CreatePreacherAssignmentDto) {
     return this.preacherAssignmentsService.create(createPreacherAssignmentDto)
   }
 
   @Patch(':id')
   @UseGuards(RolesGuard) // تعديل إسناد: ADMIN/MANAGER فقط
-  @Roles(Role.ADMIN, Role.MANAGER)
+  @Roles(Role.ADMIN, Role.MANAGER, Role.SUPER_ADMIN)
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updatePreacherAssignmentDto: UpdatePreacherAssignmentDto
@@ -65,7 +65,7 @@ export class PreacherAssignmentsController {
 
   @Delete(':id')
   @UseGuards(RolesGuard) // إلغاء إسناد: ADMIN/MANAGER فقط
-  @Roles(Role.ADMIN, Role.MANAGER)
+  @Roles(Role.ADMIN, Role.MANAGER, Role.SUPER_ADMIN)
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.preacherAssignmentsService.remove(id)
   }

@@ -34,14 +34,14 @@ export class PreachersController {
 
   @Post()
   @UseGuards(RolesGuard) // إضافة داعية: ADMIN/MANAGER فقط
-  @Roles(Role.ADMIN, Role.MANAGER)
+  @Roles(Role.ADMIN, Role.MANAGER, Role.SUPER_ADMIN)
   create(@Body() createPreacherDto: CreatePreacherDto) {
     return this.preachersService.create(createPreacherDto);
   }
 
   @Patch(':id')
   @UseGuards(RolesGuard) // تعديل داعية: ADMIN/MANAGER فقط
-  @Roles(Role.ADMIN, Role.MANAGER)
+  @Roles(Role.ADMIN, Role.MANAGER, Role.SUPER_ADMIN)
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updatePreacherDto: UpdatePreacherDto,
@@ -51,7 +51,7 @@ export class PreachersController {
 
   @Delete(':id')
   @UseGuards(RolesGuard) // حذف داعية: ADMIN/MANAGER فقط
-  @Roles(Role.ADMIN, Role.MANAGER)
+  @Roles(Role.ADMIN, Role.MANAGER, Role.SUPER_ADMIN)
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.preachersService.remove(id);
   }

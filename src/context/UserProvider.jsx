@@ -3,7 +3,9 @@ import { UserContext } from './userContext'
 import { validateToken } from '../services/authService'
 
 // الأدوار المسموح لها بالإنشاء/التعديل/الحذف — الباقي (USER, PREACHER, EMPLOYEE) قراءة فقط
-const WRITE_ROLES = ['ADMIN', 'MANAGER']
+// MODIFIED: أُضيف SUPER_ADMIN (مسؤول النظام) — الرتبة الإدارية الثالثة، بنفس صلاحيات ADMIN/MANAGER الكاملة
+// على كل شيء عدا التسلسل الهرمي بينها الثلاثة بصفحة إدارة المستخدمين (انظر Users.jsx)
+const WRITE_ROLES = ['ADMIN', 'MANAGER', 'SUPER_ADMIN']
 
 // Provider واحد على مستوى التطبيق كله — يجلب المستخدم الحقيقي مرة واحدة فقط بدل
 // تكرار نفس استدعاء /auth/me في كل صفحة (TopBar, AppLayout, ...) بشكل منفصل ومنعزل عن بعضه

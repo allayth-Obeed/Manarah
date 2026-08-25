@@ -8,7 +8,7 @@ import { Role } from '@prisma/client';
 
 @Controller('reports')
 @UseGuards(JwtAuthGuard, RolesGuard) // جميع مسارات التقارير محمية بـ JWT + الدور
-@Roles(Role.ADMIN, Role.MANAGER)
+@Roles(Role.ADMIN, Role.MANAGER, Role.SUPER_ADMIN)
 export class ReportsController {
   constructor(private readonly reportsService: ReportsService) {}
 

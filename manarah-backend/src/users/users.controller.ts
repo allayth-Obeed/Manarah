@@ -36,14 +36,14 @@ export class UsersController {
 
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard) // ADMIN/MANAGER فقط — من يديرون ربط الخطباء/الموظفين بحسابات دخول
-  @Roles(Role.ADMIN, Role.MANAGER)
+  @Roles(Role.ADMIN, Role.MANAGER, Role.SUPER_ADMIN)
   async findAll() {
     return this.usersService.findAllBasic();
   }
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard) // ADMIN/MANAGER فقط — إنشاء حساب مباشرة من صفحة إدارة المستخدمين
-  @Roles(Role.ADMIN, Role.MANAGER)
+  @Roles(Role.ADMIN, Role.MANAGER, Role.SUPER_ADMIN)
   async createUser(@Body() dto: CreateUserDto) {
     return this.usersService.createByAdmin(dto);
   }
@@ -87,30 +87,33 @@ export class UsersController {
   }
 
   @Patch(':id/role')
-  @UseGuards(JwtAuthGuard, RolesGuard) // ADMIN/MANAGER فقط — تحديد دور المستخدم (مستخدم عادي/خطيب/موظف)
-  @Roles(Role.ADMIN, Role.MANAGER)
-  async updateRole(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateUserRoleDto) {
-    return this.usersService.updateRole(id, dto.role as Role);
+  @UseGuards(JwtAuthGuard, RolesGuard) // ADMIN/MANAGER/SUPER_ADMIN — تحديد دور المستخدم (مستخدم عادي/خطيب/موظف)، أو تعديل حساب إداري تابع (حسب التسلسل الهرمي في role-hierarchy.ts)
+  @Roles(Role.ADMIN, Role.MANAGER, Role.SUPER_ADMIN)
+  async updateRole(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateUserRoleDto, @Req() req: Request) {
+    const actingRole = (req.user as any).role as Role;
+    return this.usersService.updateRole(id, dto.role as Role, actingRole);
   }
 
   @Patch(':id/password')
-  @UseGuards(JwtAuthGuard, RolesGuard) // ADMIN/MANAGER فقط — تعيين كلمة سر جديدة لمستخدم عادي (لنسيان كلمة السر مثلاً)
-  @Roles(Role.ADMIN, Role.MANAGER)
-  async resetPassword(@Param('id', ParseIntPipe) id: number, @Body() dto: ResetUserPasswordDto) {
-    return this.usersService.resetPassword(id, dto.newPassword);
+  @UseGuards(JwtAuthGuard, RolesGuard) // ADMIN/MANAGER/SUPER_ADMIN — تعيين كلمة سر جديدة لمستخدم (لنسيان كلمة السر مثلاً)، أو لحساب إداري تابع حسب التسلسل الهرمي
+  @Roles(Role.ADMIN, Role.MANAGER, Role.SUPER_ADMIN)
+  async resetPassword(@Param('id', ParseIntPipe) id: number, @Body() dto: ResetUserPasswordDto, @Req() req: Request) {
+    const actingRole = (req.user as any).role as Role;
+    return this.usersService.resetPassword(id, dto.newPassword, actingRole);
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard) // كان بدون RolesGuard: أي مستخدم مسجّل يقدر يحذف أي حساب
-  @Roles(Role.ADMIN) // حذف حساب فردي: ADMIN فقط
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.MANAGER, Role.SUPER_ADMIN) // MODIFIED: كان ADMIN فقط — الآن متساوٍ بين الثلاثة، والتسلسل الهرمي يحمي الحسابات الإدارية تحديداً (انظر UsersService.removeUser)
   async removeUser(@Param('id', ParseIntPipe) id: number, @Req() req: Request) {
     const actingUserId = (req.user as any).userId;
-    return this.usersService.removeUser(id, actingUserId);
+    const actingRole = (req.user as any).role as Role;
+    return this.usersService.removeUser(id, actingUserId, actingRole);
   }
 
   @Delete()
-  @UseGuards(JwtAuthGuard, RolesGuard) // كان بدون RolesGuard: أي مستخدم يقدر يمسح كل قاعدة المستخدمين
-  @Roles(Role.ADMIN) // حذف جماعي لكل المستخدمين: ADMIN فقط
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.MANAGER, Role.SUPER_ADMIN) // MODIFIED: كان ADMIN فقط — نفس صلاحيات الحذف الفردي أعلاه
   async removeAll() {
     return this.usersService.removeAll();
   }

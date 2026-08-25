@@ -36,17 +36,23 @@ import { getAllUsers, createUser, updateUserRole, deleteUser, resetUserPassword 
 import { EMPLOYEE_JOB_TITLES } from '../../constants/jobTitles' // ADDED: مسمّيات وظيفية حقيقية عند إنشاء حساب بدور "موظف" بدل مسمى عام ثابت
 
 // نفس تسميات TopBar.jsx للاتساق
-const roleLabels = { ADMIN: 'مشرف النظام', MANAGER: 'مدير', USER: 'مستخدم', PREACHER: 'داعية', EMPLOYEE: 'موظف' }
-// الأدوار القابلة للإسناد من هذه الصفحة فقط — ADMIN/MANAGER محجوزان ولا يُسندان من هنا
+const roleLabels = { SUPER_ADMIN: 'مسؤول النظام', ADMIN: 'مشرف النظام', MANAGER: 'مدير', USER: 'مستخدم', PREACHER: 'داعية', EMPLOYEE: 'موظف' }
+// الأدوار القابلة للإسناد من هذه الصفحة فقط — الأدوار الإدارية الثلاثة لا تُسند لحساب جديد من هنا أبداً (لا تصعيد صلاحيات عبر الواجهة)
 const assignableRoles = [
   { value: 'USER', label: 'مستخدم عادي' },
   { value: 'PREACHER', label: 'خطيب' },
   { value: 'EMPLOYEE', label: 'موظف' },
 ]
-const PROTECTED_ROLES = ['ADMIN', 'MANAGER']
+// MODIFIED: ثلاثة الأدوار الإدارية وترتيب قوتها من الأقوى للأضعف — يطابق role-hierarchy.ts بالباك اند تماماً.
+// الأدوار الثلاثة تملك نفس الصلاحيات على كل شيء إلا فيما بينها: فقط رتبة أعلى صراحةً تقدر تعدّل/تحذف/تغيّر
+// كلمة سر رتبة أدنى (نفس الرتبة، بما فيها حسابك أنت، ممنوعة عمداً)
+const ADMIN_TIER_RANK = { SUPER_ADMIN: 3, MANAGER: 2, ADMIN: 1 }
+const isAdminTierRole = (role) => role in ADMIN_TIER_RANK
+const canActOnAdminTier = (actingRole, targetRole) => (ADMIN_TIER_RANK[actingRole] ?? 0) > (ADMIN_TIER_RANK[targetRole] ?? 0)
 
-// صفحة إدارة المستخدمين (ADMIN/MANAGER فقط): تحديد دور كل حساب (خطيب/موظف/مستخدم عادي) وحذف الحسابات —
-// محمية بالكامل عن حسابات مسؤولي النظام (لا تُعرض لها خيارات تغيير/حذف) والباك اند يفرض نفس الحماية أيضاً
+// صفحة إدارة المستخدمين (ADMIN/MANAGER/SUPER_ADMIN): تحديد دور كل حساب وحذف الحسابات وتغيير كلمات السر —
+// المستخدمون العاديون/الخطباء/الموظفون متاحون للثلاثة بالتساوي، أما الحسابات الإدارية (ADMIN/MANAGER/SUPER_ADMIN)
+// فمحمية بتسلسل هرمي: مسؤول النظام > مدير > مشرف — الباك اند يفرض نفس الحماية أيضاً (users.service.ts)
 export default function Users() {
   const { activeTheme } = useTheme()
   const { colors } = activeTheme
@@ -183,11 +189,11 @@ export default function Users() {
     <div>
       <MainFun
         title="إدارة المستخدمين"
-        description="تحديد دور كل حساب (خطيب/موظف/مستخدم عادي) وحذف الحسابات — لا يشمل حسابات مسؤولي النظام."
+        description="تحديد دور كل حساب وحذف الحسابات وتغيير كلمات السر — الحسابات الإدارية محمية بتسلسل هرمي (مسؤول النظام > مدير > مشرف)."
         addButton="إضافة مستخدم"
         onAddClick={openAddDialog}
         showAnnouncementButton={false}
-        showAddButton={myRole === 'ADMIN' || myRole === 'MANAGER'}
+        showAddButton={isAdminTierRole(myRole)}
       />
 
       {loading && (
@@ -210,14 +216,21 @@ export default function Users() {
             </TableHead>
             <TableBody>
               {users.map((u) => {
-                const isProtected = PROTECTED_ROLES.includes(u.role)
+                // MODIFIED: الحسابات الإدارية (ADMIN/MANAGER/SUPER_ADMIN) لم تعد محمية بشكل مطلق —
+                // canManage يحدد إن كانت رتبتي أعلى صراحةً من رتبة هذا الحساب (وفق التسلسل الهرمي)
+                const targetIsAdminTier = isAdminTierRole(u.role)
+                const canManage = targetIsAdminTier ? canActOnAdminTier(myRole, u.role) : isAdminTierRole(myRole)
                 const isSelf = u.id === me?.id
+                // لحسابات إدارية أقدر أديرها: أُبقي دورها الحالي ظاهراً بالقائمة كخيار إضافي فوق خيارات التخفيض العادية
+                const roleOptions = targetIsAdminTier && canManage
+                  ? [{ value: u.role, label: roleLabels[u.role] }, ...assignableRoles]
+                  : assignableRoles
                 return (
                   <TableRow key={u.id} hover>
                     <TableCell align="right" sx={{ color: colors.text, fontWeight: 600 }}>{u.name}</TableCell>
                     <TableCell align="right" sx={{ color: colors.mutedText }}>{u.email}</TableCell>
                     <TableCell align="right">
-                      {isProtected ? (
+                      {!canManage ? (
                         <Chip label={roleLabels[u.role]} size="small" sx={{ bgcolor: colors.accent, color: colors.primary, fontWeight: 700 }} />
                       ) : (
                         <Select
@@ -227,35 +240,30 @@ export default function Users() {
                           sx={{ minWidth: 140, fontSize: 13, bgcolor: colors.bgelem, color: colors.text }}
                           MenuProps={{ sx: { '& .MuiMenu-paper': { direction: 'rtl', bgcolor: colors.surface }, '& .MuiMenuItem-root': { justifyContent: 'flex-end', color: colors.text } } }}
                         >
-                          {assignableRoles.map((r) => (
+                          {roleOptions.map((r) => (
                             <MenuItem key={r.value} value={r.value} sx={{ justifyContent: 'flex-end' }}>{r.label}</MenuItem>
                           ))}
                         </Select>
                       )}
                     </TableCell>
                     <TableCell align="center">
-                      {isProtected ? (
+                      {!canManage ? (
                         <Typography sx={{ fontSize: 12, color: colors.mutedText }}>محمي</Typography>
                       ) : (
                         <Stack direction="row" spacing={0.5} justifyContent="center">
-                          {/* تغيير كلمة السر: ADMIN/MANAGER، لا تظهر لحسابات مسؤولي النظام */}
-                          {(myRole === 'ADMIN' || myRole === 'MANAGER') && (
-                            <Tooltip title="تغيير كلمة السر">
-                              <IconButton size="small" aria-label="reset-password" onClick={() => openPasswordDialog(u)}>
-                                <LockResetIcon fontSize="small" sx={{ color: colors.secondary }} />
-                              </IconButton>
-                            </Tooltip>
-                          )}
-                          {/* حذف الحساب: ADMIN فقط بالباك اند، ولا يظهر لحسابات مسؤولي النظام أو لحسابك الخاص */}
-                          {myRole === 'ADMIN' && !isSelf && (
+                          <Tooltip title="تغيير كلمة السر">
+                            <IconButton size="small" aria-label="reset-password" onClick={() => openPasswordDialog(u)}>
+                              <LockResetIcon fontSize="small" sx={{ color: colors.secondary }} />
+                            </IconButton>
+                          </Tooltip>
+                          {/* حذف الحساب: متاح لأي من الأدوار الإدارية الثلاثة الآن، بشرط عدم كونه حسابك الخاص
+                              (ولحساب إداري تحديداً: بشرط أن ترتيبي أعلى منه وفق التسلسل الهرمي أعلاه) */}
+                          {!isSelf && (
                             <Tooltip title="حذف الحساب">
                               <IconButton size="small" aria-label="delete" onClick={() => setDeleteTarget(u)}>
                                 <DeleteIcon fontSize="small" sx={{ color: colors.danger500 }} />
                               </IconButton>
                             </Tooltip>
-                          )}
-                          {!(myRole === 'ADMIN' || myRole === 'MANAGER') && (
-                            <Typography sx={{ fontSize: 12, color: colors.mutedText }}>—</Typography>
                           )}
                         </Stack>
                       )}

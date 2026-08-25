@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { Role } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 import { CreateUserDto } from './dto/create-user.dto';
+import { isAdminTierRole, canActOnAdminTier } from '../auth/role-hierarchy';
 
 @Injectable()
 export class UsersService {
@@ -137,13 +138,14 @@ export class UsersService {
     }
   }
 
-  // ADDED: تحديث دور مستخدم (مستخدم عادي/خطيب/موظف فقط — لا يمكن الترقية إلى ADMIN/MANAGER من هنا،
-  // ولا يمكن تعديل دور حساب هو أصلاً ADMIN/MANAGER لحماية حسابات مسؤولي النظام من التعديل عبر هذه الواجهة)
-  async updateRole(id: number, role: Role) {
+  // MODIFIED: تحديث دور مستخدم — لا يمكن الترقية إلى ADMIN/MANAGER/SUPER_ADMIN من هنا (يتم فقط عبر تدخل مباشر
+  // بقاعدة البيانات)، لكن تعديل حساب هو أصلاً ADMIN/MANAGER/SUPER_ADMIN أصبح ممكناً وفق التسلسل الهرمي:
+  // فقط رتبة أعلى صراحةً تقدر تعدّل رتبة أدنى (مسؤول النظام > مدير > مشرف) — انظر role-hierarchy.ts
+  async updateRole(id: number, role: Role, actingRole: Role) {
     const user = await this.findById(id);
 
-    if (user.role === Role.ADMIN || user.role === Role.MANAGER) {
-      throw new ForbiddenException('لا يمكن تغيير دور حساب مسؤول النظام من هنا');
+    if (isAdminTierRole(user.role) && !canActOnAdminTier(actingRole, user.role)) {
+      throw new ForbiddenException('لا تملك صلاحية كافية لتعديل هذا الحساب');
     }
 
     const updated = await this.prisma.user.update({
@@ -179,13 +181,13 @@ export class UsersService {
     return user;
   }
 
-  // ADDED: يسمح لـ ADMIN/MANAGER بتعيين كلمة سر جديدة لمستخدم عادي (لنسيان كلمة السر مثلاً) دون معرفة كلمته الحالية —
-  // محمي بنفس حماية updateRole عن حسابات مسؤولي النظام لمنع أي تصعيد صلاحيات أو تعديل حساب مسؤول من هنا
-  async resetPassword(id: number, newPassword: string) {
+  // MODIFIED: يسمح لـ ADMIN/MANAGER/SUPER_ADMIN بتعيين كلمة سر جديدة لمستخدم عادي دون معرفة كلمته الحالية،
+  // وأيضاً لحساب إداري آخر (ADMIN/MANAGER/SUPER_ADMIN) طالما رتبة الفاعل أعلى صراحةً من رتبة الهدف
+  async resetPassword(id: number, newPassword: string, actingRole: Role) {
     const user = await this.findById(id);
 
-    if (user.role === Role.ADMIN || user.role === Role.MANAGER) {
-      throw new ForbiddenException('لا يمكن تغيير كلمة سر حساب مسؤول النظام من هنا');
+    if (isAdminTierRole(user.role) && !canActOnAdminTier(actingRole, user.role)) {
+      throw new ForbiddenException('لا تملك صلاحية كافية لتغيير كلمة سر هذا الحساب');
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
@@ -198,7 +200,9 @@ export class UsersService {
     return { message: 'تم تغيير كلمة السر بنجاح' };
   }
 
-  async removeUser(id: number, actingUserId?: number) {
+  // MODIFIED: حذف حساب إداري (ADMIN/MANAGER/SUPER_ADMIN) أصبح ممكناً وفق التسلسل الهرمي بدل الحظر المطلق —
+  // فقط رتبة أعلى صراحةً تقدر تحذف رتبة أدنى، ومنع حذف الحساب لنفسه يبقى قائماً دائماً بغض النظر عن الرتبة
+  async removeUser(id: number, actingUserId?: number, actingRole?: Role) {
     const user = await this.prisma.user.findUnique({
       where: { id },
       include: {
@@ -211,12 +215,11 @@ export class UsersService {
       throw new NotFoundException('المستخدم غير موجود');
     }
 
-    // ADDED: حماية حسابات مسؤولي النظام من الحذف عبر واجهة إدارة المستخدمين، ومنع حذف المستخدم لحسابه الخاص بالخطأ
-    if (user.role === Role.ADMIN || user.role === Role.MANAGER) {
-      throw new ForbiddenException('لا يمكن حذف حساب مسؤول النظام من هنا');
-    }
     if (actingUserId != null && actingUserId === id) {
       throw new BadRequestException('لا يمكنك حذف حسابك الخاص');
+    }
+    if (isAdminTierRole(user.role) && !canActOnAdminTier(actingRole as Role, user.role)) {
+      throw new ForbiddenException('لا تملك صلاحية كافية لحذف هذا الحساب');
     }
 
     // حذف البيانات المرتبطة أولاً إن وجدت

@@ -34,14 +34,14 @@ export class MosquesController {
 
   @Post()
   @UseGuards(RolesGuard) // إنشاء مسجد: ADMIN/MANAGER فقط، وليس أي مستخدم مسجّل
-  @Roles(Role.ADMIN, Role.MANAGER)
+  @Roles(Role.ADMIN, Role.MANAGER, Role.SUPER_ADMIN)
   create(@Body() createMosqueDto: CreateMosqueDto) {
     return this.mosquesService.create(createMosqueDto);
   }
 
   @Patch(':id')
   @UseGuards(RolesGuard) // تعديل مسجد: ADMIN/MANAGER فقط
-  @Roles(Role.ADMIN, Role.MANAGER)
+  @Roles(Role.ADMIN, Role.MANAGER, Role.SUPER_ADMIN)
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateMosqueDto: UpdateMosqueDto,
@@ -51,7 +51,7 @@ export class MosquesController {
 
   @Delete(':id')
   @UseGuards(RolesGuard) // حذف مسجد: ADMIN/MANAGER فقط
-  @Roles(Role.ADMIN, Role.MANAGER)
+  @Roles(Role.ADMIN, Role.MANAGER, Role.SUPER_ADMIN)
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.mosquesService.remove(id);
   }

@@ -202,7 +202,9 @@ model Notification {
 }
 
 // Enums
+// ADDED: SUPER_ADMIN — رتبة إدارية ثالثة أعلى من ADMIN وMANAGER (مسؤول النظام)، انظر role-hierarchy.ts
 enum Role {
+  SUPER_ADMIN
   ADMIN
   MANAGER
   USER

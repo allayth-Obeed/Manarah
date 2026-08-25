@@ -23,7 +23,9 @@ import { API_ORIGIN } from '../../services/apiClient' // ADDED: لبناء را�
 const drawerWidth = 240
 
 // ADDED: ترجمة قيم Role الإنجليزية القادمة من الباك اند إلى تسميات عربية للعرض بالشريط العلوي
+// MODIFIED: أُضيف SUPER_ADMIN (مسؤول النظام) — الرتبة الإدارية الأعلى، انظر role-hierarchy.ts بالباك اند
 const roleLabels = {
+  SUPER_ADMIN: 'مسؤول النظام',
   ADMIN: 'مشرف النظام',
   MANAGER: 'مدير',
   USER: 'مستخدم',

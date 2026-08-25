@@ -34,14 +34,14 @@ export class DonationsController {
 
   @Post()
   @UseGuards(RolesGuard) // تسجيل تبرع (بيانات مالية): ADMIN/MANAGER فقط
-  @Roles(Role.ADMIN, Role.MANAGER)
+  @Roles(Role.ADMIN, Role.MANAGER, Role.SUPER_ADMIN)
   create(@Body() createDonationDto: CreateDonationDto) {
     return this.donationsService.create(createDonationDto);
   }
 
   @Patch(':id')
   @UseGuards(RolesGuard) // تعديل تبرع: ADMIN/MANAGER فقط
-  @Roles(Role.ADMIN, Role.MANAGER)
+  @Roles(Role.ADMIN, Role.MANAGER, Role.SUPER_ADMIN)
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateDonationDto: UpdateDonationDto,
@@ -51,7 +51,7 @@ export class DonationsController {
 
   @Delete(':id')
   @UseGuards(RolesGuard) // حذف تبرع: ADMIN/MANAGER فقط
-  @Roles(Role.ADMIN, Role.MANAGER)
+  @Roles(Role.ADMIN, Role.MANAGER, Role.SUPER_ADMIN)
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.donationsService.remove(id);
   }

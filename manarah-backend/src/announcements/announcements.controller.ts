@@ -34,14 +34,14 @@ export class AnnouncementsController {
 
   @Post()
   @UseGuards(RolesGuard) // نشر إعلان: ADMIN/MANAGER فقط
-  @Roles(Role.ADMIN, Role.MANAGER)
+  @Roles(Role.ADMIN, Role.MANAGER, Role.SUPER_ADMIN)
   create(@Body() createAnnouncementDto: CreateAnnouncementDto) {
     return this.announcementsService.create(createAnnouncementDto);
   }
 
   @Patch(':id')
   @UseGuards(RolesGuard) // تعديل إعلان: ADMIN/MANAGER فقط
-  @Roles(Role.ADMIN, Role.MANAGER)
+  @Roles(Role.ADMIN, Role.MANAGER, Role.SUPER_ADMIN)
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateAnnouncementDto: UpdateAnnouncementDto,
@@ -51,7 +51,7 @@ export class AnnouncementsController {
 
   @Delete(':id')
   @UseGuards(RolesGuard) // حذف إعلان: ADMIN/MANAGER فقط
-  @Roles(Role.ADMIN, Role.MANAGER)
+  @Roles(Role.ADMIN, Role.MANAGER, Role.SUPER_ADMIN)
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.announcementsService.remove(id);
   }

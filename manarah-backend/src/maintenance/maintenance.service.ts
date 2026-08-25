@@ -90,8 +90,9 @@ export class MaintenanceService {
       throw new NotFoundException('تذكرة الصيانة غير موجودة');
     }
 
-    // ADDED: الموظف المُسنَدة إليه التذكرة يقدر يحدّث حالتها فقط (ليس إسنادها/عنوانها/مسجدها) — ADMIN/MANAGER لهما التعديل الكامل
-    const isPrivileged = actingUser.role === Role.ADMIN || actingUser.role === Role.MANAGER;
+    // MODIFIED: الموظف المُسنَدة إليه التذكرة يقدر يحدّث حالتها فقط (ليس إسنادها/عنوانها/مسجدها) — ADMIN/MANAGER/SUPER_ADMIN لهم التعديل الكامل
+    const isPrivileged =
+      actingUser.role === Role.ADMIN || actingUser.role === Role.MANAGER || actingUser.role === Role.SUPER_ADMIN;
     if (!isPrivileged) {
       // ملاحظة: target=es2022 يجعل كل حقول الـ DTO المُعرَّفة (حتى غير المُرسَلة) خصائص ذاتية بقيمة undefined
       // (دلالات class fields)، لذا Object.keys(dto) وحدها لا تكفي — لا بد من استبعاد القيم undefined فعلياً

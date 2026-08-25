@@ -54,7 +54,7 @@ export class MaintenanceController {
 
   @Delete(':id')
   @UseGuards(RolesGuard) // حذف تذكرة: ADMIN/MANAGER فقط
-  @Roles(Role.ADMIN, Role.MANAGER)
+  @Roles(Role.ADMIN, Role.MANAGER, Role.SUPER_ADMIN)
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.maintenanceService.remove(id);
   }

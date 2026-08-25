@@ -34,14 +34,14 @@ export class EmployeesController {
 
   @Post()
   @UseGuards(RolesGuard) // إضافة موظف (بيانات راتب حساسة): ADMIN/MANAGER فقط
-  @Roles(Role.ADMIN, Role.MANAGER)
+  @Roles(Role.ADMIN, Role.MANAGER, Role.SUPER_ADMIN)
   create(@Body() createEmployeeDto: CreateEmployeeDto) {
     return this.employeesService.create(createEmployeeDto);
   }
 
   @Patch(':id')
   @UseGuards(RolesGuard) // تعديل موظف: ADMIN/MANAGER فقط
-  @Roles(Role.ADMIN, Role.MANAGER)
+  @Roles(Role.ADMIN, Role.MANAGER, Role.SUPER_ADMIN)
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateEmployeeDto: UpdateEmployeeDto,
@@ -51,7 +51,7 @@ export class EmployeesController {
 
   @Delete(':id')
   @UseGuards(RolesGuard) // حذف موظف: ADMIN/MANAGER فقط
-  @Roles(Role.ADMIN, Role.MANAGER)
+  @Roles(Role.ADMIN, Role.MANAGER, Role.SUPER_ADMIN)
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.employeesService.remove(id);
   }
