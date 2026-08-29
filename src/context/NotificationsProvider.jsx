@@ -10,7 +10,7 @@ const STATUS_LABELS = { OPEN: 'مفتوحة', IN_PROGRESS: 'قيد المعال�
 // دوال بناء نص عربي مقروء لكل نوع حدث لحظي يبثّه الباك اند
 const EVENT_MESSAGES = {
   'donation.created': (p) =>
-    `تبرع جديد من ${p.donorName || 'متبرع'} بقيمة ${p.amount || 0} ر.س${p.mosqueName ? ` — ${p.mosqueName}` : ''}`,
+    `تبرع جديد من ${p.donorName || 'متبرع'} بقيمة ${p.amount || 0} ل.س${p.mosqueName ? ` — ${p.mosqueName}` : ''}`,
   'maintenance.created': (p) =>
     `تذكرة صيانة جديدة: ${p.title}${p.mosqueName ? ` — ${p.mosqueName}` : ''}`,
   'maintenance.statusChanged': (p) =>

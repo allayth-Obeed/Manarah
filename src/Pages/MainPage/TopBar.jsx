@@ -399,6 +399,9 @@ function TopBar() {
               px: 1.5,
               py: 0.5,
               minWidth: 'fit-content',
+              // MODIFIED: مخفي على الجوال — نفس شعار المديرية معروض أصلاً بالشريط الجانبي، وبقاؤه هنا كان
+              // يمنع محتوى الشريط العلوي من التسع بسطر واحد فيتمدد الشريط ويتداخل مع محتوى الصفحة تحته
+              display: { xs: 'none', md: 'block' },
             }}
           >
             <Box className="group" sx={{ cursor: 'pointer' }}>

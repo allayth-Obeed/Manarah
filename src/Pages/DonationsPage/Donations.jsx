@@ -112,7 +112,7 @@ export default function Donations() {
   // ADDED: صفوف تصدير جاهزة للعرض (نص) مبنية من بيانات التبرعات الخام القادمة من الـ API
   const donationExportRows = donations.map((d) => ({
     donorName: d.donorName || 'متبرع',
-    amountLabel: `${d.amount || 0} ر.س`,
+    amountLabel: `${d.amount || 0} ل.س`,
     mosqueName: d.mosque?.name || '—',
     purposeLabel: d.purpose || 'تبرع عام',
     dateLabel:

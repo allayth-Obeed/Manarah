@@ -17,6 +17,32 @@ import LocationPicker from '../common/LocationPicker' // ADDED: منتقي ال�
 import SearchableSelect from '../common/SearchableSelect' // ADDED: اختيار الخطيب بالبحث عن اسمه بدل التمرير بقائمة طويلة
 import { useTheme } from '../../theme/themeContext'
 
+// خارج المكوّن عمداً — تعريفه داخل MosqueDialogs كان يعيد إنشاء نوع المكوّن بكل تصيير
+// فيفقد الحقل تركيزه (focus) بلا داعٍ في ديالوجي الإضافة والتعديل معاً
+const StatusField = ({ colors, status, onStatusChange }) => (
+  <Stack spacing={0.5}>
+    <Typography sx={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 500, fontSize: 14, color: colors.text, lineHeight: '20px', textAlign: 'right' }}>الحالة</Typography>
+    <TextField
+      select
+      value={status || 'ACTIVE'}
+      onChange={(e) => onStatusChange(e.target.value)}
+      fullWidth
+      sx={{
+        '& .MuiOutlinedInput-root': { backgroundColor: colors.bgelem, borderRadius: 2, height: 48, '& fieldset': { border: 'none' }, '&:hover fieldset': { border: 'none' }, '&.Mui-focused fieldset': { border: 'none' } },
+        '& .MuiSelect-select': { textAlign: 'right', fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 400, fontSize: 16, color: colors.text, py: 1.5 },
+      }}
+      SelectProps={{
+        IconComponent: () => <svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginLeft: 8 }}><path d="M1 1.5L6 6.5L11 1.5" stroke={colors.mutedText} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+      }}
+      SelectDisplayProps={{ style: { direction: 'rtl' } }}
+      MenuProps={{ sx: { '& .MuiMenu-paper': { direction: 'rtl', bgcolor: colors.surface }, '& .MuiMenuItem-root': { justifyContent: 'flex-end', fontFamily: '"IBM Plex Sans Arabic", sans-serif', color: colors.text } } }}
+    >
+      <MenuItem value="ACTIVE" sx={{ justifyContent: 'flex-end' }}>نشط</MenuItem>
+      <MenuItem value="MAINTENANCE" sx={{ justifyContent: 'flex-end' }}>قيد الصيانة</MenuItem>
+    </TextField>
+  </Stack>
+)
+
 /**
  * Dialog لإضافة مسجد جديد
  * ✅ يتلقى بيانات النموذج و دوال الاستدعاء من الصفحة الأب (Mosque.jsx)
@@ -50,34 +76,6 @@ export default function MosqueDialogs({
     '& input': { textAlign: 'right', fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 400, fontSize: 16, color: colors.text, '&::placeholder': { color: colors.mutedText, opacity: 1 } },
   }
 
-  // ADDED: نمط قائمة الحالة المنسدلة (نشط/قيد الصيانة) — نفس أسلوب حقول النموذج الأخرى
-  const selectSx = {
-    '& .MuiOutlinedInput-root': { backgroundColor: colors.bgelem, borderRadius: 2, height: 48, '& fieldset': { border: 'none' }, '&:hover fieldset': { border: 'none' }, '&.Mui-focused fieldset': { border: 'none' } },
-    '& .MuiSelect-select': { textAlign: 'right', fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 400, fontSize: 16, color: colors.text, py: 1.5 },
-  }
-
-  // ADDED: حقل حالة المسجد الحقيقي (يُستخدم بديالوجي الإضافة والتعديل معاً)
-  const StatusField = () => (
-    <Stack spacing={0.5}>
-      <Typography sx={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 500, fontSize: 14, color: colors.text, lineHeight: '20px', textAlign: 'right' }}>الحالة</Typography>
-      <TextField
-        select
-        value={mosqueForm.status || 'ACTIVE'}
-        onChange={(e) => setMosqueForm((p) => ({ ...p, status: e.target.value }))}
-        fullWidth
-        sx={selectSx}
-        SelectProps={{
-          IconComponent: () => <svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ marginLeft: 8 }}><path d="M1 1.5L6 6.5L11 1.5" stroke={colors.mutedText} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>,
-        }}
-        SelectDisplayProps={{ style: { direction: 'rtl' } }}
-        MenuProps={{ sx: { '& .MuiMenu-paper': { direction: 'rtl', bgcolor: colors.surface }, '& .MuiMenuItem-root': { justifyContent: 'flex-end', fontFamily: '"IBM Plex Sans Arabic", sans-serif', color: colors.text } } }}
-      >
-        <MenuItem value="ACTIVE" sx={{ justifyContent: 'flex-end' }}>نشط</MenuItem>
-        <MenuItem value="MAINTENANCE" sx={{ justifyContent: 'flex-end' }}>قيد الصيانة</MenuItem>
-      </TextField>
-    </Stack>
-  )
-
   return (
     <>
       {/* ============= Dialog إضافة مسجد ============= */}
@@ -107,7 +105,7 @@ export default function MosqueDialogs({
                 <TextField value={mosqueForm.phone} onChange={(e) => setMosqueForm((p) => ({ ...p, phone: e.target.value }))} placeholder="05xxxxxxxx" fullWidth sx={inputSx} />
               </Stack>
               {/* ADDED: حالة المسجد عند الإنشاء (نشط افتراضياً) */}
-              <StatusField />
+              <StatusField colors={colors} status={mosqueForm.status} onStatusChange={(v) => setMosqueForm((p) => ({ ...p, status: v }))} />
             </Stack>
             {/* ADDED: منتقي الموقع الجغرافي (منطقة/منطقة فرعية/موقع) — إلزامي، يمتد على عرض الديالوج كاملاً */}
             <Box sx={{ gridColumn: '1 / -1' }}>
@@ -157,7 +155,7 @@ export default function MosqueDialogs({
                 <TextField value={mosqueForm.phone} onChange={(e) => setMosqueForm((p) => ({ ...p, phone: e.target.value }))} placeholder="05xxxxxxxx" fullWidth sx={inputSx} />
               </Stack>
               {/* ADDED: تعديل الحالة الحقيقية للمسجد — هذا هو المطلوب أساساً */}
-              <StatusField />
+              <StatusField colors={colors} status={mosqueForm.status} onStatusChange={(v) => setMosqueForm((p) => ({ ...p, status: v }))} />
             </Stack>
             {/* ADDED: منتقي الموقع الجغرافي — يظهر معبَّأً إن كان للمسجد موقع مسبق، ويبقى اختيارياً للمساجد القديمة دون إجبار */}
             <Box sx={{ gridColumn: '1 / -1' }}>

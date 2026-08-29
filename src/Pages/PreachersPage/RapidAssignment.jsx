@@ -41,7 +41,6 @@ export default function RapidAssignment({
   // الخطباء بلا حساب دخول مرتبط (userId فارغ) يبقون مؤهَّلين دائماً — لا "دور" حساب يقيّدهم أصلاً
   const assignablePreachers = preachers.filter((p) => !p.userId || p.user?.role === 'PREACHER')
 
-  const selectedMosque = mosques.find((mosque) => mosque.id === Number(selectedMosqueId)) || null // ADDED: استخراج المسجد المختار كاملًا لعرض اسمه.
   const selectedPreacher =
     preachers.find((preacher) => preacher.id === Number(selectedPreacherId)) || null // ADDED: استخراج الخطيب المختار كاملًا لعرض اسمه.
   const preacherName = selectedPreacher

@@ -23,11 +23,15 @@ export class DonationsController {
   constructor(private readonly donationsService: DonationsService) {}
 
   @Get()
+  @UseGuards(RolesGuard) // MODIFIED: عرض قائمة التبرعات (بيانات مالية) — ADMIN/MANAGER فقط، لم تكن محمية بالدور سابقاً
+  @Roles(Role.ADMIN, Role.MANAGER, Role.SUPER_ADMIN)
   findAll() {
     return this.donationsService.findAll();
   }
 
   @Get(':id')
+  @UseGuards(RolesGuard) // MODIFIED: نفس حماية القائمة أعلاه لسجل تبرع مفرد
+  @Roles(Role.ADMIN, Role.MANAGER, Role.SUPER_ADMIN)
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.donationsService.findOne(id);
   }

@@ -170,7 +170,7 @@ export default function DonationsOverview({ donations = [], onRowClick, onDelete
       date,
       type,
       tone,
-      value: `${donation.amount || 0} ر.س`,
+      value: `${donation.amount || 0} ل.س`,
     }
   })
 

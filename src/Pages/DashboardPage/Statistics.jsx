@@ -178,7 +178,7 @@ export default function Statistics({ mosques = [], donations = [], preachers = [
             <Typography variant="body2" sx={{ color: colors.mutedText }}>الخطباء</Typography>
           </Card>
           <Card sx={{ ...cardSx, p: 2, textAlign: 'center' }}>
-            <Typography variant="h4" sx={{ fontWeight: 'bold', color: colors.primary }}>{totalDonations.toLocaleString('ar-SA')} ر.س</Typography>
+            <Typography variant="h4" sx={{ fontWeight: 'bold', color: colors.primary }}>{totalDonations.toLocaleString('ar-SY')} ل.س</Typography>
             <Typography variant="body2" sx={{ color: colors.mutedText }}>إجمالي التبرعات</Typography>
           </Card>
           <Card sx={{ ...cardSx, p: 2, textAlign: 'center' }}>

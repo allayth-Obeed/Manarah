@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react' // ADDED: React hooks for state and lifecycle management
+import React, { useState, useEffect, useMemo } from 'react' // ADDED: React hooks for state and lifecycle management
 import { Box } from '@mui/material' // ADDED: لتغليف جدول الخطباء الجديد
 import MainFun from './../DashboardPage/MainFun' // ADDED: Reusable header component with action buttons
 import MainAssignment from './MainAssignment' // ADDED: Main assignment display component showing preacher-mosque assignments
@@ -116,7 +116,9 @@ export default function Preachers() {
     return nextFriday // ADDED: إرجاع كائن تاريخ الجمعة القادمة
   } // ADDED: نهاية دالة حساب الجمعة القادمة
 
-  const assignmentDate = getNextFridayDate() // ADDED: حفظ تاريخ الجمعة القادمة لاستخدامه في التكليف والفحص
+  // MODIFIED: useMemo بدل استدعاء مباشر — بدون هذا كان assignmentDate كائن Date جديد بكل تصيير
+  // فيتعذّر إدراجه مباشرة كاعتماد بـ useEffect أدناه دون تكرار الفحص بلا داعٍ بكل تصيير
+  const assignmentDate = useMemo(() => getNextFridayDate(), []) // ADDED: حفظ تاريخ الجمعة القادمة لاستخدامه في التكليف والفحص
   const assignmentDateLabel = assignmentDate.toLocaleDateString('ar-SA', {
     weekday: 'long',
     year: 'numeric',
@@ -149,7 +151,7 @@ export default function Preachers() {
     } // ADDED: نهاية تعريف دالة فحص التعارض
 
     runConflictCheck() // ADDED: تنفيذ فحص التعارض مباشرة بعد اختيار الخطيب
-  }, [selectedPreacherId, assignmentDateLabel]) // ADDED: إعادة الفحص عند تغيير الخطيب أو التاريخ المعروض
+  }, [selectedPreacherId, assignmentDate]) // MODIFIED: assignmentDate بدل نصّه المعروض — أصبح مستقراً بفضل useMemo أعلاه
 
   // ============= إضافة خطيب جديد (API) =============
   const handleAddSubmit = async (e) => {

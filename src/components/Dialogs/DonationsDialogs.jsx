@@ -41,7 +41,7 @@ export default function DonationsDialogs({ addOpen, setAddOpen, donationForm, se
               </Stack>
               {/* المبلغ - يتوافق مع amount في الباك إند */}
               <Stack spacing={0.5}>
-                <Typography sx={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 500, fontSize: 14, color: colors.text, lineHeight: '20px', textAlign: 'right' }}>المبلغ (ر.س)</Typography>
+                <Typography sx={{ fontFamily: '"IBM Plex Sans Arabic", sans-serif', fontWeight: 500, fontSize: 14, color: colors.text, lineHeight: '20px', textAlign: 'right' }}>المبلغ (ل.س)</Typography>
                 <TextField value={donationForm.amount} onChange={(e) => setDonationForm((p) => ({ ...p, amount: e.target.value }))} placeholder="0.00" type="number" fullWidth sx={inputSx} />
               </Stack>
             </Stack>

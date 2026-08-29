@@ -60,14 +60,9 @@ export default function Maintenance() {
   const fetchAll = async () => {
     setLoading(true)
     try {
-      const [ticketsData, mosquesData, employeesData] = await Promise.all([
-        getAllTickets(),
-        getAllMosques(),
-        getAllEmployees(),
-      ])
+      const [ticketsData, mosquesData] = await Promise.all([getAllTickets(), getAllMosques()])
       setTickets(ticketsData)
       setMosques(mosquesData)
-      setEmployees(employeesData)
       setError(null)
     } catch (err) {
       console.error('خطأ في جلب بيانات الصيانة:', err)
@@ -80,6 +75,15 @@ export default function Maintenance() {
   useEffect(() => {
     fetchAll()
   }, [])
+
+  // MODIFIED: GET /employees محصور الآن بـ ADMIN/MANAGER بالباك اند — منفصل بـ useEffect خاص لأن canWrite
+  // يبدأ false دائماً قبل اكتمال جلب المستخدم الحالي، ولتفادي فشل Promise.all أعلاه لبقية الأدوار (الصيانة متاحة للجميع)
+  useEffect(() => {
+    if (!canWrite) return
+    getAllEmployees()
+      .then(setEmployees)
+      .catch(() => {})
+  }, [canWrite])
 
   const handleAddSubmit = async (e) => {
     e?.preventDefault()

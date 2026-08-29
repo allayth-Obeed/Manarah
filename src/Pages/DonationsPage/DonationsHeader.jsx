@@ -13,7 +13,7 @@ const summaryCards = [
   {
     title: 'متوسط التبرع الشهري',
     value: '5,200',
-    currency: 'د.ا',
+    currency: 'ل.س',
     icon: VolunteerActivismRoundedIcon,
     iconBg: 'accent',
     iconColor: 'primary',
@@ -29,7 +29,7 @@ const summaryCards = [
   {
     title: 'إجمالي التبرعات السنوي',
     value: '1,450,280',
-    currency: 'د.ا',
+    currency: 'ل.س',
     // تم حذف progress (نسبة هدف 75%) نهائياً: لا يوجد مفهوم "هدف/target" بنموذج التبرعات بالباك اند
     // growth يُحسب لاحقاً من بيانات حقيقية بدل "+12.5%" الثابتة
     dark: true,

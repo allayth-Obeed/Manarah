@@ -23,11 +23,15 @@ export class EmployeesController {
   constructor(private readonly employeesService: EmployeesService) {}
 
   @Get()
+  @UseGuards(RolesGuard) // MODIFIED: عرض قائمة الموظفين (بيانات وظيفية) — ADMIN/MANAGER فقط، لم تكن محمية بالدور سابقاً
+  @Roles(Role.ADMIN, Role.MANAGER, Role.SUPER_ADMIN)
   findAll() {
     return this.employeesService.findAll();
   }
 
   @Get(':id')
+  @UseGuards(RolesGuard) // MODIFIED: نفس حماية القائمة أعلاه لسجل موظف مفرد
+  @Roles(Role.ADMIN, Role.MANAGER, Role.SUPER_ADMIN)
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.employeesService.findOne(id);
   }
