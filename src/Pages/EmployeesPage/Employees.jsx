@@ -163,6 +163,10 @@ export default function Employees() {
         ...employeeForm,
         mosqueId: employeeForm.mosqueId ? Number(employeeForm.mosqueId) : undefined, // ADDED
         userId: employeeUserId, // ADDED: ربط اختياري بحساب دخول — يفعّل إشعاراته الشخصية عند إسناد تذكرة صيانة له
+        // MODIFIED: كانا يُرسَلان كسلسلة فارغة '' دائماً (لا يوجد حقل راتب بالنموذج أصلاً) فيرفضهما الباك اند
+        // دوماً رغم كونهما اختياريَّين — @IsOptional لا يتجاوز إلا undefined وليس ''
+        salary: employeeForm.salary ? Number(employeeForm.salary) : undefined,
+        hireDate: employeeForm.hireDate || undefined,
       })
 
       // إعادة جلب القائمة المحدثة
